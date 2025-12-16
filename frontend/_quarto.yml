@@ -1,12 +1,14 @@
 project:
   type: website
   output-dir: _site
+  resources:       
+    - assets/
   preview:
     port: 4200        
     browser: true
 
 website:
-  title: "My Portfolio"
+  title: "GGuex"
   navbar:
     left:
       - text: "About Me"

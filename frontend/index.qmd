@@ -1,8 +1,40 @@
 ---
-title: "About Me"
+title: "Guillaume Guex"
+image: assets/profile.jpg
+about:
+  template: trestles
+  links:
+    - icon: linkedin
+      text: LinkedIn
+      href: https://linkedin.com/in/guillaume-guex/
+    - icon: github
+      text: Github
+      href: https://github.com/gguex
+    - icon: envelope
+      text: Email
+      href: mailto:guillaume.guex@gmail.com
+    - text: CV (PDF)
+      icon: file-text
+      href: assets/cv.pdf
 ---
 
-## Welcome
+## Bio 
+
 Hello! I am a researcher in Applied Mathematics, Statistics, Machine Learning, 
 Datascience and Digital Humanities. This is my personal website where you can 
-find my biography, my courses, data visualisations, simulations and algorithms.
+find courses, data visualizations, simulations and algorithms.
+
+## Education
+
+* **PhD in Computer Science** | University of Lausanne | *2020 - Present*
+* **MSc in Data Science** | EPFL | *2018 - 2020*
+
+## Selected Publications
+
+1.  **Doe, J.**, Smith, A. (2024). *Advanced Algorithms for Web Simulations*. Journal of Computational Science.
+2.  Doe, J. (2023). *Quarto and FastAPI: A Guide*. International Conference on Web Engineering.
+
+## Experience
+
+* **Research Assistant** | My Lab | *2021 - Present*
+* **Data Intern** | Tech Company | *2019*
