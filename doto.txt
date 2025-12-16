@@ -1,0 +1,27 @@
+TODO LIST 
+
+# Personal Data
+
+- Mettre à jour mon CV (OK)
+- Mettre à jour une photo récente
+- Mettre à jour ma liste des publications
+- Mettre à jour mon portfolio en ligne
+- Joindre le lien ORCID
+- Joindre les pages UNIL
+
+# TEACHING 
+
+- Mettre le cours de Machine Learning
+- Mettre le cours de MQ I 
+- Mettre le cours de MQ III
+- Mettre le cours pour les linguistes
+- Mettre les parties de mon cours MQ IV
+- Mettre quelques contributions eparses
+
+# VIZ
+
+- Trouver une visualisation de base réel pour illustration
+
+# SIM
+
+- Trouver un alogrithme de base à mettre en avant
