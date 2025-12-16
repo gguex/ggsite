@@ -1,3 +1,16 @@
 ---
-title: "Teaching"
+title: "Teaching Materials"
+listing:
+  contents:
+    - "*.ipynb"   # List all notebooks
+    - "*.qmd"     # List all markdown
+    - "*.pdf"     # List all pdf
+  type: table     # Display as table
+  fields: [title, date] # What we display
+  sort: "date desc"
 ---
+
+Here you will find resources for my courses.
+
+## Machine Learning
+Below is the list of available notebooks and slides.
