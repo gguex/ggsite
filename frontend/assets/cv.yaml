@@ -1,0 +1,21 @@
+education:
+  - title: "PhD in Computer Science"
+    institution: "University of Lausanne"
+    year: "2020 — Present"
+    description: "Thesis on AI and Web Simulation."
+  
+  - title: "MSc in Data Science"
+    institution: "EPFL"
+    year: "2018 — 2020"
+    description: "Specialization in Machine Learning."
+
+experience:
+  - title: "Research Assistant"
+    institution: "University Lab"
+    year: "2021 — Present"
+    description: "Developing FastAPI backends and Quarto sites."
+
+  - title: "Data Scientist Intern"
+    institution: "Tech Corp"
+    year: "2019"
+    description: "Implemented predictive models."

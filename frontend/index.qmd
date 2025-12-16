@@ -2,39 +2,98 @@
 title: "Guillaume Guex"
 image: assets/profile.jpg
 about:
+  id: hero-heading
   template: trestles
   links:
+    - icon: envelope
+      text: Email
+      href: mailto:guillaume.guex@gmail.com
+    - icon: person-badge
+      text: ORCID
+      href: https://orcid.org/0000-0003-1001-9525
     - icon: linkedin
       text: LinkedIn
       href: https://linkedin.com/in/guillaume-guex/
     - icon: github
       text: Github
       href: https://github.com/gguex
-    - icon: envelope
-      text: Email
-      href: mailto:guillaume.guex@gmail.com
     - text: CV (PDF)
       icon: file-text
       href: assets/cv.pdf
+bibliography: assets/references.bib
+csl: assets/apa-cv.csl
+nocite: |
+  @*
 ---
 
-## Bio 
+:::{#hero-heading}
 
-Hello! I am a researcher in Applied Mathematics, Statistics, Machine Learning, 
-Datascience and Digital Humanities. This is my personal website where you can 
-find courses, data visualizations, simulations and algorithms.
+## Hello!  
 
-## Education
+I am a academic researcher in Applied Mathematics, Statistics, 
+Machine Learning, Computation Linguistics, and Digital Humanities. I am 
+passionate about science, arts, computers and education. I reall like to build 
+mathematical models of various phenomena (especially in humain and 
+social science), to implement numerical simulations, and to create data 
+visualizations. 
 
-* **PhD in Computer Science** | University of Lausanne | *2020 - Present*
-* **MSc in Data Science** | EPFL | *2018 - 2020*
+With this website, I want to share some of my production. You will find 
+teaching material, data visualizations, simulations and algorithms. 
 
-## Selected Publications
+I hope you will enjoy them!
 
-1.  **Doe, J.**, Smith, A. (2024). *Advanced Algorithms for Web Simulations*. Journal of Computational Science.
-2.  Doe, J. (2023). *Quarto and FastAPI: A Guide*. International Conference on Web Engineering.
+:::
 
-## Experience
+---
 
-* **Research Assistant** | My Lab | *2021 - Present*
-* **Data Intern** | Tech Company | *2019*
+```{python}
+
+#| echo: false
+#| output: asis
+import yaml
+import textwrap
+
+# Read data
+try:
+    with open('assets/cv.yaml', 'r') as f:
+        data = yaml.safe_load(f)
+except FileNotFoundError:
+    data = {}
+
+# 2. Fonction corrigée avec 'dedent'
+def print_section(section_data):
+    if not section_data:
+        return
+        
+    for entry in section_data:
+        # On définit le HTML
+        raw_html = f"""
+        <div class="cv-entry">
+            <div class="cv-year">{entry['year']}</div>
+            <div class="cv-details">
+                <div class="cv-title">{entry['title']}</div>
+                <div class="cv-institution">{entry['institution']}</div>
+                <div class="cv-desc">{entry['description']}</div>
+            </div>
+        </div>
+        """
+        
+        # MAGIC FIX : textwrap.dedent enlève l'indentation de Python
+        # .strip() enlève les sauts de ligne inutiles au début/fin
+        print(textwrap.dedent(raw_html).strip())
+        print("\n") # Un saut de ligne Markdown pour séparer les blocs
+
+# 3. Affichage des sections
+if 'education' in data:
+    print("## Education\n")
+    print_section(data['education'])
+
+if 'experience' in data:
+    print("## Experience\n")
+    print_section(data['experience'])
+```
+
+## Publications
+
+::: {#refs} 
+:::

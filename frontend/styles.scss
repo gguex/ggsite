@@ -13,3 +13,74 @@ $link-color: #e67e22;
     border-radius: 50%; // Round corner 
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); // Shadow effect
 }
+
+/* --- Biblography style --- */
+
+/* Every publication item */
+div.csl-entry {
+    margin-bottom: 1.5rem; // Publication spacing 
+    padding-left: 3rem; // Move text to the right 
+    border-left: 3px solid $primary; // Add a vertical bar
+    transition: transform 0.2s; // For the effect 
+}
+
+/* Small effect on hover */
+div.csl-entry:hover {
+    
+    transform: translateX(5px); // Translate to the right 
+    background-color: rgba(0, 0, 0, 0.02); // Light background
+}
+
+/* --- CV style --- */
+
+.cv-entry {
+    display: flex; // Year and text side by side 
+    margin-bottom: 1.5rem; // Spacing between entries
+    align-items: baseline; // Aligne le texte en haut
+}
+
+.cv-year {
+    flex: 0 0 120px; // Fixe width for "Year" column
+    font-weight: bold;
+    color: $primary; // Color theme
+    font-size: 0.9em;
+    text-align: right; // Year align to the right
+    margin-right: 1.5rem; // Spece between year and text
+    border-right: 2px solid #ddd; // Small splitting line
+    padding-right: 10px;
+}
+
+.cv-details {
+    flex: 1; // Take the rest of the space
+}
+
+.cv-title {
+    font-weight: bold;
+    font-size: 1.1em;
+    color: #333;
+}
+
+.cv-institution {
+    font-style: italic;
+    color: #666;
+    margin-bottom: 0.2rem;
+}
+
+.cv-desc {
+    font-size: 0.9em;
+    color: #555;
+}
+
+/* Mobile version */
+@media (max-width: 768px) {
+    .cv-entry {
+        display: block;
+    }
+
+    .cv-year {
+        text-align: left;
+        border-right: none;
+        margin-bottom: 5px;
+        color: $link-color; // Change of color on mobile for fun
+    }
+}
