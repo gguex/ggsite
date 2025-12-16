@@ -1,0 +1,8 @@
+---
+title: "About Me"
+---
+
+## Welcome
+Hello! I am a researcher in Applied Mathematics, Statistics, Machine Learning, 
+Datascience and Digital Humanities. This is my personal website where you can 
+find my biography, my courses, data visualisations, simulations and algorithms.

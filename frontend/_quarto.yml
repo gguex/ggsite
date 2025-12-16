@@ -1,0 +1,21 @@
+project:
+  type: website
+  output-dir: _site
+
+website:
+  title: "My Portfolio"
+  navbar:
+    left:
+      - text: "About Me"
+        href: index.qmd
+      - text: "Teaching"
+        href: teaching/index.qmd
+      - text: "Visualizations"
+        href: viz/index.qmd
+      - text: "Simulations"
+        href: sim/index.qmd
+
+format:
+  html:
+    theme: cosmo
+    toc: true
