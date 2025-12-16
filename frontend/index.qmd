@@ -20,7 +20,7 @@ about:
     - text: CV (PDF)
       icon: file-text
       href: assets/cv.pdf
-bibliography: assets/references.bib
+bibliography: data/references.bib
 csl: assets/apa-cv.csl
 nocite: |
   @*
@@ -47,26 +47,24 @@ I hope you will enjoy them!
 ---
 
 ```{python}
-
 #| echo: false
 #| output: asis
 import yaml
-import textwrap
+from IPython.display import HTML, display
 
 # Read data
 try:
-    with open('assets/cv.yaml', 'r') as f:
+    with open('data/cv.yaml', 'r') as f:
         data = yaml.safe_load(f)
 except FileNotFoundError:
     data = {}
 
-# 2. Fonction corrigée avec 'dedent'
+# Function to display the items
 def print_section(section_data):
     if not section_data:
         return
         
     for entry in section_data:
-        # On définit le HTML
         raw_html = f"""
         <div class="cv-entry">
             <div class="cv-year">{entry['year']}</div>
@@ -77,13 +75,10 @@ def print_section(section_data):
             </div>
         </div>
         """
+        display(HTML(raw_html))
         
-        # MAGIC FIX : textwrap.dedent enlève l'indentation de Python
-        # .strip() enlève les sauts de ligne inutiles au début/fin
-        print(textwrap.dedent(raw_html).strip())
-        print("\n") # Un saut de ligne Markdown pour séparer les blocs
 
-# 3. Affichage des sections
+# Display both section
 if 'education' in data:
     print("## Education\n")
     print_section(data['education'])
