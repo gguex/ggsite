@@ -67,7 +67,10 @@ def print_section(section_data):
     for entry in section_data:
         raw_html = f"""
         <div class="cv-entry">
-            <div class="cv-year">{entry['year']}</div>
+            <div class="cv-year">
+              <div class="cv-year-end">{entry['year_end']}</div>
+              <div class="cv-year-start">{entry['year_start']}</div>
+            </div>
             <div class="cv-details">
                 <div class="cv-title">{entry['title']}</div>
                 <div class="cv-institution">{entry['institution']}</div>
@@ -79,13 +82,13 @@ def print_section(section_data):
         
 
 # Display both section
-if 'education' in data:
-    print("## Education\n")
-    print_section(data['education'])
-
 if 'experience' in data:
     print("## Experience\n")
     print_section(data['experience'])
+
+if 'education' in data:
+    print("## Education\n")
+    print_section(data['education'])
 ```
 
 ## Publications

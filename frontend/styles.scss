@@ -40,7 +40,8 @@ div.csl-entry:hover {
 }
 
 .cv-year {
-    flex: 0 0 120px; // Fixe width for "Year" column
+    flex: 0 0 140px; // Fixe width for "Year" column
+    flex-direction: column; // Stack year if needed
     font-weight: bold;
     color: $primary; // Color theme
     font-size: 0.9em;
