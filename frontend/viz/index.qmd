@@ -1,3 +1,32 @@
 ---
-title: "Visualizations"
+title: "Data Visualization"
+format:
+  html:
+    code-fold: true
 ---
+
+This section showcases interactive visualizations generated with Python and Plotly.
+
+## 3D Scatter Plot Example
+
+Here is an example of clustering visualization. You can zoom, rotate, and hover over points.
+
+```{python}
+#| label: fig-3d
+#| fig-cap: "Interactive 3D Iris Dataset"
+
+import plotly.express as px
+
+# On utilise un jeu de données d'exemple inclus dans Plotly
+df = px.data.iris()
+
+# Création du graphique 3D
+fig = px.scatter_3d(df, x='sepal_length', y='sepal_width', z='petal_width',
+              color='species',
+              symbol='species',
+              opacity=0.7,
+              size_max=10)
+
+# Affichage (Quarto va transformer ça en HTML interactif)
+fig.show()
+```
