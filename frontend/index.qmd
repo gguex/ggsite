@@ -11,6 +11,9 @@ about:
     - icon: person-badge
       text: ORCID
       href: https://orcid.org/0000-0003-1001-9525
+    - icon: mortarboard-fill
+      text: University
+      href: https://applicationspub.unil.ch/interpub/noauth/php/Un/UnPers.php?PerNum=1118876&LanCode=8
     - icon: linkedin
       text: LinkedIn
       href: https://linkedin.com/in/guillaume-guex/

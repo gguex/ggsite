@@ -5,9 +5,9 @@ TODO LIST
 - Mettre à jour mon CV (OK)
 - Mettre à jour une photo récente
 - Mettre à jour ma liste des publications (OK)
-- Mettre à jour mon portfolio en ligne
-- Joindre le lien ORCID
-- Joindre les pages UNIL
+- Mettre à jour mon portfolio en ligne (OK)
+- Joindre le lien ORCID (OK)
+- Joindre les pages UNIL (OK)
 
 # TEACHING 
 
