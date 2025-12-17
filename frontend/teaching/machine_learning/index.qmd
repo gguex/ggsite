@@ -1,49 +1,42 @@
 ---
-title: "Introduction to Python"
-description: "From variables to pandas DataFrames."
-date: 2024-12-18
+title: "Machine Learning"
+description: "A ML course for students with a light background in mathematics and quantitative methods."
+date: 2025-12-18
 image: image.png
-categories: [Python, Undergraduate]
-toc: true  # Table des matières sur la droite pour naviguer vite entre les sessions
+categories: [Quantitative Methods, Machine Learning, Neural Network, Deep Learning, Python]
+toc: true
 ---
 
-## Syllabus & Materials
+## Sessions
 
-Here you will find the materials sorted by session. Please download the data files before the lab.
-
-::: {.callout-note appearance="default"}
-## Session 1: The Basics (Variables & Loops)
-📅 **Date:** Sept 12, 2024
-
-In this first session, we set up the environment (Anaconda/VS Code) and cover the syntax basics.
-
-**Downloads:**
-
-[{{< fa file-pdf >}} Lecture Slides (PDF)](session1/slides_1.pdf){.btn .btn-outline-primary .btn-sm}
-
-[{{< fa brands python >}} Lab Notebook](session1/cours1.ipynb){.btn .btn-outline-success .btn-sm}
-
-[{{< fa file-zipper >}} Data Files (ZIP)](session1/data.zip){.btn .btn-outline-secondary .btn-sm}
-
+::: {.callout-warning appearance="default"}
+**This course is currently in French, but I plan to create an English version in the future.**
 :::
 
 ::: {.callout-note appearance="default"}
-## Session 2: Functions & Modules
-📅 **Date:** Sept 19, 2024
+## Session 1: Introduction au ML
+📅 **Date:** Sept 15, 2025
 
-We learn how to write reusable code and import standard libraries.
+Cours d'introduction au Machine Learning. <br>
+TP de prise en main des librairies Python utilisées dans presque la totalité des TP.
 
-**Downloads:**
+[{{< fa file-pdf >}} 1. Introduction au Machine Learning (Slides)](session1/1_introduction_au_ml.pdf){.btn .btn-outline-primary .btn-sm}
 
-* [{{< fa file-pdf >}} Lecture Slides (PDF)](session2/slides.pdf){.btn .btn-outline-primary .btn-sm}
-* [{{< fa brands python >}} Lab Notebook](session2/lab.ipynb){.btn .btn-outline-success .btn-sm}
+[{{< fa brands python >}} TP1. Prise en main (Notebook)](session1/TP01_prise_en_main.ipynb){.btn .btn-outline-success .btn-sm}
 
+[{{< fa file-zipper >}} Données du TP1 (ZIP)](session1/ml_data.zip){.btn .btn-outline-secondary .btn-sm}
 :::
 
 ::: {.callout-note appearance="default"}
-## Session 3: Data Analysis with Pandas
-📅 **Date:** Sept 26, 2024
+## Session 2: Introduction au ML
+📅 **Date:** Sept 29, 2025
 
-*(Content coming soon)*
+Cours d'introduction au Machine Learning. <br>
+TP de prise en main des librairies Python utilisées dans presque la totalité des TP.
 
+[{{< fa file-pdf >}} 1. Introduction au Machine Learning (Slides)](session1/1_introduction_au_ml.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa brands python >}} TP1. Prise en main (Notebook)](session1/TP01_prise_en_main.ipynb){.btn .btn-outline-success .btn-sm}
+
+[{{< fa file-zipper >}} Données du TP1 (ZIP)](session1/ml_data.zip){.btn .btn-outline-secondary .btn-sm}
 :::

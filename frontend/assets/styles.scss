@@ -85,3 +85,48 @@ div.csl-entry:hover {
         color: $link-color; // Change of color on mobile for fun
     }
 }
+
+/* --- Colors for buttons in teaching --- */
+
+.btn-sm {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    padding: 5px 12px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+/* PDF Button (red) */
+.btn-outline-primary {
+    color: #d32f2f !important;
+    border-color: #d32f2f !important;
+
+    &:hover {
+        background-color: #d32f2f !important;
+        color: white !important;
+    }
+}
+
+/* Notebook Button (green) */
+.btn-outline-success {
+    color: #2e7d32 !important;
+    border-color: #2e7d32 !important;
+
+    &:hover {
+        background-color: #2e7d32 !important;
+        color: white !important;
+    }
+}
+
+/* Data/ZIP Button (gray-blue) */
+.btn-outline-secondary {
+    color: #455a64 !important;
+    border-color: #455a64 !important;
+
+    &:hover {
+        background-color: #455a64 !important;
+        color: white !important;
+    }
+}
