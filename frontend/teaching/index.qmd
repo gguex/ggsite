@@ -1,16 +1,18 @@
 ---
-title: "Teaching Materials"
+title: "Teaching"
 listing:
-  contents:
-    - "*.ipynb"   # List all notebooks
-    - "*.qmd"     # List all markdown
-    - "*.pdf"     # List all pdf
-  type: table     # Display as table
-  fields: [title, date] # What we display
+  contents: 
+    - "*/index.qmd"    
   sort: "date desc"
+  type: grid          
+  categories: true
+  fields: [image, title, description, categories, date]
+  image-placeholder: ../assets/default-img.png
 ---
 
-Here you will find resources for my courses.
+Welcome to my teaching section! 
 
-## Machine Learning
-Below is the list of available notebooks and slides.
+Below you will find materials for my current and past courses.
+All of them are in French. 
+
+## Courses

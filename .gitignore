@@ -5,3 +5,4 @@ __pycache__/
 _site/
 .quarto/
 .DS_Store
+_extensions/
