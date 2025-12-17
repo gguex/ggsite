@@ -1,8 +1,0 @@
-execute:
-  freeze: true
-format:
-  html:
-    code-links:
-      - text: Open in Colab
-        icon: file-earmark-code
-        href: https://colab.research.google.com/github/gguex/ISH_ressources_cours_ML/blob/main/TP01_prise_en_main.ipynb

@@ -25,4 +25,5 @@ format:
     theme:
       - flatly
       - assets/styles.scss
+    from: markdown+autolink_bare_uris
     toc: true

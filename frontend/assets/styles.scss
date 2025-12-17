@@ -130,3 +130,17 @@ div.csl-entry:hover {
         color: white !important;
     }
 }
+
+/* --- Limit the size of output cells --- */
+
+.cell-output-stdout pre,
+.cell-output-display pre,
+.cell-output-stderr pre {
+    max-height: 350px;
+    overflow-y: auto;
+    /* Vertical scroll possible */
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 10px;
+}

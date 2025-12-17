@@ -17,8 +17,8 @@ toc: true
 ## Session 1: Introduction au ML
 📅 **Date:** Sept 15, 2025
 
-Cours d'introduction au Machine Learning. <br>
-TP de prise en main des librairies Python utilisées dans presque la totalité des TP.
+Cours 1 : Introduit les concepts fondamentaux du Machine Learning. <br>
+TP 1 : Prise en main des librairies Python utilisées dans presque la totalité des TP.
 
 [{{< fa file-pdf >}} 1. Introduction au Machine Learning (Slides)](session1/1_introduction_au_ml.pdf){.btn .btn-outline-primary .btn-sm}
 
@@ -28,15 +28,17 @@ TP de prise en main des librairies Python utilisées dans presque la totalité d
 :::
 
 ::: {.callout-note appearance="default"}
-## Session 2: Introduction au ML
+## Session 2: Modèles linéaire et généralisation
 📅 **Date:** Sept 29, 2025
 
-Cours d'introduction au Machine Learning. <br>
-TP de prise en main des librairies Python utilisées dans presque la totalité des TP.
+Cours 2 : Les modèles de régression linéaire sont abordés, et à travers eux la problématique fondamentale de la généralisation.<br>
+TP 2: Mise en application des modèles de régression, avec sélection des hyperparamètres via cross-validation.
 
-[{{< fa file-pdf >}} 1. Introduction au Machine Learning (Slides)](session1/1_introduction_au_ml.pdf){.btn .btn-outline-primary .btn-sm}
+[{{< fa file-pdf >}} 2. Modèles linéaires et généralisation (Slides)](session2/2_modeles_lineaires.pdf){.btn .btn-outline-primary .btn-sm}
 
-[{{< fa brands python >}} TP1. Prise en main (Notebook)](session1/TP01_prise_en_main.ipynb){.btn .btn-outline-success .btn-sm}
+[{{< fa brands python >}} TP2. Régression et généralisation (Notebook)](session2/TP02_regression_generalisation.ipynb){.btn .btn-outline-success .btn-sm}
 
-[{{< fa file-zipper >}} Données du TP1 (ZIP)](session1/ml_data.zip){.btn .btn-outline-secondary .btn-sm}
+[{{< fa brands python >}} Corrigé TP2 (Notebook)](session2/TP02c_corrige.ipynb){.btn .btn-outline-success .btn-sm}
+
+[{{< fa file-zipper >}} Données du TP2 (ZIP)](session2/ml_data.zip){.btn .btn-outline-secondary .btn-sm}
 :::
