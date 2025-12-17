@@ -1,19 +1,19 @@
 education:
-  - title: "Ph.D. in Geography"
+  - title: "PhD in Geography"
     institution: "University of Lausanne"
-    year_start: "2011"
+    year_start: ""
     year_end: "2016"
     description: "Specialization in graphs theory, optimization, and flows modeling"
   
-  - title: "M.Sc. in Statistics"
+  - title: "MSc in Statistics"
     institution: "University of Neuchâtel"
-    year_start: "2011"
+    year_start: ""
     year_end: "2011"
     description: "Specialization in multivariate analysis"
 
-  - title: "B.Sc. in Mathematics"
+  - title: "BSc in Mathematics"
     institution: "EPFL"
-    year_start: "2001"
+    year_start: ""
     year_end: "2006"
     description: "Specialization in probability and statistics"
 

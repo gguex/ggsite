@@ -31,14 +31,17 @@ nocite: |
 ## Hello!  
 
 I am a academic researcher in Applied Mathematics, Statistics, 
-Machine Learning, Computation Linguistics, and Digital Humanities. I am 
-passionate about science, arts, computers and education. I reall like to build 
-mathematical models of various phenomena (especially in humain and 
-social science), to implement numerical simulations, and to create data 
-visualizations. 
+Machine Learning, Computation Linguistics, Geography and Digital Humanities. I am 
+passionate about science, arts, computers and education. I really enjoy designing 
+mathematical models for various phenomena (especially in human and 
+social sciences), implementing numerical simulations, and creating data 
+visualizations.
 
-With this website, I want to share some of my production. You will find 
-teaching material, data visualizations, simulations and algorithms. 
+With this website, I wanted to share some of my production. You will find here: 
+
+ * Teaching material.
+ * Data visualizations. 
+ * Simulations and algorithms.
 
 I hope you will enjoy them!
 
