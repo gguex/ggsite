@@ -6,13 +6,16 @@ listing:
   sort: "date desc"
   type: grid          
   categories: true
-  fields: [image, title, description, categories, date]
+  fields: [image, title, lang, description, categories, date]
   image-placeholder: ../assets/default-img.png
 ---
 
-Welcome to my teaching section! 
+Welcome to the teaching section! 
 
 Below you will find materials for my current and past courses.
-All of them are in French. 
+
+::: {.callout-warning appearance="default"}
+**All courses are currently in French, but I plan to create an English versions in the future.**
+:::
 
 ## Courses

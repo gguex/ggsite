@@ -1,6 +1,7 @@
 ---
 title: "Machine Learning"
-description: "A ML course for students with a light background in mathematics and quantitative methods."
+lang: fr
+description: "Cours de Machine Learning ne demandant que des connaissances légères en méthode quantitative et mathématiques"
 date: 2025-12-18
 image: image.png
 categories: [Quantitative Methods, Machine Learning, Neural Network, Deep Learning, Python]

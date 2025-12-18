@@ -1,5 +1,6 @@
 ---
 title: "Introduction to Python"
+lang: fr
 description: "From variables to pandas DataFrames."
 date: 2024-12-18
 image: image.png
