@@ -15,7 +15,7 @@ Welcome to the teaching section!
 Below you will find materials for my current and past courses.
 
 ::: {.callout-warning appearance="default"}
-**All courses are currently in French, but I plan to create an English versions in the future.**
+**All courses are currently in French, but I plan to create English versions in the future.**
 :::
 
 ## Courses
