@@ -1,11 +1,14 @@
 ---
-title: "Data Visualization"
+title: "3D Scatter Plot Example"
+description: "An example of 3D scatter plot using Plotly"
+date: today
+image: image.png
 format:
   html:
     code-fold: true
+    page-layout: full
+jupyter: python3
 ---
-
-This section showcases interactive visualizations generated with Python and Plotly.
 
 ## 3D Scatter Plot Example
 

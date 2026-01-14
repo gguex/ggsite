@@ -16,9 +16,9 @@ website:
       - text: "Teaching"
         href: teaching/index.qmd
       - text: "Visualizations"
-        href: viz/index.qmd
+        href: visualizations/index.qmd
       - text: "Simulations"
-        href: sim/index.qmd
+        href: simulations/index.qmd
 
 format:
   html:

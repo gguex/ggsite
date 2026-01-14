@@ -1,5 +1,6 @@
 ---
 title: "Teaching"
+description: "My teaching materials from current and past courses."
 listing:
   contents: 
     - "*/index.qmd"    
@@ -8,11 +9,8 @@ listing:
   categories: true
   fields: [image, title, lang, description, categories, date]
   image-placeholder: ../assets/default-img.png
+title-block-banner: true
 ---
-
-Welcome to the teaching section! 
-
-Below you will find materials for my current and past courses.
 
 ::: {.callout-warning appearance="default"}
 **All courses are currently in French. If I have time, one day, I will create English versions of them.**
