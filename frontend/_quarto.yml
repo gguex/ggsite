@@ -7,6 +7,8 @@ project:
     port: 4200        
     browser: true
 
+lang: en
+
 website:
   title: "GGuex"
   navbar:

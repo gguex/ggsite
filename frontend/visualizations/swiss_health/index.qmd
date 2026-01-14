@@ -6,7 +6,8 @@ image: image.png
 format:
   html:
     code-fold: true
-    page-layout: full  # On utilise toute la largeur pour la carte
+    toc: false
+    page-layout: full
 jupyter: python3
 ---
 
@@ -23,23 +24,22 @@ import plotly.express as px
 import numpy as np
 import json
 
-# 1. Chargement du fichier LOCAL (Plus jamais d'erreur 404 !)
-# On remonte d'un dossier (..) pour aller chercher dans assets
+# Load the GeoJSON file
 geojson_path = "../../assets/switzerland.geojson"
 
 try:
     with open(geojson_path, 'r', encoding='utf-8') as f:
         swiss_geojson = json.load(f)
 except FileNotFoundError:
-    print("Erreur : Le fichier switzerland.geojson n'est pas dans le dossier assets.")
+    print("Error: switzerland.geojson is not in the assets folder.")
     swiss_geojson = None
 
-# 2. Configuration des données
+# Configure the data
 years = range(2014, 2025)
 cantons_abbr = ["ZH", "BE", "LU", "UR", "SZ", "OW", "NW", "GL", "ZG", "FR", "SO", "BS", "BL", "SH", "AR", "AI", "SG", "GR", "AG", "TG", "TI", "VD", "VS", "NE", "GE", "JU"]
 
-# Dictionnaire de mapping pour correspondre au GeoJSON (qui utilise les noms complets)
-# Note: Les noms doivent correspondre exactement à ceux du fichier GeoJSON
+# Mapping dictionary to match the GeoJSON (which uses full names)
+# Note: Names must match exactly those in the GeoJSON file
 abbr_to_name = {
     "ZH": "Zürich", "BE": "Bern", "LU": "Luzern", "UR": "Uri", "SZ": "Schwyz", 
     "OW": "Obwalden", "NW": "Nidwalden", "GL": "Glarus", "ZG": "Zug", "FR": "Fribourg", 
@@ -49,7 +49,7 @@ abbr_to_name = {
     "VS": "Valais", "NE": "Neuchâtel", "GE": "Genève", "JU": "Jura"
 }
 
-# Facteurs de coût (Geneve/Bale chers, Appenzell moins cher)
+# Cost factors (Geneve/Bale are expensive, Appenzell is cheaper)
 cost_factors = {c: 1.0 for c in cantons_abbr}
 cost_factors.update({'GE': 1.4, 'BS': 1.35, 'VD': 1.25, 'ZH': 1.2, 'UR': 0.8, 'AI': 0.75})
 
@@ -62,41 +62,39 @@ for year in years:
         
         data.append({
             "Canton Code": abbr,
-            "Canton Name": abbr_to_name[abbr], # On ajoute le nom complet pour la carte
+            "Canton Name": abbr_to_name[abbr], # Add the full name for the map
             "Year": year,
             "Premium (CHF)": round(price, 0)
         })
 
 df = pd.DataFrame(data)
 
-# 3. Création de la Carte
+# Create the map
 if swiss_geojson:
     fig = px.choropleth(
         df,
         geojson=swiss_geojson,
-        locations='Canton Name',   # On utilise le Nom Complet
-        featureidkey="properties.name", # La clé dans le GeoJSON est "properties.name"
+        locations='Canton Name',   # Use the full name
+        featureidkey="properties.name", # The key in the GeoJSON is "properties.name"
         
         color='Premium (CHF)',
         animation_frame='Year',
         
-        # Esthétique
+        # Aesthetic    
         color_continuous_scale="Reds",
         range_color=[250, 650],
         title="Average Monthly Premium by Canton",
         height=600
     )
 
-    # Zoom automatique sur les données
+    # Automatic zoom on data
     fig.update_geos(
-        visible=False,               # Cache le fond de carte mondial par défaut
-        projection_type="mercator",  # Projection correcte
+        visible=False,               # Hide the default world map background
+        projection_type="mercator",  # Correct projection
         
-        # C'est ICI la solution : On définit la fenêtre de vue manuellement
-        # au lieu d'utiliser fitbounds.
-        # Coordonnées approximatives qui englobent la Suisse avec une petite marge
-        lataxis_range=[45.8, 47.9],  # Latitude (Sud-Nord)
-        lonaxis_range=[5.8, 10.6],   # Longitude (Ouest-Est)
+        # Approximate coordinates that enclose Switzerland with a small margin
+        lataxis_range=[45.8, 47.9],  # Latitude (South-North)
+        lonaxis_range=[5.8, 10.6],   # Longitude (West-East)
         
         showcountries=False,
         showcoastlines=False,
@@ -104,10 +102,8 @@ if swiss_geojson:
     )
     
     fig.update_layout(
-        # On laisse 20px de marge pour ne pas couper les bords au moindre mouvement
         margin={"r":20,"t":60,"l":20,"b":20},
         font=dict(family="Arial"),
-        # Fond transparent pour s'intégrer au site
         paper_bgcolor="rgba(0,0,0,0)",
         geo_bgcolor="rgba(0,0,0,0)"
     )
