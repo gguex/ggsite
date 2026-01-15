@@ -1,0 +1,287 @@
+year,canton,premium
+2014,Zürich,428
+2014,Bern,352
+2014,Luzern,358
+2014,Uri,289
+2014,Schwyz,358
+2014,Obwalden,354
+2014,Nidwalden,357
+2014,Glarus,358
+2014,Zug,359
+2014,Fribourg,354
+2014,Solothurn,357
+2014,Basel-Stadt,476
+2014,Basel-Landschaft,358
+2014,Schaffhausen,356
+2014,Appenzell Ausserrhoden,356
+2014,Appenzell Innerrhoden,266
+2014,St. Gallen,350
+2014,Graubünden,350
+2014,Aargau,358
+2014,Thurgau,351
+2014,Ticino,358
+2014,Vaud,440
+2014,Valais,358
+2014,Neuchâtel,357
+2014,Genève,498
+2014,Jura,352
+2015,Zürich,446
+2015,Bern,367
+2015,Luzern,373
+2015,Uri,301
+2015,Schwyz,373
+2015,Obwalden,369
+2015,Nidwalden,372
+2015,Glarus,373
+2015,Zug,374
+2015,Fribourg,369
+2015,Solothurn,372
+2015,Basel-Stadt,496
+2015,Basel-Landschaft,373
+2015,Schaffhausen,371
+2015,Appenzell Ausserrhoden,371
+2015,Appenzell Innerrhoden,277
+2015,St. Gallen,365
+2015,Graubünden,365
+2015,Aargau,373
+2015,Thurgau,366
+2015,Ticino,373
+2015,Vaud,458
+2015,Valais,373
+2015,Neuchâtel,372
+2015,Genève,519
+2015,Jura,367
+2016,Zürich,464
+2016,Bern,382
+2016,Luzern,388
+2016,Uri,313
+2016,Schwyz,388
+2016,Obwalden,384
+2016,Nidwalden,387
+2016,Glarus,388
+2016,Zug,389
+2016,Fribourg,384
+2016,Solothurn,387
+2016,Basel-Stadt,516
+2016,Basel-Landschaft,388
+2016,Schaffhausen,386
+2016,Appenzell Ausserrhoden,386
+2016,Appenzell Innerrhoden,288
+2016,St. Gallen,380
+2016,Graubünden,380
+2016,Aargau,388
+2016,Thurgau,381
+2016,Ticino,388
+2016,Vaud,477
+2016,Valais,388
+2016,Neuchâtel,387
+2016,Genève,540
+2016,Jura,382
+2017,Zürich,482
+2017,Bern,397
+2017,Luzern,403
+2017,Uri,325
+2017,Schwyz,403
+2017,Obwalden,399
+2017,Nidwalden,402
+2017,Glarus,403
+2017,Zug,404
+2017,Fribourg,399
+2017,Solothurn,402
+2017,Basel-Stadt,536
+2017,Basel-Landschaft,403
+2017,Schaffhausen,401
+2017,Appenzell Ausserrhoden,401
+2017,Appenzell Innerrhoden,299
+2017,St. Gallen,395
+2017,Graubünden,395
+2017,Aargau,403
+2017,Thurgau,396
+2017,Ticino,403
+2017,Vaud,496
+2017,Valais,403
+2017,Neuchâtel,402
+2017,Genève,561
+2017,Jura,397
+2018,Zürich,500
+2018,Bern,412
+2018,Luzern,418
+2018,Uri,337
+2018,Schwyz,418
+2018,Obwalden,414
+2018,Nidwalden,417
+2018,Glarus,418
+2018,Zug,419
+2018,Fribourg,414
+2018,Solothurn,417
+2018,Basel-Stadt,556
+2018,Basel-Landschaft,418
+2018,Schaffhausen,416
+2018,Appenzell Ausserrhoden,416
+2018,Appenzell Innerrhoden,310
+2018,St. Gallen,410
+2018,Graubünden,410
+2018,Aargau,418
+2018,Thurgau,411
+2018,Ticino,418
+2018,Vaud,514
+2018,Valais,418
+2018,Neuchâtel,417
+2018,Genève,582
+2018,Jura,412
+2019,Zürich,518
+2019,Bern,427
+2019,Luzern,433
+2019,Uri,349
+2019,Schwyz,433
+2019,Obwalden,429
+2019,Nidwalden,432
+2019,Glarus,433
+2019,Zug,434
+2019,Fribourg,429
+2019,Solothurn,432
+2019,Basel-Stadt,577
+2019,Basel-Landschaft,433
+2019,Schaffhausen,431
+2019,Appenzell Ausserrhoden,431
+2019,Appenzell Innerrhoden,322
+2019,St. Gallen,425
+2019,Graubünden,425
+2019,Aargau,433
+2019,Thurgau,426
+2019,Ticino,433
+2019,Vaud,533
+2019,Valais,433
+2019,Neuchâtel,432
+2019,Genève,603
+2019,Jura,427
+2020,Zürich,536
+2020,Bern,442
+2020,Luzern,448
+2020,Uri,361
+2020,Schwyz,448
+2020,Obwalden,444
+2020,Nidwalden,447
+2020,Glarus,448
+2020,Zug,449
+2020,Fribourg,444
+2020,Solothurn,447
+2020,Basel-Stadt,597
+2020,Basel-Landschaft,448
+2020,Schaffhausen,446
+2020,Appenzell Ausserrhoden,446
+2020,Appenzell Innerrhoden,333
+2020,St. Gallen,440
+2020,Graubünden,440
+2020,Aargau,448
+2020,Thurgau,441
+2020,Ticino,448
+2020,Vaud,552
+2020,Valais,448
+2020,Neuchâtel,447
+2020,Genève,624
+2020,Jura,442
+2021,Zürich,554
+2021,Bern,457
+2021,Luzern,463
+2021,Uri,373
+2021,Schwyz,463
+2021,Obwalden,459
+2021,Nidwalden,462
+2021,Glarus,463
+2021,Zug,464
+2021,Fribourg,459
+2021,Solothurn,462
+2021,Basel-Stadt,617
+2021,Basel-Landschaft,463
+2021,Schaffhausen,461
+2021,Appenzell Ausserrhoden,461
+2021,Appenzell Innerrhoden,344
+2021,St. Gallen,455
+2021,Graubünden,455
+2021,Aargau,463
+2021,Thurgau,456
+2021,Ticino,463
+2021,Vaud,571
+2021,Valais,463
+2021,Neuchâtel,462
+2021,Genève,645
+2021,Jura,457
+2022,Zürich,572
+2022,Bern,472
+2022,Luzern,478
+2022,Uri,385
+2022,Schwyz,478
+2022,Obwalden,474
+2022,Nidwalden,477
+2022,Glarus,478
+2022,Zug,479
+2022,Fribourg,474
+2022,Solothurn,477
+2022,Basel-Stadt,638
+2022,Basel-Landschaft,478
+2022,Schaffhausen,476
+2022,Appenzell Ausserrhoden,476
+2022,Appenzell Innerrhoden,356
+2022,St. Gallen,470
+2022,Graubünden,470
+2022,Aargau,478
+2022,Thurgau,471
+2022,Ticino,478
+2022,Vaud,590
+2022,Valais,478
+2022,Neuchâtel,477
+2022,Genève,666
+2022,Jura,472
+2023,Zürich,590
+2023,Bern,487
+2023,Luzern,493
+2023,Uri,397
+2023,Schwyz,493
+2023,Obwalden,489
+2023,Nidwalden,492
+2023,Glarus,493
+2023,Zug,494
+2023,Fribourg,489
+2023,Solothurn,492
+2023,Basel-Stadt,658
+2023,Basel-Landschaft,493
+2023,Schaffhausen,491
+2023,Appenzell Ausserrhoden,491
+2023,Appenzell Innerrhoden,367
+2023,St. Gallen,485
+2023,Graubünden,485
+2023,Aargau,493
+2023,Thurgau,486
+2023,Ticino,493
+2023,Vaud,608
+2023,Valais,493
+2023,Neuchâtel,492
+2023,Genève,687
+2023,Jura,487
+2024,Zürich,608
+2024,Bern,502
+2024,Luzern,508
+2024,Uri,409
+2024,Schwyz,508
+2024,Obwalden,504
+2024,Nidwalden,507
+2024,Glarus,508
+2024,Zug,509
+2024,Fribourg,504
+2024,Solothurn,507
+2024,Basel-Stadt,678
+2024,Basel-Landschaft,508
+2024,Schaffhausen,506
+2024,Appenzell Ausserrhoden,506
+2024,Appenzell Innerrhoden,378
+2024,St. Gallen,500
+2024,Graubünden,500
+2024,Aargau,508
+2024,Thurgau,501
+2024,Ticino,508
+2024,Vaud,627
+2024,Valais,508
+2024,Neuchâtel,507
+2024,Genève,708
+2024,Jura,502

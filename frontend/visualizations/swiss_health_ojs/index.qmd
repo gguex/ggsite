@@ -1,0 +1,201 @@
+---
+title: "Swiss Health (OJS Interactive)"
+description: "Interactive map with auto-play animation and rich tooltips."
+date: 2024-05-21
+categories: [Switzerland, Maps, OJS]
+image: image.png
+format:
+  html:
+    toc: false
+    page-layout: full
+---
+
+## Evolution of Premiums
+
+```{ojs}
+//| echo: false
+
+// --- 1. CONFIGURATION & IMPORTS ---
+import {Inputs} from "@observablehq/inputs"
+import {Legend} from "@d3/color-legend"
+
+// Load Data
+geoData = FileAttachment("../../assets/switzerland.geojson").json()
+csvData = FileAttachment("../../assets/swiss_health_premiums.csv").csv({typed: true})
+
+
+// --- 2. DATA PREPARATION ---
+// Group data by year for fast access: Map<Year, Map<Canton, Premium>>
+dataByYear = {
+  const map = new Map();
+  csvData.forEach(d => {
+    if (!map.has(d.year)) map.set(d.year, new Map());
+    map.get(d.year).set(d.canton, d.premium);
+  });
+  return map;
+}
+
+// Global min/max for color scale
+priceExtent = d3.extent(csvData, d => d.premium)
+
+
+// --- 3. USER INTERFACE ---
+html`<div class="card p-3 mb-3 bg-light">
+  <div style="display: flex; align-items: center; gap: 20px;">
+    <div style="flex-grow: 1;">
+      ${viewof selectedYear}
+    </div>
+    <div>
+      ${viewof isPlaying}
+    </div>
+  </div>
+</div>`
+
+viewof selectedYear = Inputs.range([2014, 2024], {step: 1, value: 2024, label: "Year"})
+viewof isPlaying = Inputs.toggle({label: " Auto-Play", value: false})
+
+
+// --- 5. D3 CHART ---
+chart = {
+  const width = 975;
+  const height = 600;
+  
+  // Current data for the selected year
+  const currentYearData = dataByYear.get(selectedYear);
+
+  const zoom = d3.zoom()
+      .scaleExtent([1, 8])
+      .on("zoom", zoomed);
+
+  const root = d3.create("div")
+      .attr("class", "root")
+      .style("position", "relative")
+      .style("width", "100%")
+      .style("height", "auto");
+
+  const svg = root.append("svg")
+      .attr("viewBox", [0, 0, width, height])
+      .attr("style", "max-width: 100%; height: auto;")
+      .on("click", reset);
+
+  const g = svg.append("g");
+  
+  // Fit projection to Switzerland
+  const projection = d3.geoMercator()
+    .fitSize([width, height], geoData);
+    
+  const path = d3.geoPath().projection(projection);
+  
+  // Color scale
+  const color = d3.scaleSequential(priceExtent, d3.interpolateReds);
+  
+  // Legend
+  svg.append("g")
+      .attr("transform", "translate(20,20)")
+      .append(() => Legend(color, {
+        title: "Monthly Premium (CHF)",
+        width: 260
+      }));
+
+  // Tooltip Element
+  const tooltip = root
+    .append("div")
+    .style("position", "absolute")
+    .style("display", "none")
+    .style("background", "white")
+    .style("border", "1px solid #ccc")
+    .style("padding", "8px")
+    .style("border-radius", "4px")
+    .style("pointer-events", "none")
+    .style("box-shadow", "0 2px 4px rgba(0,0,0,0.1)")
+    .style("font-size", "0.9rem");
+
+  // Render Features
+  const features = g.append("g")
+      .attr("cursor", "pointer")
+    .selectAll("path")
+    .data(geoData.features)
+    .join("path")
+      .attr("fill", d => {
+        const val = currentYearData.get(d.properties.name);
+        return val ? color(val) : "#ccc";
+      })
+      .attr("stroke", "white")
+      .attr("stroke-width", 0.5)
+      .attr("d", path)
+      .on("click", clicked)
+      .on("mouseover", function(event, d) {
+        d3.select(this)
+          .attr("stroke", "black")
+          .attr("stroke-width", 2)
+          .raise();
+          
+        tooltip.style("display", "block");
+        const val = currentYearData.get(d.properties.name);
+        tooltip.html(`
+          <strong>${d.properties.name}</strong><br>
+          ${val ? Math.round(val) + " CHF" : "N/A"}
+        `);
+      })
+      .on("mousemove", function(event) {
+        // Position relative to the container
+        const [x, y] = d3.pointer(event, root.node());
+        tooltip
+          .style("top", (y - 10) + "px")
+          .style("left", (x + 15) + "px");
+      })
+      .on("mouseout", function() {
+        d3.select(this)
+          .attr("stroke", "white")
+          .attr("stroke-width", 0.5)
+          .lower(); // Lower back so borders don't overlap incorrectly
+          
+        tooltip.style("display", "none");
+      });
+
+  svg.call(zoom);
+
+  function reset() {
+    svg.transition().duration(750).call(
+      zoom.transform,
+      d3.zoomIdentity,
+      d3.zoomTransform(svg.node()).invert([width / 2, height / 2])
+    );
+  }
+
+  function clicked(event, d) {
+    const [[x0, y0], [x1, y1]] = path.bounds(d);
+    event.stopPropagation();
+    svg.transition().duration(750).call(
+      zoom.transform,
+      d3.zoomIdentity
+        .translate(width / 2, height / 2)
+        .scale(Math.min(8, 0.9 / Math.max((x1 - x0) / width, (y1 - y0) / height)))
+        .translate(-(x0 + x1) / 2, -(y0 + y1) / 2)
+    );
+  }
+
+  function zoomed(event) {
+    const {transform} = event;
+    g.attr("transform", transform);
+    g.attr("stroke-width", 1 / transform.k);
+  }
+
+  return root.node();
+}
+```
+
+```{ojs}
+//| output: false
+//| echo: false
+
+// --- 4. ANIMATION LOOP (Hidden) ---
+{
+  while (isPlaying) {
+    yield Promises.delay(700);
+    const nextYear = (selectedYear >= 2024) ? 2014 : selectedYear + 1;
+    viewof selectedYear.value = nextYear;
+    viewof selectedYear.dispatchEvent(new Event("input", {bubbles: true}));
+  }
+}
+```
