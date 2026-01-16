@@ -1,0 +1,26 @@
+---
+title: "Observable tutorial"
+description: "A notebook to test Observable in Quarto"
+date: today
+image: image.png
+format:
+  html:
+    code-fold: true
+    page-layout: full
+---
+
+## Fist tuto
+
+
+
+```{ojs}©
+viewof amount = Inputs.range([0, 200], {label: "Amount", step: 1})
+
+viewof tipPercent = Inputs.radio([10, 12, 15, 18, 20, 25],
+                                 {label: "Tip Percentage", value: 20})
+
+tip = amount * (tipPercent / 100)
+
+html`<br />`
+md`A **${tipPercent}%** tip on **$${amount.toFixed(2)}** is **$${tip.toFixed(2)}**, for a total of **$${(amount+tip).toFixed(2)}**`
+```
