@@ -13,7 +13,7 @@ format:
 
 
 
-```{ojs}©
+```{ojs}
 viewof amount = Inputs.range([0, 200], {label: "Amount", step: 1})
 
 viewof tipPercent = Inputs.radio([10, 12, 15, 18, 20, 25],
