@@ -11,7 +11,7 @@ format:
 
 ## Fist tuto
 
-
+### 1. Create a range input for the amount of the bill
 
 ```{ojs}
 viewof amount = Inputs.range([0, 200], {label: "Amount", step: 1})
@@ -23,4 +23,193 @@ tip = amount * (tipPercent / 100)
 
 html`<br />`
 md`A **${tipPercent}%** tip on **$${amount.toFixed(2)}** is **$${tip.toFixed(2)}**, for a total of **$${(amount+tip).toFixed(2)}**`
+```
+
+### 2. Create a dropdown to select a country and display its population
+
+The following table shows a list of olympians. You can select multiple rows.
+
+```{ojs}
+viewof selection = Inputs.table(olympians)
+```
+
+```{ojs}
+maxHeight = d3.max(selection, d => d.height)
+md`The maximum height of the selected olympians is **${maxHeight}**`
+```
+
+### 3. Create a line chart with selectable aggregation
+
+```{ojs}
+viewof aggregation = Inputs.select(["day", "week", "month", "quarter"], {label: "Aggregation", value: "week"})
+```
+
+```{ojs}
+Plot.plot({
+  marks: [
+    Plot.ruleY([0]),
+    Plot.lineY(ordersByPeriod, {x: "start_date", y: "revenue"})
+  ],
+  y: {tickFormat: "$s"}
+})
+```
+
+```{ojs}
+import { DuckDBClient } from "@observablehq/duckdb"
+db = DuckDBClient.of({ pizzaOrders: pizzaOrders })
+
+pizzaOrders = pizza
+
+ordersByPeriod = db.sql`
+SELECT DATE_TRUNC(${aggregation}, order_date) as start_date, sum(revenue) as revenue
+  FROM pizzaOrders
+ GROUP BY start_date
+ ORDER BY start_date
+`
+Inputs.table(ordersByPeriod)
+```
+
+## Second tuto
+
+```{ojs}
+//| echo: false
+us_power_plants = FileAttachment("../../assets/us_power_plants.csv").csv({typed: true})
+us = FileAttachment("../../assets/us-counties-10m.json").json()
+states = topojson.feature(us, us.objects.states)
+```
+
+```{ojs}
+Plot.plot({ // Initialize the plot
+  projection: "albers-usa", // Set the projection
+  marks: [
+    Plot.geo(states), // Add the state boundaries
+    Plot.dot(us_power_plants, { // Create dot marks (bubbles) using data from power_plants
+      x: "longitude", // Provide longitude values
+      y: "latitude", // Provide latitude values
+      r: "Total_MW" // Update bubble radius based on this variable's value
+    })
+  ],
+  height: 500, // Update canvas height
+  width: 800, // Update canvas width
+  margin: 50 // Update margins
+})
+```
+
+```{ojs}
+Plot.plot({
+  projection: "albers-usa",
+  marks: [
+    Plot.geo(states, { fill: "white", stroke: "#e2e2e2"  }),
+    Plot.dot(us_power_plants, {
+      x: "longitude",
+      y: "latitude",
+      r: "Total_MW",
+      fill: "PrimSource",
+      opacity: 0.7
+    }),
+    Plot.dot(us_power_plants, { // Can you figure out what this additional Plot.dot layer adds?
+      x: "longitude",
+      y: "latitude",
+      r: "Total_MW",
+      fill: "PrimSource",
+      stroke: "black",
+      filter: d => d.Total_MW > 3500
+    }),
+    Plot.text(us_power_plants, { // Add text to the map using data from us_power_plants
+      x: "longitude", // Place text horizontally at plant longitude
+      y: "latitude", // Place text vertically at plant latitude
+      text: "Plant_Name", // The text that appears is the value from the Plant_Name column,
+      filter: (d) => d.Total_MW > 3500, // Only add text for plants with capacity exceeding 3500 MW
+      fontSize: 12, // Increased font size
+      fontWeight: 600, // Increased font weight
+      stroke: "white", // Adds white outer stroke to text (for readability)
+      fill: "black", // Text fill color
+      textAnchor: "start", // Left align text with the x- and y-coordinates
+      dx: 15 // Shifts text to the right (starting from left alignment with coordinate)
+    })
+  ],
+  r: { range: [1, 15] },
+  color: { legend: true },
+  height: 500,
+  width: 800,
+  margin: 50
+})
+```
+
+```{ojs}
+viewof selectSource = Inputs.select(us_power_plants.map(d => d.PrimSource),
+  { unique: true, label: "Select primary source(s):", multiple: true, value: ["coal", "nuclear", "hydroelectric", "wind"] }
+)
+```
+
+```{ojs}
+Plot.plot({
+  projection: "albers-usa",
+  marks: [
+    Plot.geo(states, { fill: "white", stroke: "#e2e2e2" }),
+    Plot.dot(us_power_plants, {
+      x: "longitude",
+      y: "latitude",
+      r: "Total_MW",
+      stroke: "PrimSource",
+      strokeOpacity: .5,
+      opacity: d => selectSource.includes(d.PrimSource) ? 0.7 : 0,
+    }),
+    Plot.density(us_power_plants, {
+      x: "longitude",
+      y: "latitude",
+      bandwidth: 10,
+      thresholds: 10,
+      stroke: "PrimSource",
+      fill: "PrimSource",
+      fillOpacity: 0.25,
+      opacity: d => selectSource.includes(d.PrimSource) ? 0.7 : 0, // (transparent unless source selected)
+      mixBlendMode: "multiply", 
+      weight: "Total_MW"
+    })
+  ],
+  height: 500,
+  width: 800,
+  margin: 50,
+  density: {
+    domain: [100, 2000]
+  },
+  r: { range: [1, 15], domain: d3.extent(us_power_plants, (d) => d.Total_MW) },
+  color: { legend: true }
+})
+```
+
+## Third tuto
+
+```{ojs}
+//| output: false
+//| echo: false
+counties = topojson.feature(us, us.objects.counties)
+us_broadband = FileAttachment("../../assets/us_broadband.csv").csv({typed: true})
+
+us_broadband.map(d => d.id = d.id.split("US")[1].trim())
+
+us_broadband_2018 = us_broadband.filter(d => d.year === 2018)
+broadband_access_2018 = new Map(us_broadband_2018.map(({id, broadband}) => [id, broadband]))
+```
+
+```{ojs}
+Plot.plot({
+  projection: "albers-usa", // Set the projection
+  marks: [
+    Plot.geo(counties, {stroke: "black"}) // Add county boundaries using the geo mark 
+  ]
+})
+```
+
+```{ojs}
+Plot.plot({
+  projection: "albers-usa",
+  marks: [
+    Plot.geo(
+      counties,
+      { fill: (d) => broadband_access_2018.get(d.id) } // Fill color depends on broadband value
+    )
+  ]
+})
 ```
