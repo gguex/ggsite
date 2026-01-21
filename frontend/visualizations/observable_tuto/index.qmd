@@ -213,3 +213,88 @@ Plot.plot({
   ]
 })
 ```
+
+```{ojs}
+Plot.plot({
+  projection: "albers-usa",
+  marks: [
+    Plot.geo(counties, {fill: (d) => broadband_access_2018.get(d.id)}),
+    Plot.geo(states, {stroke: "#fff", strokeWidth: 0.5}) // New layer with state boundaries
+  ],
+  color: {
+    scheme: "spectral", // Change color scheme
+    unknown: "#ddd", // Polygons with unknown broadband values are gray
+    type: "linear", // Linear scale for color progression
+    legend: true, // Add the legend
+    label: "% of county population with home broadband", // Update legend label
+    percent: true, // Convert value to a percent (from a proportion)
+    domain: [0, 100], // Update the value domain to span 0 to 100% access
+    marginLeft: 20
+  }
+})
+```
+
+```{ojs}
+import {addTooltips} from "@mkfreeman/plot-tooltip"
+percent = d3.format(".2%")
+
+addTooltips( // Add tooltips
+  Plot.plot({
+    projection: "albers-usa",
+    marks: [
+      Plot.geo(counties, {fill: (d) => broadband_access_2018.get(d.id),
+                          title: (d) =>
+                          `${d.properties.name} County \n ${percent(
+                            broadband_access_2018.get(d.id))}`
+      }), 
+      Plot.geo(states, { stroke: "#fff", strokeWidth: 0.5 })
+    ],
+    color: {
+      scheme: "Spectral",
+      unknown: "#ddd",
+      type: "linear",
+      label: "% of county population with home broadband",
+      legend: true,
+      percent: true,
+      domain: [0, 100],
+      marginLeft: 20
+    }
+  })
+)
+```
+
+```{ojs}
+viewof yearSelect = Inputs.range(
+  d3.extent(us_broadband, d => d.year), 
+  {label: "Year:", step: 1, value: d3.max(us_broadband, d => d.year)}
+)
+broadband_select_year = us_broadband.filter(d => d.year === yearSelect)
+broadband_access_select_year = new Map(
+  broadband_select_year.map(({id, broadband}) => [id, broadband])
+)
+```
+
+```{ojs}
+addTooltips(
+  Plot.plot({
+    projection: "albers-usa",
+    marks: [
+      Plot.geo(counties, {
+        fill: (d) => broadband_access_select_year.get(d.id),
+        title: (d) => `${d.properties.name} County \n ${percent(broadband_access_select_year.get(d.id))}`
+      }),
+      Plot.geo(counties, { strokeWidth: 0.05 }),
+      Plot.geo(states, { stroke: "#fff", strokeWidth: .5 })
+    ],
+    color: {
+      scheme: "Spectral",
+      unknown: "#ddd",
+      type: "linear",
+      label: "% of county population with home broadband",
+      legend: true,
+      percent: true,
+      domain: [0, 100]
+    }
+  })
+)
+```
