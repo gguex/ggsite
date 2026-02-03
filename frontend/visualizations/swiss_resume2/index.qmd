@@ -1,0 +1,160 @@
+---
+title: "Carte Suisse (Leaflet + OJS)"
+format: 
+  html:
+    toc: false
+    echo: false
+    code-fold: true
+    page-layout: full
+---
+
+## Option Leaflet : La robustesse géographique
+
+Ici, on utilise la librairie **Leaflet.js** à l'intérieur d'Observable. C'est l'option idéale si le fond de carte est prioritaire.
+
+```{python}
+#| label: data-prep-leaflet
+import pandas as pd
+
+# Données Python (Identiques)
+data = {
+    'id': ['Genève', 'Vaud', 'Zürich', 'Bern', 'Valais', 'Ticino', 'Fribourg', 'Neuchâtel', 'Jura', 'Solothurn', 'Basel-Stadt'], 
+    'nom_long': ['Canton de Genève', 'Canton de Vaud', 'Canton de Zurich', 'Canton de Berne', 'Canton du Valais', 'Canton du Tessin', 'Canton de Fribourg', 'Canton de Neuchâtel', 'Canton du Jura', 'Canton de Soleure', 'Bâle-Ville'],
+    'pop': [500000, 800000, 1500000, 1000000, 340000, 350000, 320000, 170000, 73000, 270000, 190000],
+    'desc': ["Cité internationale.", "Innovation & Lac.", "Finance & Rythme.", "Politique & Nature.", "Soleil & Cimes.", "Latinité suisse.", "Pont des cultures.", "Temps & Précision.", "Nature sauvage.", "Baroque.", "Chimie & Art."]
+}
+df = pd.DataFrame(data)
+ojs_define(data_py = df)
+```
+
+::: {.grid}
+
+::: {.g-col-12 .g-col-md-8}
+```{ojs}
+//| label: control-bar
+
+// On crée un bouton via l'interface standard OJS
+viewof resetBtn = Inputs.button("Zoom reset", {
+  // Cette fonction 'reduce' est magique : elle ne s'exécute que quand on clique
+  reduce: () => {
+    // On vérifie que la carte est bien chargée
+    // mapContainer est le nom de la cellule OJS suivante
+    if (typeof mapContainer !== 'undefined' && mapContainer.resetMap) {
+       mapContainer.resetMap();
+    }
+  },
+  // Un peu de style pour que le bouton ne soit pas minuscule
+  width: "100%", 
+  color: "primary"
+})
+```
+:::
+
+::: {.g-col-12 .g-col-md-9}
+```{ojs}
+//| label: leaflet-map-container
+
+// Setup Leaflet + CSS
+L = {
+  const L = await require("leaflet@1.9.4/dist/leaflet.js");
+  if (!document.getElementById('leaflet-css-fix')) {
+    const link = document.createElement('link');
+    link.id = 'leaflet-css-fix';
+    link.rel = 'stylesheet';
+    link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    document.head.appendChild(link);
+  }
+  return L;
+}
+
+data = transpose(data_py)
+geo = FileAttachment("../../assets/switzerland.geojson").json()
+statsMap = new Map(data.map(d => [d.id, d]))
+mutable selectionLeaflet = null 
+
+// LA CARTE
+mapContainer = {
+  const container = document.createElement("div");
+  container.style.height = "500px";
+  container.style.width = "100%";
+  container.style.borderRadius = "8px";
+  container.style.border = "1px solid #ddd";
+
+  yield container; 
+
+  // Zoom 7.5 et centrage ajusté
+  const map = L.map(container, { snapZoom: false }).setView([46.8, 8.2], 7.5);
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; OSM & CARTO', subdomains: 'abcd', maxZoom: 19
+  }).addTo(map);
+
+  const geoLayer = L.geoJSON(geo, {
+    style: function(feature) {
+      const stat = statsMap.get(feature.properties.name);
+      return {
+        color: "white", weight: 1,
+        fillColor: stat ? "#0d6efd" : "#999", 
+        fillOpacity: 0.5
+      };
+    },
+    onEachFeature: function(feature, layer) {
+      layer.bindTooltip(feature.properties.name, {sticky: true});
+      layer.on('click', function(e) {
+        mutable selectionLeaflet = feature;
+        map.flyToBounds(e.target.getBounds(), {padding: [10, 10], duration: 1.0});
+        geoLayer.resetStyle();
+        e.target.setStyle({ weight: 3, color: '#d63384', fillOpacity: 0.7 });
+        L.DomEvent.stopPropagation(e);
+      });
+    }
+  }).addTo(map);
+
+  // --- FONCTION RESET EXPOSÉE ---
+  // C'est elle que le bouton du haut va appeler
+  container.resetMap = () => {
+      mutable selectionLeaflet = null;
+      geoLayer.resetStyle();
+      map.flyTo([46.8, 8.2], 7.5, {duration: 1.0});
+  };
+
+  // Le clic sur le fond appelle aussi cette fonction
+  map.on('click', container.resetMap);
+}
+```
+:::
+
+::: {.g-col-12 .g-col-md-3}
+```{ojs}
+//| label: info-panel-clean
+
+html`
+  <div style="height: 100%; display: flex; flex-direction: column;">
+    <div style="background: white; padding: 25px; border-radius: 8px; border: 1px solid #dee2e6; box-shadow: 0 2px 4px rgba(0,0,0,0.05); flex-grow: 1;">
+      ${selectionLeaflet 
+        ? (() => {
+            const info = statsMap.get(selectionLeaflet.properties.name);
+            if (!info) return html`<p>Pas de données.</p>`;
+            return html`
+              <h2 style="margin-top:0;">${info.nom_long}</h2>
+              <hr>
+              <div style="font-size: 2em; font-weight: bold; color: #0d6efd;">
+                ${info.pop.toLocaleString()} <span style="font-size: 0.4em; color: gray;">habitants</span>
+              </div>
+              <p style="margin-top: 20px;">${info.desc}</p>
+            `;
+          })()
+        : html`
+           <div style="text-align: center; color: #adb5bd; padding-top: 40px;">
+              <h3>Explorateur Suisse</h3>
+              <p>Cliquez sur un canton pour voir les détails.</p>
+            </div>
+        `
+      }
+    </div>
+  </div>
+`
+```
+:::
+
+:::
