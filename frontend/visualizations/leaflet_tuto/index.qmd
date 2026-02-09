@@ -1,0 +1,80 @@
+---
+title: "Leaflet.js Tutorial"
+format: 
+  html:
+    toc: false
+    echo: false
+    code-fold: true
+    page-layout: full
+---
+
+```{ojs}
+// L is a reactive variable that loads the Leaflet.js library and its CSS if not already present
+L = {
+  const L = await require("leaflet@1.9.4/dist/leaflet.js");
+  if (!document.getElementById('leaflet-css-fix')) {
+    const link = document.createElement('link');
+    link.id = 'leaflet-css-fix';
+    link.rel = 'stylesheet';
+    link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+    document.head.appendChild(link);
+  }
+  return L;
+}
+
+// mapContainer is a reactive variable
+mapContainer = {
+
+    // Create a container for the map, style it, and yield it to be used by Leaflet
+    const container = document.createElement("div");
+    container.style.height = "480px";
+    container.style.width = "640px";    
+    container.style.margin = "0 auto";
+    yield container;
+
+    // Initialize the Leaflet map in the container and set its view to a specific location and zoom level
+    const map = L.map(container).setView([51.505, -0.09], 13);
+
+    // Add a tile layer to the map using OpenStreetMap tiles, with attribution and maximum zoom level
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(map);
+
+    // Add a marker, a circle and a polygon
+    var marker = L.marker([51.5, -0.09]).addTo(map);
+    var circle = L.circle([51.508, -0.11], {
+        color: 'red',
+        fillColor: '#f03',
+        fillOpacity: 0.5,
+        radius: 500
+    }).addTo(map);
+    var polygon = L.polygon([
+        [51.509, -0.08],
+        [51.503, -0.06],
+        [51.51, -0.047]
+    ]).addTo(map);
+
+    // Add popups to the marker, circle and polygon
+    marker.bindPopup("<b>Hello world!</b><br>I am a popup.").openPopup();
+    circle.bindPopup("I am a circle.");
+    polygon.bindPopup("I am a polygon.");  
+
+    // Add a standalone popup at a specific location on the map
+    var popup = L.popup()
+        .setLatLng([51.513, -0.09])
+        .setContent("I am a standalone popup.")
+        .openOn(map);
+
+    // Add an event listener to the map that shows a popup with the coordinates of the clicked location
+    var popup = L.popup();
+    function onMapClick(e) {
+        popup
+            .setLatLng(e.latlng)
+            .setContent("You clicked the map at " + e.latlng.toString())
+            .openOn(map);
+    }
+    map.on('click', onMapClick);
+}
+
+```
