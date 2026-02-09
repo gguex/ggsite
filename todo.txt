@@ -11,7 +11,7 @@ TODO LIST
 
 # TEACHING 
 
-- Mettre le cours de Machine Learning
+- Mettre le cours de Machine Learning (OK)
 - Mettre le cours de MQ I 
 - Mettre le cours de MQ III
 - Mettre le cours pour les linguistes
@@ -20,7 +20,9 @@ TODO LIST
 
 # VIZ
 
-- Trouver une visualisation de base réel pour illustration
+- Faire la visualisation des cantons (leaflet)
+- Faire une visualisation plus statistique (idée : jeux vidéo)
+- Faire une visualisation plus algorithmique (les discussions politiques ?)
 
 # SIM
 
