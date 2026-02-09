@@ -1,5 +1,5 @@
 ---
-title: "Carte Suisse (Leaflet + OJS)"
+title: "Swiss Cantons Explorer"
 format: 
   html:
     toc: false
