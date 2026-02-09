@@ -23,7 +23,7 @@ about:
     - text: CV (PDF)
       icon: file-text
       href: assets/cv.pdf
-bibliography: data/references.bib
+bibliography: data/personal_data/references.bib
 csl: assets/apa-cv.csl
 nocite: |
   @*
@@ -60,7 +60,7 @@ from IPython.display import HTML, display
 
 # Read data
 try:
-    with open('data/cv.yaml', 'r') as f:
+    with open('data/personal_data/cv.yaml', 'r') as f:
         data = yaml.safe_load(f)
 except FileNotFoundError:
     data = {}

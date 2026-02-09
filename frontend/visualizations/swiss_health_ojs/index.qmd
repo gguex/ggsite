@@ -20,8 +20,8 @@ import {Inputs} from "@observablehq/inputs"
 import {Legend} from "@d3/color-legend"
 
 // Load Data
-geoData = FileAttachment("../../assets/switzerland.geojson").json()
-csvData = FileAttachment("../../assets/swiss_health_premiums.csv").csv({typed: true})
+geoData = FileAttachment("../../data/geojson/switzerland.geojson").json()
+csvData = FileAttachment("../../data/swiss_data/swiss_health_premiums.csv").csv({typed: true})
 
 
 // --- 2. DATA PREPARATION ---

@@ -73,8 +73,8 @@ Inputs.table(ordersByPeriod)
 
 ```{ojs}
 //| echo: false
-us_power_plants = FileAttachment("../../assets/us_power_plants.csv").csv({typed: true})
-us = FileAttachment("../../assets/us-counties-10m.json").json()
+us_power_plants = FileAttachment("../../data/us_data/us_power_plants.csv").csv({typed: true})
+us = FileAttachment("../../data/geojson/us-counties-10m.json").json()
 states = topojson.feature(us, us.objects.states)
 ```
 
@@ -185,7 +185,7 @@ Plot.plot({
 //| output: false
 //| echo: false
 counties = topojson.feature(us, us.objects.counties)
-us_broadband = FileAttachment("../../assets/us_broadband.csv").csv({typed: true})
+us_broadband = FileAttachment("../../data/us_data/us_broadband.csv").csv({typed: true})
 
 us_broadband.map(d => d.id = d.id.split("US")[1].trim())
 
