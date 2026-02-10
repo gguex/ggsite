@@ -6,7 +6,10 @@ format:
     echo: false
     code-fold: true
     page-layout: full
+title-block-banner: true
 ---
+
+## Tutorial 1
 
 ```{ojs}
 // L is a reactive variable that loads the Leaflet.js library and its CSS if not already present
@@ -76,5 +79,4 @@ mapContainer = {
     }
     map.on('click', onMapClick);
 }
-
 ```
