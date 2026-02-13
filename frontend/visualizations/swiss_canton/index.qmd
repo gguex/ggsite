@@ -8,10 +8,6 @@ format:
     page-layout: full
 ---
 
-## Option Leaflet : La robustesse géographique
-
-Ici, on utilise la librairie **Leaflet.js** à l'intérieur d'Observable. C'est l'option idéale si le fond de carte est prioritaire.
-
 ```{python}
 #| label: data-prep-leaflet
 import pandas as pd
@@ -33,17 +29,17 @@ ojs_define(data_py = df)
 ```{ojs}
 //| label: control-bar
 
-// On crée un bouton via l'interface standard OJS
+// A button to reset the zoom, which will call a function defined in the Leaflet cell below
 viewof resetBtn = Inputs.button("Zoom reset", {
-  // Cette fonction 'reduce' est magique : elle ne s'exécute que quand on clique
+  
+  // The function to call when the button is clicked
   reduce: () => {
-    // On vérifie que la carte est bien chargée
-    // mapContainer est le nom de la cellule OJS suivante
     if (typeof mapContainer !== 'undefined' && mapContainer.resetMap) {
        mapContainer.resetMap();
     }
   },
-  // Un peu de style pour que le bouton ne soit pas minuscule
+
+  // Style of the button
   width: "100%", 
   color: "primary"
 })
@@ -72,30 +68,42 @@ geo = FileAttachment("../../data/geojson/switzerland.geojson").json()
 statsMap = new Map(data.map(d => [d.id, d]))
 mutable selectionLeaflet = null 
 
-// LA CARTE
+// The map
 mapContainer = {
+
+  // Create a container div for the Leaflet map
   const container = document.createElement("div");
   container.style.height = "500px";
   container.style.width = "100%";
   container.style.borderRadius = "8px";
   container.style.border = "1px solid #ddd";
 
+  // The container is yielded to be used in the reset button's function
   yield container; 
 
-  // Zoom 7.5 et centrage ajusté
-  const map = L.map(container, { snapZoom: false }).setView([46.8, 8.2], 7.5);
+  // Zoom 7.8 and fit to Switzerland
+  const map = L.map(container, {zoomSnap: 0, zoomDelta: 1, wheelPxPerZoomLevel: 5}).setView([46.8, 8.2], 7.8);
 
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; OSM & CARTO', subdomains: 'abcd', maxZoom: 19
-  }).addTo(map);
+  //L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+  //  attribution: '&copy; OSM & CARTO', subdomains: 'abcd', maxZoom: 19
+  //}).addTo(map);
 
-  const geoLayer = L.geoJSON(geo, {
+  // The Swiss-specific tiles from OSM Switzerland, with bounds to prevent panning outside the country  
+  L.tileLayer('https://tile.osm.ch/switzerland/{z}/{x}/{y}.png', {
+    maxZoom: 18,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    bounds: [[45, 5], [48, 11]]
+  }) .addTo(map);
+
+  // Add the GeoJSON layer with styling and interactivity
+  const geoLayer = L.geoJSON(geo, 
+  {
     style: function(feature) {
       const stat = statsMap.get(feature.properties.name);
       return {
-        color: "white", weight: 1,
-        fillColor: stat ? "#0d6efd" : "#999", 
-        fillOpacity: 0.5
+        color: "#00000087", weight: 1,
+        fillColor: stat ? "#999" : "#999", 
+        fillOpacity: 0.3
       };
     },
     onEachFeature: function(feature, layer) {
@@ -104,21 +112,20 @@ mapContainer = {
         mutable selectionLeaflet = feature;
         map.flyToBounds(e.target.getBounds(), {padding: [10, 10], duration: 1.0});
         geoLayer.resetStyle();
-        e.target.setStyle({ weight: 3, color: '#d63384', fillOpacity: 0.7 });
+        e.target.setStyle({ weight: 2, color: '#000000', fillColor: "#ffffff00"});
         L.DomEvent.stopPropagation(e);
       });
     }
   }).addTo(map);
 
-  // --- FONCTION RESET EXPOSÉE ---
-  // C'est elle que le bouton du haut va appeler
+  // Function to reset the map view and styles
   container.resetMap = () => {
       mutable selectionLeaflet = null;
       geoLayer.resetStyle();
-      map.flyTo([46.8, 8.2], 7.5, {duration: 1.0});
+      map.flyTo([46.8, 8.2], 7.8, {duration: 1.0});
   };
 
-  // Le clic sur le fond appelle aussi cette fonction
+  // Reset the map when clicking outside of any canton
   map.on('click', container.resetMap);
 }
 ```
