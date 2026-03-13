@@ -43,7 +43,9 @@ La régression multiple est une méthode d'analyse multivariée qui permet de mo
 
 [{{< fa file-pdf >}} 4. Régression multiple](session4/cours_4.pdf){.btn .btn-outline-primary .btn-sm}
 
-[{{< fa file >}} Figures geoservant](session4/regression_geoservant.txt){.btn .btn-outline-secondary .btn-sm}
+[{{< fa brands r-project >}} Notebook R : exemple de régression](session4/exemple_regression.qmd){.btn .btn-outline-success .btn-sm}
+
+[{{< fa file-zipper >}} Notebook R : sources et données](session4//exemple_regression_sources.zip){.btn .btn-outline-secondary .btn-sm}
 
 ## Session 5: Analyse en composantes principales
 📅 **Date:** Oct 16, 2025

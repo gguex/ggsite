@@ -1,0 +1,114 @@
+---
+title: "Exemple de régression multiple"
+author: "Guillaume Guex"
+lang: fr
+---
+
+## Objectif
+
+Dans cet exemple, nous allons effectuer une **régression multiple** sur le fichier
+des notes présenté en cours. Nous allons aussi voir comment selectionner au mieux un modèle
+avec une méthode très simple (des méthodes plus avancées existent, mais celle-ci est très intuitive et permet de comprendre les enjeux de la sélection de modèle). Enfin, nous allons tester les hypothèses de travail de la régression multiple à l'aide du diagramme des résidus.
+
+## Chargement des données 
+
+On commence par charger le fichier de données :
+
+```{r}
+data = read.csv("notes.csv")
+```
+
+Et on récupère le nombre de lignes et le nombre de colonnes dans des variables :
+
+```{r}
+n = dim(data)[1]
+p = dim(data)[2]
+```
+
+## Régression multiple "à la main"
+
+La régression va s'effectuer sur la note de géographie. Pour calculer la solution de la régression multiple, on commence par construire les matrices $\mathbf{X}$ des prédicteurs (avec une colonne de $1$ pour l'ordonnée à l'origine) et le vecteur $y$ des valeurs à prédire : 
+
+```{r}
+y = as.matrix(data$geographie)
+X_s1 = as.matrix(data[,-2])
+X = cbind(rep(1,n), X_s1)
+```
+
+Puis, on applique la formule vue en cours $\mathbf{b} = (\mathbf{X}'\mathbf{X})^{-1}\mathbf{X}'\mathbf{y}$ pour calculer les coefficients de régression :
+
+```{r}
+b = solve( t(X) %*% X ) %*% t(X) %*% y
+```
+
+## Régression avec `lm()`
+
+Dans R, nous pouvons utiliser la fonction `lm()` pour faire la régression multiple. Voici comment faire la régression avec tous les prédicteurs :
+
+```{r} 
+solution_regression = lm(geographie~., data)
+```
+
+On peut ensuite afficher les résultats de la régression avec la fonction `summary()` :
+
+```{r} 
+summary(solution_regression)
+```
+
+La **matrice des corrélations** s'obtient avec :
+
+```{r} 
+cor(data)
+```
+
+## Sélection de modèle
+
+Nous allons utiliser une méthode de sélection de modèle très simple. Nous allons sortir un par un les prédicteurs qui possèdent la valeur p la plus élevée, jusqu'à ce que tous les prédicteurs soient significatifs. 
+
+On commence par faire le modèle complet :
+```{r}
+model_complet = lm(geographie~., data)
+summary(model_complet)
+```
+
+On voit que le prédicteur `chimie` a une valeur p de 0.326, ce qui est très élevé. On va donc le retirer du modèle et refaire la régression 
+```{r}
+opt_model = lm(geographie ~ . -chimie, data)
+summary(opt_model)
+```
+L'ordonnée à l'origine semble la moins significative, on la retire :
+```{r}
+opt_model = lm(geographie ~ . -chimie -1, data)
+summary(opt_model)
+```
+
+C'est maintenant le prédicteur `physique` qui a la p-valeur la plus élevée (0.228), on le retire donc : 
+
+```{r}
+opt_model = lm(geographie ~ . -chimie -physique -1, data)
+summary(opt_model)
+```
+
+Avec une valeur p de 0.230, c'est `francais` qui sort du modèle :
+
+```{r}
+opt_model = lm(geographie ~ . -chimie -physique -francais -1, data)
+summary(opt_model)
+```
+
+Au tour de l'`histoire` (p=0.309), on va maintenant écrire la formule avec les prédicteurs restants :
+
+```{r}
+opt_model = lm(geographie ~ mathematiques + philosophie + allemand -1, data)
+summary(opt_model)
+```
+Tous les prédicteurs sont significatifs, on s'arrête là. Le $R^2$-ajusté de ce modèle est de 0.94, ce qui est plutôt bon.
+
+## Tester les hypothèses de travail
+
+Pour tester les hypothèses de travail, on va afficher les **diagramme des résidus** : 
+```{r}
+plot(opt_model$fitted.values, opt_model$residuals)
+```
+Il n'y a pas d'hétéroscédasticité, les résidus semblent répartis selon une loi normale, et la linéarité apparaît vraisemblable. Les hypothèses de travail peuvent être considérées comme valides.
+
