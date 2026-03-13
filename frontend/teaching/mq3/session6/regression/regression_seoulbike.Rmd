@@ -1,0 +1,215 @@
+
+---
+title: "Régression multiple sur les données SeoulBike"
+author: "G.Guex pour Méthodes Quantitatives 3"
+output:
+  html_document: default
+---
+
+# Exemple de régression sur les données SeoulBikeData
+
+Dans ce notebook (https://bookdown.org/yihui/rmarkdown/), nous allons donner un 
+exemple de **régression multiple** sur les données `SeoulBikeData.csv` (https://archive.ics.uci.edu/dataset/560/seoul+bike+sharing+demand), qui 
+contiennent des informations sur le nombre de locations de vélos à Séoul en 
+fonction de différentes variables explicatives (température, humidité, saison, etc).
+
+## Chargement des données et pré-traitements
+
+On commence par charger les données et jeter un coup d'œil rapide à leur 
+structure.
+
+```{r}
+# Charger les bibliothèques nécessaires
+library(tidyverse)
+library(knitr)
+
+# Charger les données
+seoul_bike = read.csv("SeoulBikeData.csv", stringsAsFactors = TRUE)
+
+# Afficher les premières lignes des données
+kable(head(seoul_bike))
+```
+
+On regarde combien de lignes possède le jeu de données.
+```{r}
+nrow(seoul_bike)
+```
+Il y a 8760 observations, ce qui correspond à une observation par heure pendant 
+une année (365 jours x 24 heures = 8760).
+
+On va retirer les variables "Date" et "Heure, qui ne sont pas 
+pertinentes pour notre analyse.
+```{r}
+seoul_bike = seoul_bike %>% 
+  select(-Date, -Hour)
+glimpse(seoul_bike)
+```
+
+La variable "Functioning.Day" indique si le service de location de vélos est 
+fonctionnel. On va retirer les jours où ce n'est pas le cas, car ils n'apportent
+pas d'information pertinente pour notre analyse, puis retirer cette variable.
+```{r}
+seoul_bike = seoul_bike %>%
+  filter(Functioning.Day == "Yes") %>%
+  select(-Functioning.Day)
+```
+
+On observe maintenant nos variables restantes et notre nombre d'individus
+```{r}
+glimpse(seoul_bike)
+nrow(seoul_bike)
+```
+
+Les deux variables "Seasons", "Holiday" sont catégorielles et il faudrait donc 
+les transformer en variables numériques comme vu en cours. 
+Cependant, cette tâche s'effectue de manière automatique en R lorsque l'on 
+effectue une régression . Il n'est donc pas nécessaire d'effectuer d'autres 
+pré-traitements.
+
+-----------------
+
+## Sélection du modèle de régression
+
+Notre regression va s'effectuer sur la variable cible "Rented.Bike.Count".
+On commence par afficher le **matrice de corrélation** entre nos variables 
+numériques ce qui peut servir dans la sélection des variables. 
+
+```{r}
+# Calculer la matrice de corrélation
+cor_matrix = cor(seoul_bike %>% select_if(is.numeric))
+# Afficher la matrice de corrélation
+kable(cor_matrix)
+```
+
+On voit que la variable la plus corrélée (en valeur absolue) avec "Rented.Bike.Count" est 
+"Temperature.C." avec une valeur de 0.5627. C'est donc elle qu'il faudrait utiliser 
+pour effectuer une régression avec un seul prédicteur.
+
+Effectuons maintenant une régression multiple avec toutes les variables.
+```{r}
+# Effectuer la régression multiple
+model_full = lm(Rented.Bike.Count ~ ., data = seoul_bike)
+# Afficher le résumé du modèle
+summary(model_full)
+```
+
+Si on doit retirer du modèle une variable, on va regarder la plus grande valeur 
+propre, il s'agit ici de (à part l'intercept que l'on ne va retirer) de 
+"Visibility..10m." (p-value = 0.204). On peut donc faire un 
+nouveau modèle sans cette dernière.
+```{r}
+# Régression sans "Visibility..10m."
+model_refined = lm(Rented.Bike.Count ~ . - `Visibility..10m.`, 
+                        data = seoul_bike)
+# Afficher le résumé du modèle
+summary(model_refined)
+```
+
+C'est maintenant "Dew.point.temperature.C." qui a la plus grande p-valeur 
+(0.148), on la retire également.
+```{r}
+# Régression sans "Visibility..10m." et "Dew.point.temperature.C."
+model_refined = lm(Rented.Bike.Count ~ . - `Visibility..10m.` - 
+                     `Dew.point.temperature.C.`, data = seoul_bike)
+# Afficher le résumé du modèle
+summary(model_refined)
+```
+
+Tous les coefficients sont significatifs, on peut donc se satisfaire de ce 
+modèle.
+
+-----------------
+
+## Interprétations des résultats 
+
+Regardons à nouveau le résumé de notre modèle affiné.
+```{r}
+summary(model_refined)
+```
+
+### Significativité globale du modèle
+
+On voit que le **R² ajusté** est de 0.4615, ce qui indique que le modèle explique
+46.15% de la variance totale de la variable cible "Rented.Bike.Count" 
+(estimé sur la population). De plus, on voit sur la ligne suivante que le 
+**test du F rejette l'hypothèse nulle** : "le R² théorique est égal à zéro" avec un 
+p-valeur < 2.2e-16, ce qui indique que le modèle est globalement très 
+significatif.
+
+### Étude des coefficients
+
+Si on regarde maintenant les **coefficients**, on peut interpréter ceux-ci comme
+l'effet moyen d'une augmentation d'une unité de la variable explicative. 
+
+On a donc comme **effet positif** sur le nombre de location de vélos les variables :
+
+* Temperature.C.
+* Wind.speed..m.s.
+* Snowfall..cm.
+* La modalité "No Holiday" de la variable "Holiday" (il y a plus de vélos loués hors des vacances)
+
+Et comme **effet négatif** les variables :
+
+* Humidity....
+* Visibility..km.
+* La modalité "Spring" de la variable "Seasons"
+* La modalité "Summer" de la variable "Seasons"
+* La modalité "Winter" de la variable "Seasons"
+
+Comme la modalité "Autumn" de la variable "Seasons" n'est pas présente dans le 
+modèle, c'est elle qui sert de référence pour les autres modalités. Les autres
+saisons ayant un effet négatif, on en déduit que l'automne est la saison où il y 
+a le plus de locations de vélos en moyenne **à autres variables constantes**.
+
+Pour voir l'**effet le plus important sans prendre en compte les unités**, on va
+calculer les **coefficients standardisés** $\beta$. 
+```{r}
+# Cet opération nécessite une librairie supplémentaire
+library(QuantPsyc) 
+# Calculer les coefficients standardisés
+standardized_coeffs = lm.beta::lm.beta(model_refined)
+# Afficher les coefficients standardisés
+kable(as.data.frame(standardized_coeffs$standardized.coefficients))
+```
+
+On voit que la variable ayant l'effet standardisé le plus important est celui 
+de "Temperature.C." (0.6655), ce qui indique que c'est la variable la plus
+importante pour expliquer le nombre de locations de vélos à Séoul. C'était 
+également la plus corrélée avec la variable cible.
+
+-----------------
+
+## Vérification des hypothèses de travail
+
+Il est important de vérifier que les hypothèses du modèle linéaire sont 
+respectées. On va donc regarder le diagramme des résidus.
+```{r}
+# Obtenir les résidus du modèle et les valeurs prédites
+residuals = model_refined$residuals
+predictied_values = model_refined$fitted.values
+# Tracer les résidus
+ggplot() +
+  geom_point(aes(x = predictied_values, y = residuals)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  labs(title = "Résidus vs Valeurs Prédites",
+       x = "Valeurs Prédites",
+       y = "Résidus")
+```
+
+Ce graphique montre que qu'il n'y a pas une tendance non-linéaire particulière, la 
+**linéarité est respectée**. En revanche, pour ce qui est de la **normalité et surtout 
+l'homoscédasticité, ces hypothèses ne semblent pas être respectées**. Il faudra
+donc mettre une certaine réserve dans la communication de nos résultats. 
+
+La forme particulière de ce graphique s'explique par le fait la variable cible
+ne peut pas être négative (on ne peut pas louer un nombre négatif de vélos), ce qui
+crée une sorte de "limite" pour les résidus négatifs. C'est ce qui rend ce modèle
+de régression moins fiable.
+
+-----------------
+
+
+
+
+
+

@@ -31,11 +31,13 @@ nocite: |
 
 :::{#hero-heading}
 
-## Hello!  
+## Welcome to my portfolio !  
+
+#### Who am I ?
 
 I am a academic researcher in Applied Mathematics, Statistics, 
-Machine Learning, Computation Linguistics, Geography and Digital Humanities. I am 
-passionate about science, arts, computers and education. I really enjoy designing 
+Machine Learning, AI, Computation Linguistics, Geography and Digital Humanities. I am 
+passionate about mathematics, human and social sciences, computers, and education. I really enjoy designing 
 mathematical models for various phenomena (especially in human and 
 social sciences), implementing numerical simulations, and creating data 
 visualizations.

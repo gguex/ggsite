@@ -4,7 +4,7 @@ lang: fr
 description: "Cours de Machine Learning ne demandant que des connaissances légères en méthodes quantitative et mathématiques"
 date: 2025-12-18
 image: image.png
-categories: [Quantitative Methods, Machine Learning, Neural Network, Deep Learning, Python]
+categories: [Machine Learning, Neural Network, Deep Learning, Python]
 toc: true
 ---
 

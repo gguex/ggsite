@@ -13,7 +13,7 @@ title-block-banner: true
 ---
 
 ::: {.callout-warning appearance="default"}
-**All courses are currently in French. If I have time, one day, I will create English versions of them.**
+**All courses are currently in French.**
 :::
 
 ## Courses
