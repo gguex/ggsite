@@ -1,15 +1,13 @@
-
 ---
 title: "Régression multiple sur les données SeoulBike"
-author: "G.Guex pour Méthodes Quantitatives 3"
-output:
-  html_document: default
+author: "Guillaume Guex"
+lang: fr
 ---
 
-# Exemple de régression sur les données SeoulBikeData
+## Présentation
 
-Dans ce notebook (https://bookdown.org/yihui/rmarkdown/), nous allons donner un 
-exemple de **régression multiple** sur les données `SeoulBikeData.csv` (https://archive.ics.uci.edu/dataset/560/seoul+bike+sharing+demand), qui 
+Dans ce notebook (<https://bookdown.org/yihui/rmarkdown/>), nous allons donner un 
+exemple de **régression multiple** sur les données `SeoulBikeData.csv` (<https://archive.ics.uci.edu/dataset/560/seoul+bike+sharing+demand>), qui 
 contiennent des informations sur le nombre de locations de vélos à Séoul en 
 fonction de différentes variables explicatives (température, humidité, saison, etc).
 

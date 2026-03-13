@@ -1,0 +1,204 @@
+---
+title: "ACP sur les données Real Estate"
+author: "Guillaume Guex"
+lang: fr
+---
+
+## Présentation
+
+Dans ce notebook (<https://bookdown.org/yihui/rmarkdown/>), nous allons donner un 
+exemple d'**ACP** sur les données `realestate_data.xlsx` (<https://archive.ics.uci.edu/dataset/477/real+estate+valuation+data+set>), qui 
+contiennent des informations sur les prix de l'immobilier à Taïwan. Ce jeu de
+données est généralement utilisé pour prédire le prix de l'immobilier en 
+fonction de différentes variables explicatives (âge du bâtiment, distance aux transports, 
+positon, etc).
+
+## Chargement des données et pré-traitements
+
+On commence par charger les données et jeter un coup d'œil à leur 
+structure.
+
+```{r}
+# Charger les bibliothèques nécessaires
+library(tidyverse)
+library(readxl)
+library(FactoMineR)
+library(factoextra)
+library(knitr)
+library(psych)
+
+# Charger les données
+real_estate = read_excel("realestate_data.xlsx")
+
+# Afficher les premières lignes des données
+kable(head(real_estate))
+```
+
+On regarde combien de lignes possède le jeu de données.
+```{r}
+nrow(real_estate)
+```
+Il y a 414 observations.
+
+La variable "transaction_date" contient une date, qui n'a pas été lue 
+correctement. On ne va garder que l'année qui se situe avant le point
+```{r}
+real_estate = real_estate %>%
+  mutate(transaction_date = as.numeric(substr(transaction_date, 1, 4)))
+```
+
+On va également enlèver la numéro de maison
+```{r}
+real_estate = real_estate %>%
+  select(-No)
+glimpse(real_estate)
+```
+Toutes les autres variables sont numériques, on peut donc effectuer une ACP.
+
+-----------------
+
+## ACP
+
+On effectue une ACP sur les données en utilisant la fonction `PCA` du
+package `FactoMineR`.
+```{r}
+# Effectuer l'ACP
+pca_res = PCA(real_estate, graph = FALSE)
+```
+
+L'ACP est effectuée, on peut maintenant observer les différents résultats
+
+### Variance expliquée
+
+Commençons par observer la **valeurs propres** qui expriment la variance expliquée
+sur chaque facteur.
+```{r}
+eig_vals = get_eigenvalue(pca_res)
+kable(eig_vals)
+```
+
+On peut visualiser cette variance expliquée par chaque facteur avec 
+le **screegraph**
+```{r}
+fviz_screeplot(pca_res, addlabels = TRUE, ylim = c(0, 50))
+```
+
+Grâce à ces deux éléments, on pourrait décider du nombre de facteurs selon 
+différents critère : 
+
+  * Selon le *crière de Joliffe* (garder 90% de la variance), on garderait
+  5 facteurs.
+  * Selon le *critère de Kaiser* (valeurs propres > moyenne = 1), on garderait
+  2 facteurs.
+  * Selon le *critère de Cattell ou du coude* (chercher un coude dans le screegraph), on
+  garderait 1 facteur.
+
+Effectuons un **test de Bartlett** pour vérifier que l'ACP est pertinente
+```{r}
+cortest.bartlett(real_estate)
+```
+
+L'hypothèse H0 : "toutes les valeurs propres sont égales" est largement rejetée, 
+notre ACP est donc pertinente.
+
+### Cercle des corrélations
+
+On peut visualiser le **cercle des corrélations** pour observer les
+contributions des variables aux différents facteurs.
+```{r}
+fviz_pca_var(pca_res, col.var = "contrib",
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             repel = TRUE)
+```
+
+Les *communalités* (vues plus loin) des variables sur les deux premiers facteurs ont 
+été utilisées pour la coloration. Ce graphique exprime **46.7% + 15.4% = 62.1% 
+de la variance totale**.
+
+Ce graphique montre que le **premier facteur** comprends les variables :
+
+* (positivement) le prix au m2
+* (positivement) la latitude 
+* (positivement) la longitude 
+* (positivement) le nombre de commerces
+* (négativement) la distance aux transports publics
+
+On pourrait nommer cette axe **"Attractivité du bâtiment"**.
+
+Le **deuxième facteur** lie :
+
+* (positivement) âge de la maison
+* (positivement) date de vente 
+
+En réalité cet axe est presque entièrement lié à l'âge de la maison, qui semble
+orthogonale à toutes les autres variables.
+
+Ce graphique est basé sur les **saturations** (correlations entre variables et facteurs)
+```{r}
+saturations = pca_res$var$coord[, 1:2]
+kable(saturations)
+```
+
+Les **saturations carrées** exprime le pourcentage de variance d'une variable
+expliquée par un facteur.
+```{r}
+kable(saturations^2)
+```
+
+Et les **communalités** sont la somme de ces dernières sur les deux premiers facteurs.
+```{r}
+kable(rowSums(saturations^2))
+```
+
+On voit que les variables "house_age" (84.81%), "distance_to_station" (84.47%) et 
+"house_price_unit" (71.45%) sont les mieux exprimées sur ces axes.
+
+### Coordonnées factorielles
+
+On peut observer les **coordonnées factorielles** des observations sur les deux premiers
+facteurs.
+```{r}
+fviz_pca_ind(pca_res)
+```
+
+Les individus étant anonymes dans ce jeu de données, ce graphique n'est pas très
+informatif. On pourrait les colorer selon une variable catégorielle, mais il n'y
+en a pas dans ce jeu de données. 
+
+Nous allons ici les colorer selon un gradient d'une des variables numériques. 
+Commençons par "house_age".
+```{r}
+fviz_pca_ind(pca_res,
+             geom="point",
+             col.ind = real_estate$house_age,
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"))
+```
+
+Comme attendu, les maisons plus récentes (en bleu) se situent en bas du graphique
+(âge faible sur le deuxième facteur).
+
+Faisons de même avec "distance_to_station".
+```{r}
+fviz_pca_ind(pca_res,
+             geom="point",
+             col.ind = real_estate$distance_to_station,
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"))
+```
+
+On observe que les maisons plus proches des transports publics (en bleu) se situent
+à droite du graphique (corrélation négative avec le premier facteur).
+
+Finalement idem avec "house_price_unit".
+```{r}
+fviz_pca_ind(pca_res,
+             geom="point",
+             col.ind = real_estate$house_price_unit,
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"))
+```
+
+On observe que les logements les plus chers (en rouge) se situent vers la droite.
+
+-----------------
+
+
+

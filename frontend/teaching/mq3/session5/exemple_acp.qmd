@@ -1,0 +1,103 @@
+---
+title: "Exemple d'Analyse en Composantes principales"
+author: "Guillaume Guex"
+lang: fr
+---
+
+## Objectif
+
+Dans cet exemple, nous allons effectuer une **Analyse en Composantes principales** sur le fichier `cantons.csv`, qui possède plusieurs variables socioéconomiques sur la cantons suisses. Nous allons utiliser les packages R suivants :
+
+```{r}
+library(tidyverse) # Pour la manipulation de données et la visualisation
+library(FactoMineR) # Pour les méthodes factorielles
+library(factoextra) # Plusieurs fonctions pour visualiser les résultats de l'ACP
+library(knitr) # Pour afficher les tableaux de manière plus jolie)
+```
+
+## Chargement des données 
+
+On commence par charger le fichier de données et on nomme les colonnes avec le 
+nom des cantons (utile pour les graphiques) :
+
+```{r}
+df = read_csv("cantons.csv")
+df = df %>% 
+  column_to_rownames(var="nom")
+kable(df)
+```
+
+## Faire l'ACP et afficher les scores factoriels 
+
+On peut faire l'ACP avec la fonction `PCA()` du package `FactoMineR`. Le paramètre `graph=F` permet de ne pas afficher les graphiques par défaut de la fonction :
+
+```{r}
+ca = PCA(df, graph=F)
+```
+
+Les **scores factoriels** des individus (les coordonnées des individus dans le plan factoriel) sont disponibles dans
+`ca$ind$coord` :
+
+```{r}
+kable(ca$ind$coord)
+```
+Que l'on peut représenter avec la fonction `fviz_pca_ind()` du package `factoextra` :
+
+```{r}
+fviz_pca_ind(ca)
+```
+
+## Les saturations, les communalités et la variance expliquée
+
+Les **saturations** (les coordonnées des variables dans le plan factoriel) sont disponibles dans `ca$var$coord` :
+
+```{r}
+kable(ca$var$coord)
+```
+
+On peut les représenter avec la fonction `fviz_pca_var()` du package `factoextra` :
+
+```{r}
+fviz_pca_var(ca)
+```
+
+Les **saturations au carré** (les cosinus carrés, qui représentent la qualité de représentation des variables dans le plan factoriel) sont disponibles dans `ca$var$cos2` :
+
+```{r}
+kable(ca$var$cos2)
+```
+
+Les **communalités** (la proportion de variance de chaque variable expliquée par les composantes principales) sont obtenues en faisant la somme des cosinus carrés sur les composantes principales retenues (par exemple, les 2 premières) :
+
+```{r}
+rowSums(ca$var$cos2[, 1:2])
+```
+
+La **variance expliquée** par les composantes principales est disponible dans `ca$eig` :
+
+```{r}
+kable(ca$eig)
+```
+
+On peut les représenter avec la fonction `fviz_screeplot()` du package `factoextra` :
+
+```{r}
+fviz_screeplot(ca)
+```
+
+## ACP sur la matrice de covariance
+
+Pour faire l'ACP sur la matrice de covariance (sans standardiser les variables), il suffit de mettre le paramètre `scale.unit=F` dans la fonction `PCA()` :
+
+```{r}
+ca_cov = PCA(df, graph=F, scale.unit=F)
+```
+
+Les résultats sont assez particulier dans ce cas, car les variables sont sur des échelles très différentes (par exemple, la population et le taux de chômage). Il est donc généralement recommandé de faire l'ACP sur la matrice de corrélation (en standardisant les variables) pour éviter que les variables sur des échelles plus grandes ne dominent l'analyse.
+
+```{r}
+fviz_pca_ind(ca_cov)
+fviz_pca_var(ca_cov)
+fviz_screeplot(ca_cov)
+```
+
