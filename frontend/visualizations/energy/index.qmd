@@ -1,0 +1,145 @@
+---
+title: "Energy Consumption Streamgraph"
+description: ""
+date: today
+image: image.png
+format:
+  html:
+    code-fold: false
+    page-layout: full
+execute:
+  echo: false
+---
+
+```{r}
+#| label: data-preparation
+#| message: false
+
+library(dplyr)
+library(tidyr)
+library(readr)
+library(quarto)
+
+# 1. Load the raw data from Our World in Data (this might take a few seconds)
+raw_url <- "https://raw.githubusercontent.com/owid/energy-data/master/owid-energy-data.csv"
+energy_raw <- read_csv(raw_url, show_col_types = FALSE)
+
+# 2. Filter and clean the data
+# We select a few key regions and energy sources (in Terawatt-hours - TWh)
+regions_of_interest <- c("World", "Europe", "North America", "Asia", "South America", "Africa")
+
+energy_clean <- energy_raw %>%
+    filter(
+        country %in% regions_of_interest,
+        year >= 1965 # Début officiel des données fiables de consommation (BP Statistical Review)
+    ) %>%
+    select(
+        region = country,
+        year,
+        coal = coal_consumption,
+        oil = oil_consumption,
+        gas = gas_consumption,
+        nuclear = nuclear_consumption,
+        hydro = hydro_consumption,
+        wind = wind_consumption,
+        solar = solar_consumption,
+        other_renewables = other_renewable_consumption
+    ) %>%
+    # Replace NA with 0 to avoid gaps in our streamgraph
+    mutate(across(where(is.numeric), ~ replace_na(., 0))) %>%
+    # Pivot to "long" format for easier plotting in Observable
+    pivot_longer(
+        cols = -c(region, year),
+        names_to = "energy_source",
+        values_to = "consumption"
+    )
+
+# 3. Export to Observable JS
+ojs_define(energy_data = energy_clean)
+```
+
+```{ojs}
+// 4. Récupération et formatage des données côté JS
+// R envoie les colonnes séparément, on utilise transpose() pour reconstruire le tableau
+data = transpose(energy_data).map(d => ({
+  region: d.region,
+  energy_source: d.energy_source,
+  year: +d.year,              // Forcer en nombre
+  consumption: +d.consumption // Forcer en nombre
+}))
+
+// 5. Création de l'interface utilisateur interactif
+viewof selected_region = Inputs.radio(
+  ["World", "Europe", "North America", "Asia", "South America", "Africa"],
+  { value: "World", label: "Choose a region: " }
+)
+
+// On crée un dataset filtré qui va réagir immédiatement au changement du radio bouton
+filtered_data = data.filter(d => d.region === selected_region)
+```
+
+```{ojs}
+// 6. Visualisation (Observable Plot) : Le Streamgraph !
+// On définit l'ordre d'affichage des strates (sombre pour les fossiles en bas, vif pour les renouvelables en haut)
+energy_order = ["coal", "oil", "gas", "nuclear", "hydro", "wind", "solar", "other_renewables"]
+
+// On associe chaque source d'énergie à une couleur spécifique
+color_scale = d3.scaleOrdinal()
+  .domain(energy_order)
+  .range([
+    "#333333", // coal (dark grey)
+    "#664433", // oil (dark brown)
+    "#997E65", // gas (light brown/taupe)
+    "#AB82C5", // nuclear (distinct purple)
+    "#4A90E2", // hydro (steel blue)
+    "#50E3C2", // wind (bright teal/cyan)
+    "#F5A623", // solar (bright yellow/orange)
+    "#7ED321"  // other_renewables (bright green)
+  ])
+
+Plot.plot({
+  width: width,   // Largeur adaptative (responsive)
+  height: 500,    // Hauteur confortable
+  marginLeft: 70, // Espace généreux pour les chiffres de l'axe Y
+  style: {
+    fontSize: "14px",
+    fontFamily: "system-ui, sans-serif"
+  },
+  // Axe Y visible pour lire les valeurs, vu que la base est plate
+  y: { 
+    grid: true,
+    label: "Consumption (TWh)"
+  },
+  // Axe X pour les années (sans les virgules des milliers via tickFormat)
+  x: { 
+    tickFormat: d3.format("d"), 
+    grid: true 
+  },
+  // On utilise l'échelle de couleurs qu'on vient de créer pour la légende
+  color: {
+    domain: color_scale.domain(),
+    range: color_scale.range(),
+    legend: true
+  },
+  marks: [
+    // Le cœur visuel : Plot.areaY crée les strates
+    Plot.areaY(filtered_data, {
+      x: "year",
+      y: "consumption",
+      z: "energy_source",
+      fill: d => color_scale(d.energy_source), // Application de notre couleur
+      // Base plate (plus de streamgraph 'wiggle')
+      order: energy_order,    // Ordonner les couches (fossiles en bas, renouvelables en haut)
+      // L'interaction de base
+      title: d => `${d.energy_source}\n${d.year}: ${d.consumption.toFixed(0)} TWh`,
+      // On rend les zones un peu transparentes
+      fillOpacity: 0.9,
+      // Ces propriétés activent la douceur et les animations lors du changement de région
+      curve: "monotone-x", // Rendre les bords courbes
+      tip: true            // Activer un super pop-up d'informations natif au survol !
+    })
+  ],
+  // Ajout de la source de données en bas du graphique
+  caption: html`Source: <a href="https://ourworldindata.org/energy" target="_blank">Our World in Data</a>`
+})
+```
