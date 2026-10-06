@@ -1,0 +1,176 @@
+---
+title: "Bases de données : modélisation et implémentation"
+lang: fr
+description: "Cours de bases de données relationnelles : SQL avec MariaDB et DBeaver, récolte et pré-traitement de données, modélisation logique et physique, normalisation, peuplement, vues et statistiques, avec une ouverture vers Python et le NoSQL."
+date: 2024-09-18
+image: image.png
+categories: [Databases, SQL, MariaDB, Data Modeling]
+toc: true
+---
+
+::: {.callout-note appearance="default"}
+**Ce cours est très pratique : chaque séance alterne slides et travaux pratiques sur une vraie base de données.** Les fichiers de cours et de TP sont fournis en zip (scripts SQL, sauvegardes de bases à restaurer, données CSV) et les corrigés sont inclus dans les zips de TP.
+:::
+
+## Outils nécessaires
+
+Le cours utilise deux logiciels libres, à installer avant la première séance de TP en suivant le guide d'installation ci-dessous :
+
+- **MariaDB**, le système de gestion de bases de données : <https://mariadb.org/>
+- **DBeaver**, le logiciel d'administration qui sert d'interface graphique : <https://dbeaver.io/download/>
+
+[{{< fa file-pdf >}} TP 1 : Guide d'installation de MariaDB et DBeaver](session1/TP1_installation.pdf){.btn .btn-outline-primary .btn-sm}
+
+Ressources utiles tout au long du semestre : le [MariaDB Tutorial](https://www.mariadbtutorial.com/) et la [documentation de DBeaver](https://dbeaver.com/docs/dbeaver/).
+
+## Séance 1 : Introduction aux bases de données
+📅 **Date:** Sept 18, 2024
+
+Pourquoi des bases de données ? Les notions fondamentales du modèle relationnel : tables, relations, clés, types de données, et le rôle d'un système de gestion de bases de données.
+
+[{{< fa file-pdf >}} 1. Introduction aux bases de données](session1/cours1_introduction_aux_BD.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-pdf >}} TP 1 : Installation](session1/TP1_installation.pdf){.btn .btn-outline-primary .btn-sm}
+
+## Séance 2 : Prise en main de MariaDB, SQL et DBeaver
+📅 **Date:** Sept 25, 2024
+
+Premiers pas dans DBeaver et premières requêtes SQL : créer une base, créer des tables, importer des données et interroger une base de pays et de langues.
+
+[{{< fa file-pdf >}} 2. MariaDB, SQL et DBeaver](session2/cours2_mariadb_sql_dbeaver.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Fichiers du cours 2 (scripts SQL, données)](session2/cours2_fichiers.zip){.btn .btn-outline-secondary .btn-sm}
+
+[{{< fa file-pdf >}} TP 2](session2/TP2.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Fichiers du TP 2 et corrigé](session2/tp2_fichiers.zip){.btn .btn-outline-secondary .btn-sm}
+
+## Séance 3 : SQL 2
+📅 **Date:** Oct 2, 2024
+
+Les requêtes `SELECT` en profondeur : filtres, tri, fonctions, et premières jointures sur la base `world`. Le TP travaille sur la base `employees`, à restaurer depuis la sauvegarde fournie.
+
+[{{< fa file-pdf >}} 3. SQL 2](session3/cours3_sql2.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Fichiers du cours 3](session3/cours3_fichiers.zip){.btn .btn-outline-secondary .btn-sm}
+
+[{{< fa file-pdf >}} TP 3](session3/TP3.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Fichiers du TP 3 et corrigé (base employees)](session3/tp3_fichiers.zip){.btn .btn-outline-secondary .btn-sm}
+
+## Séance 4 : SQL 3
+📅 **Date:** Oct 9, 2024
+
+Jointures multiples, agrégations et sous-requêtes. Le TP introduit la base de jeux vidéo, utilisée à plusieurs reprises dans la suite du cours et décrite dans un document à part.
+
+[{{< fa file-pdf >}} 4. SQL 3](session4/cours4_sql3.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Fichiers du cours 4](session4/cours4_fichiers.zip){.btn .btn-outline-secondary .btn-sm}
+
+[{{< fa file-pdf >}} Présentation de la base de jeux vidéo](session4/BD_video_games.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-pdf >}} TP 4](session4/TP4.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Fichiers du TP 4 et corrigé (base video_games)](session4/tp4_fichiers.zip){.btn .btn-outline-secondary .btn-sm}
+
+## Séance 5 : Récolte de données et pré-traitements
+📅 **Date:** Oct 16, 2024
+
+Les formats de données (CSV, JSON, XML, HTML), les sites de données ouvertes et les API REST. Les scripts Python montrent comment interroger une API et aplatir un JSON en table.
+
+[{{< fa file-pdf >}} 5. Récolte de données et pré-traitements](session5/cours5_donnees.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Fichiers du cours 5 (exemples de formats)](session5/cours5_fichiers.zip){.btn .btn-outline-secondary .btn-sm}
+
+[{{< fa brands python >}} Scripts Python : API et aplatissement de JSON](session5/scripts_api.zip){.btn .btn-outline-success .btn-sm}
+
+[{{< fa file-pdf >}} TP 5](session5/TP5.pdf){.btn .btn-outline-primary .btn-sm}
+
+## Séance 6 : Conception de bases de données, modélisation logique
+📅 **Date:** Oct 23, 2024
+
+Du besoin au modèle : entités, associations, cardinalités et diagramme entité-association, à partir d'un jeu de données sur les pays européens.
+
+[{{< fa file-pdf >}} 6. Modélisation logique](session6/cours6_modelisation_logique.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Fichiers du cours 6](session6/cours6_fichiers.zip){.btn .btn-outline-secondary .btn-sm}
+
+[{{< fa file-pdf >}} TP 6](session6/TP6.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Fichiers du TP 6 et corrigé (données Airbnb)](session6/tp6_fichiers.zip){.btn .btn-outline-secondary .btn-sm}
+
+## Séance 7 : Schéma relationnel et normalisation
+📅 **Date:** Oct 30, 2024
+
+Passage du modèle logique au schéma relationnel, puis les formes normales pour éviter redondances et anomalies. Le TP poursuit la modélisation des données Airbnb, avec un corrigé détaillé.
+
+[{{< fa file-pdf >}} 7. Schéma relationnel et normalisation](session7/cours7_schema_relationnel_normalisation.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Fichiers du cours 7](session7/cours7_fichiers.zip){.btn .btn-outline-secondary .btn-sm}
+
+[{{< fa file-pdf >}} TP 7](session7/TP7.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Fichiers du TP 7](session7/tp7_fichiers.zip){.btn .btn-outline-secondary .btn-sm}
+
+[{{< fa file-pdf >}} Corrigé du TP 7](session7/TP7_corrige.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa image >}} Schéma du corrigé](session7/tp7_schema.png){.btn .btn-outline-secondary .btn-sm}
+
+## Séance 8 : SQL 4
+📅 **Date:** Nov 13, 2024
+
+SQL avancé, première partie : jointures externes, opérateurs ensemblistes et requêtes imbriquées, sur la base `golf` en cours et la base de jeux vidéo en TP.
+
+[{{< fa file-pdf >}} 8. SQL 4](session8/cours8_sql4.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Fichiers du cours 8](session8/cours8_fichiers.zip){.btn .btn-outline-secondary .btn-sm}
+
+[{{< fa file-pdf >}} TP 8](session8/TP8.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Fichiers du TP 8 et corrigé](session8/tp8_fichiers.zip){.btn .btn-outline-secondary .btn-sm}
+
+## Séance 9 : SQL 5
+📅 **Date:** Nov 20, 2024
+
+SQL avancé, seconde partie : fonctions, procédures stockées et transformation de tables (unpivot). Le TP porte sur une base de jeux de société.
+
+[{{< fa file-pdf >}} 9. SQL 5](session9/cours9_sql5.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Fichiers du cours 9](session9/cours9_fichiers.zip){.btn .btn-outline-secondary .btn-sm}
+
+[{{< fa file-pdf >}} TP 9](session9/TP9.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Fichiers du TP 9 et corrigé (base board_game)](session9/tp9_fichiers.zip){.btn .btn-outline-secondary .btn-sm}
+
+## Séance 10 : Peuplement d'une base de données
+📅 **Date:** Nov 27, 2024
+
+Comment remplir une base à partir de fichiers bruts : tables temporaires, transformations et insertions, illustrées sur les pays européens et leurs émissions de CO2.
+
+[{{< fa file-pdf >}} 10. Peuplement](session10/cours10_peuplement.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Fichiers du cours 10](session10/cours10_fichiers.zip){.btn .btn-outline-secondary .btn-sm}
+
+[{{< fa file-pdf >}} TP 10](session10/TP10.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Fichiers du TP 10 et corrigé (données Airbnb)](session10/tp10_fichiers.zip){.btn .btn-outline-secondary .btn-sm}
+
+## Séance 11 : Vues et statistiques
+📅 **Date:** Dec 4, 2024
+
+Les vues pour simplifier l'accès aux données, et les requêtes statistiques pour explorer une base : comptages, moyennes, distributions.
+
+[{{< fa file-pdf >}} 11. Vues et statistiques](session11/cours11_vues_et_statistiques.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Fichiers du cours 11](session11/cours11_fichiers.zip){.btn .btn-outline-secondary .btn-sm}
+
+[{{< fa file-pdf >}} TP 11](session11/TP11.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Fichiers du TP 11 et corrigé (base airbnb)](session11/tp11_fichiers.zip){.btn .btn-outline-secondary .btn-sm}
+
+## Séance 12 : Bases de données en backend et NoSQL
+📅 **Date:** Dec 11, 2024
+
+Ouverture : accéder à une base depuis Python et un backend d'application, puis panorama des systèmes NoSQL (documents, clés-valeurs, graphes) et de leurs usages.
+
+[{{< fa file-pdf >}} 12. Backend et NoSQL](session12/cours12_backend_nosql.pdf){.btn .btn-outline-primary .btn-sm}
