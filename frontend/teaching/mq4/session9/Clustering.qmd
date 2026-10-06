@@ -1,0 +1,545 @@
+---
+title: "IX. Le clustering"
+author: "Guillaume Guex"
+number-sections: true
+lang: fr
+---
+
+## Introduction
+
+Jusqu'à présent, nous avons cherché à expliquer une variable (la régression) ou à résumer l'information de plusieurs variables (les méthodes factorielles). Aujourd'hui, notre objectif est différent : nous voulons **découvrir des groupes homogènes d'individus** (des *clusters*) au sein de nos données, sans savoir à l'avance combien de groupes existent ni ce qu'ils représentent. C'est ce qu'on appelle la **classification non supervisée** ou **clustering**.
+
+Nous allons voir ici deux méthodes de clustering : le **k-means** (k-moyennes en français) et la **Classification Ascendante Hiérarchique (CAH)**.
+
+Le clustering est extrêmement complémentaire avec les méthodes factorielles vues dans le cours précédent (ACP, MDS, AFC). En effet, l'ACP permet de réduire la dimensionnalité, d'éliminer le bruit et de créer une visualisation des individus, mais elle ne crée pas de "frontières" strictes entre les individus. À l'inverse, le clustering segmente les individus dans des classes discrètes, mais les résultats bruts sont difficiles à visualiser en haute dimension. La combinaison des deux donne souvent des résultats très parlants : on utilise l'ACP pour visualiser, puis le clustering pour catégoriser les individus.
+
+Les deux méthodes de clustering que nous allons étudier sont directement disponibles dans R. Nous allons charger ici `FactoMineR` afin de coupler notre clustering avec de la visualisation en basse dimensionnalité. De plus, `factoextra` possède des fonctions qui sont très utiles à la classification :
+
+```{r, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(FactoMineR)
+library(factoextra)
+library(aricode) # Pour l'indice AMI
+```
+
+Comme les résultats du k-means sont en partie aléatoires (initialisation au hasard), nous allons ici fixer la "graine aléatoire" pour garantir la reproductibilité de nos analyses :
+
+```{r}
+set.seed(2026)
+```
+
+## Le k-means
+
+### Théorie
+
+L'algorithme du **k-means**, ou des **k-moyennes** en français, est une méthode de partitionnement itérative. Son fonctionnement est assez intuitif à comprendre :
+
+1.  **Initialisation** : L'utilisateur choisit le nombre de groupes k. L'algorithme place aléatoirement k points (les "centroïdes") dans l'espace des données.
+2.  **Affectation** : Chaque individu est assigné au centroïde le plus proche (via la distance euclidienne), formant ainsi k groupes initiaux.
+3.  **Mise à jour** : L'algorithme recalcule la position exacte de chaque centroïde pour qu'il se place parfaitement au milieu (la moyenne) des individus de son groupe.
+4.  **Convergence** : Puisque les centroïdes ont bougé, on recommence l'étape 2. On boucle ainsi jusqu'à ce que plus aucun individu ne change de groupe.
+
+![Illustration du k-means](fig/k-means.png)
+
+### Le jeu de données
+
+Nous allons utiliser le jeu de données `USArrests`, disponible nativement dans R, qui contient les taux d'arrestation pour divers crimes dans 50 États américains en 1973 :
+
+```{r}
+arrests_df = as_tibble(USArrests, rownames="Name")
+arrests_df
+```
+
+Pour enrichir notre future analyse, nous allons ajouter un jeu de données externe, issu d'une étude sur les orientations politiques des États US à travers le temps (<https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/ZXZMJB>). Le jeu de données original (validation_data.csv, disponible dans le dossier data) a déjà été pré-traité pour obtenir quelques colonnes pertinentes pour notre analyse :
+
+```{r}
+states_meta_df = read_csv("data/states_meta_1973.csv")
+```
+
+On effectue maintenant la jointure des données, sur la colonne `Name` qui contient le nom des États :
+
+```{r}
+states_df = arrests_df %>%
+  left_join(states_meta_df, by="Name")
+```
+
+Les variables externes (non criminelles) vont nous servir de variables de comparaison pour interpréter les clusters que nous allons trouver. Cependant, ces clusters vont être calculés uniquement sur les variables de criminalité. La question sera : est-ce que les États qui ont des taux d'arrestation similaires ont aussi des orientations politiques ou géographiques similaires ?
+
+Nous allons donc isoler les variables de criminalité pour faire le clustering. L'opération `column_to_rownames()` permet de conserver le nom des États comme identifiants de la matrice sans qu'ils soient considérés comme une variable numérique (et accessoirement, elle transforme le `tibble` en `dataframe`) :
+
+```{r}
+clustering_df = states_df %>%
+  select(Name, Murder, Assault, UrbanPop, Rape) %>%
+  column_to_rownames("Name")
+```
+
+Dernier point (mais non des moindres) : il est absolument nécessaire de **standardiser** (centrer-réduire) les variables avant de faire des k-means ou une CAH. Sans cela, les variables avec les valeurs numériques les plus grandes (ici Assault qui monte à 337) prendront mathématiquement toute l'importance au détriment des autres variables (comme Murder qui est autour de 10) :
+
+```{r}
+clustering_df = scale(clustering_df)
+head(clustering_df)
+```
+
+### Visualisation pré-clustering
+
+Avant d'effectuer le clustering, nous allons observer notre jeu de données avec une ACP :
+
+```{r}
+pca_res = PCA(clustering_df, graph=FALSE)
+```
+
+Affichons le screeplot :
+
+```{r}
+fviz_eig(pca_res, addlabels=TRUE)
+```
+
+Ce graphique nous montre que presque toute l'inertie (86.7%) se trouve sur les deux premiers axes. Le clustering que nous allons réaliser devrait donc être très bien représenté sur un plan en 2D.
+
+Passons au cercle des corrélations :
+
+```{r}
+fviz_pca_var(pca_res, col.var="contrib", 
+             gradient.cols=c("#00AFBB", "#E7B800", "#FC4E07"), 
+             repel=TRUE)
+```
+
+L'axe 1 (horizontal) est principalement défini par les crimes violents (`Murder`, `Assault`, `Rape`), tandis que l'axe 2 (vertical) est principalement défini par l'urbanisation (`UrbanPop`).
+
+Affichons maintenant les individus sur les 4 premiers axes (dans notre cas, il s'agit de tous les axes disponibles) :
+
+```{r}
+fviz_pca_ind(pca_res, repel=TRUE)
+fviz_pca_ind(pca_res, axes=c(3, 4), repel=TRUE)
+```
+
+Nous pouvons déjà utiliser une variable externe pour colorer nos points, en l'occurrence la région (à mettre dans `col.ind` si elle n'est pas présente dans le jeu de données qui a servi à l'ACP) :
+
+```{r}
+fviz_pca_ind(pca_res, repel=TRUE, col.ind=states_df$region)
+```
+
+On voit que cette dernier semble expliquer en partie la variance. Nous verrons plus loin si notre clustering va trouver des groupes similaires.
+
+### Détermination du nombre de groupes
+
+Une des grandes difficultés du k-means (et des méthodes de clustering en général) est de définir le nombre de groupes $k$ à priori. On peut pour cela s'aider de plusieurs indices mathématiques qui évaluent la qualité du clustering résultant. La librairie `factoextra` en propose trois.
+
+#### Le critère de la Silhouette
+
+L'*indice de la silhouette local* est calculé pour chaque point $i$, il s'agit de :
+$$  \text{sil}_i = \frac{b_i - a_i}{\max(a_i, b_i)}$$
+où $a_i$ est la distance moyenne entre le point $i$ et les autres points de son propre cluster, et $b_i$ est la distance moyenne entre le point $i$ et les points du cluster le plus proche (celui auquel il n'appartient pas). Une valeur proche de 1 indique un point très bien classé, 0 un point ambigu, et -1 un point mal classé.
+
+L'*indice de la silhoutte global* est la moyenne de ces score de silouettes locaux :
+$$  \text{sil} = \frac{1}{n} \sum_{i=1}^n \text{sil}_i$$
+
+Utilise le critère de la silhouette consiste à sélectionner le nombre de groupes $k$ tel que cet indice soit maximal. On peut le faire aisémant avec la fonction `fviz_nbclust()` du package `factoextra` :
+
+```{r}
+fviz_nbclust(clustering_df, kmeans) +
+  labs(title="Silhouette pour déterminer k")
+```
+
+Ici, la méthode de la silhouette nous suggère $k=2$.
+
+#### La méthode du coude sur l'inertie intra-groupe
+
+Le principe même du k-means est de minimiser l'inertie intra-groupe (WSS pour *Within-cluster Sum of Squares*), c'est-à-dire la somme des distances au carré entre les points et leur centroïde. En augmentant le nombre de groupes, on diminue forcément cette inertie, mais à un moment donné, l'amélioration devient marginale. La méthode du coude consiste à tracer l'inertie intra-groupe en fonction du nombre de groupes et à chercher le "coude" dans la courbe, c'est-à-dire le point où l'amélioration devient moins significative :
+
+```{r}
+fviz_nbclust(clustering_df, kmeans, method="wss") +
+  labs(title="Méthode du coude pour déterminer k")
+```
+
+Ici, le résultat semble faire apparaître un coude à $k=4$.
+
+#### La Gap statistic
+
+Cette méthode compare l'inertie intra-groupe de vos données réelles avec celle d'une distribution de référence aléatoire sans aucune structure de cluster. L'algorithme génère des données uniformément réparties, effectue un cluserting, et calcule la moyenne du logarithme de l'inertie intra-groupe. Le "Gap" est la différence entre ce log(WSS) espéré et le log(WSS) observé sur vos vraies données.
+
+On choisit la valeur de k qui maximise la statistique Gap. Plus précisément, l'algorithme sélectionne souvent la plus petite valeur de k pour laquelle le Gap est supérieur ou égal au Gap de k+1 moins son écart-type. C'est la méthode la plus robuste statistiquement des trois :
+
+```{r}
+fviz_nbclust(clustering_df, kmeans, method="gap_stat") +
+  labs(title="Gap statistic pour déterminer k")
+```
+
+La méthode suggère ici de prendre $k=2$, mais il y a aussi un pic significatif à $k=4$.
+
+Ces trois critères montrent que le nombre de groupes optimal se situe entre 2 et 4. Nous allons opter ici pour **4 groupes**, pour avoir une granularité un peu plus intéressante qu'avec 2 groupes.
+
+### Résultats du k-means
+
+Dans R, le k-means s'effectue avec la fonction `kmeans()` (nous l'avions déjà utilisée dans les arguements de `fviz_nbclust()`) :
+
+```{r}
+kmeans_res = kmeans(clustering_df, centers=4, nstart=25)
+```
+
+L’argument `nstart=25` dit à R de faire 25 initialisations différentes du k-means et de garder le résultat avec la plus faible inertie intra-groupe. C'est une bonne pratique pour éviter de tomber sur un résultat sous-optimal.
+
+Le résultat de `kmeans()` contient plusieurs éléments, dont l'appartenance des points aux clusters. Pour voir ce que nous pouvons en extraire (comme souvent, avec `$`), il suffit d'afficher le résultat :
+
+```{r}
+kmeans_res
+```
+
+Encore une fois, `factoextra` possède une fonction, nommée `fviz_cluster()`, qui permet de visualiser les résultats d'un clustering de manière pertinente. Cette fonction effectue automatiquement une ACP en arrière-plan pour projeter nos données dans le plan :
+
+```{r}
+fviz_cluster(kmeans_res, data=clustering_df,
+             repel=TRUE
+)
+```
+
+Cette fonction affiche les centroides et les frontières des groupes, tout ceci dans le plan factoriel. N'hésitez pas à consulter son aide pour voir toutes les possibilités qu'elle offre.
+
+### Liens entre les clusters et les variables
+
+Une (autre) des difficultés du clustering et de pouvoir interpréter ce que signifient et ce que contiennent les clusters trouvés. Si notre jeu de données est suffisamment petit, l'observation visuelle des clusters ou l'études de quelques indivus qui les composent peut suffire. Cependant, il est souvent nécessaire de faire une étude statistique complémentaire pour voir si les clusters sont liés ou non à différentes variables, qu'elles aient servi au clustering ou non. Nous allons faire cette étude ici.
+
+Pour commencer, nous allons mettre le résultat du clustering dans notre jeu de données initial (dans la variable `clusters`), afin d'avoir toutes les données au même endroit :
+
+```{r}
+states_w_res_df = states_df %>%
+  mutate(clusters = factor(kmeans_res$cluster))
+```
+
+#### Liens entre clusters et variables numériques
+
+L'étude des liens entre clusters et variables numériques (utilisées pour le custering ou non) se fait en deux étapes :
+
+1.  On utilise un **test du F-ratio** (numérique x catégorielle) pour voir la **force du lien** ainsi que sa sifnificativité.
+
+2.  On étudie les **moyennes par groupe** des variables numériques pour voir les **profils types** de chaque groupe.
+
+Concernant les variables qui ont été utilisés dans le clustering, il y a de fortes chances qu'elles soient fortement liées à nos clusters. Cependant, on peut se demander si certaines ont été plus discriminantes que d'autres. On commence donc par faire des tests du F-ratio pour toutes les variables de criminalité :
+
+```{r}
+summary(aov(Murder ~ clusters, states_w_res_df))
+summary(aov(Assault ~ clusters, states_w_res_df))
+summary(aov(UrbanPop ~ clusters, states_w_res_df))
+summary(aov(Rape ~ clusters, states_w_res_df))
+```
+
+On observe que toutes ces variables ont un lien très significatif (p valeur infime). Cependant, il apparait que les variables `Assault` (F=55.7) et `Murder` (F=53.47) ont un pouvoir discriminant plus grand que `Rape` (F=36.29) et `UrbanPop` (F=21.58).
+
+Le même test effectué sur des variables supplémentaires nous donne :
+
+```{r}
+summary(aov(abortion ~ clusters, states_w_res_df))
+summary(aov(environment ~ clusters, states_w_res_df))
+summary(aov(gay_rights ~ clusters, states_w_res_df))
+summary(aov(families_payments ~ clusters, states_w_res_df))
+```
+
+Cette fois-ci, on voit que seule `families_payments` (p=0.001) et, dans un moindre mesure, `gay_rights` (p=0.043) sont significatives. Les autres orientations politiques testées ne semblent pas liées à nos profils de criminalité.
+
+Pour déterminer maintenant les profils concrets des États dans les différents clusters, ont va s'intéresser aux moyennes de ces variables au seins des différents groupes (on affiche également le nombre d'individus par cluster, pour avoir un profil plus complet) :
+
+```{r}
+states_w_res_df %>%
+  group_by(clusters) %>%
+  summarise(n = n(),
+            m_Murder = mean(Murder),
+            m_Assault = mean(Assault),
+            m_UrbanPop = mean(UrbanPop),
+            m_Rape = mean(Rape), 
+            m_fpayments = mean(families_payments))
+```
+
+Pour résumer succintement :
+
+| Cluster | Murder | Assault | UrbanPop | Rape   | Payment |
+|---------|--------|---------|----------|--------|---------|
+| 1       | faible | moyen   | élevé    | moyen  | élevé   |
+| 2       | élevé  | élevé   | élevé    | élevé  | élevé   |
+| 3       | élevé  | élevé   | faible   | moyen  | faible  |
+| 4       | faible | faible  | faible   | faible | élevé   |
+
+Ce qui illustre bien nos différents groupes.
+
+#### Liens entre clusters et variables catégorielles
+
+Pour voir les liens entre nos clusters et des variables catégorielles externes (liens entre variables catégorielles-catégorielles), il s'agira de construire une **table de contingence** et d'effectuer un **test du chi2**. Nous allons vérifier ici si nos clusters ont un lien avec la variable `region`.
+
+On commence par construire la table de contingence :
+
+```{r}
+region_clust = states_w_res_df %>%
+  select(region, clusters) %>%
+  table()
+region_clust
+```
+
+Puis on fait un test du chi2 :
+
+```{r}
+chisq.test(region_clust)
+```
+
+Le test est significatif (p \< 0.05), il existe bien un lien entre les clusters de criminalité et la région. On voit par exemple que le cluster 3 contient uniquement des États du sud, ce qui corrobore notre profilage (forte criminalité et faible population urbaine typique des États du Sud à cette époque).
+
+Les liens entre variables catégorielles peuvent aussi être mesurés à l'aide d'indices issus de la **théorie de l'information**, généralement basés sur l'**information mutuelle**. Il en existe plusieurs, contenus pour la plupart dans la package `aricode`. Nous allons calculer ici le `AMI` (*Adjusted Mutual Information*) entre `clusters` et `region`. C'est un indice standardisé et corrigé (pour tenir compte du hasard), compris entre 0 (aucun lien) et 1 (partitions identiques) :
+
+```{r}
+AMI(as.factor(states_w_res_df$region), states_w_res_df$clusters)
+```
+
+Le valeur de AMI=0.14 indique un lien mais faible, ce qui est cohérent avec le test du chi2 qui, bien que significatif, montre que les clusters ne sont pas complètement déterminés par la région.
+
+## La Classification ascendante hiérarchique (CAH)
+
+Contrairement au k-means qui force à fixer $k$ dès le départ, la **Classification ascendante hiérarchique (CAH)** propose une approche différente, qui se base sur une matrice de dissimilarité entre individus calculée en amont :
+
+1.  Au départ, chaque individu est considéré comme son propre groupe (ici, 50 groupes).
+
+2.  L'algorithme cherche les deux individus les plus proches (dissimilarité minimale) et les fusionne.
+
+3.  Les distances sont recalculées entre le nouveau groupe formé et les autres individus restants, en fonction d'un critère de liaison (p.ex. : saut minimal, saut maximal, méthode de Ward).
+
+4.  L'algorithme boucle sur l'étape 2 et 3 jusqu'à ce que tous les individus soient agglomérés dans un seul groupe.
+
+Le résultat final illustre toutes les étapes de cet algorithme sous la forme d'un arbre de classification hiérarchique : le **dendrogramme**, que l'on peut a posteriori couper à la hauteur désirée pour obtenir nos groupes.
+
+### Application de la CAH
+
+On commence par calculer la matrice des dissimilarités entre individus (ici, la distance euclidienne entre les variables standardisées) :
+
+```{r}
+dist_mat = dist(clustering_df, method="euclidean")
+```
+
+La CAH s'effectue ensuite avec la fonction `hclust()`, qui prend en argument la matrice de dissimilarité et le critère de liaison. Nous utilisons ici `"ward.D2"` : à chaque étape, la méthode de Ward fusionne les deux groupes qui feront augmenter le moins possible la variance intra-groupe. Elle a tendance à créer des clusters compacts :
+
+```{r}
+cah_res = hclust(dist_mat, method="ward.D2")
+```
+
+Si notre jeu de données et de taille raisonnable, on peut ensuite visualiser le dendrogramme avec `fviz_dend()` :
+
+```{r}
+fviz_dend(cah_res, cex=0.5, 
+          main="Dendrogramme de la CAH (Méthode de Ward)")
+```
+
+### Détermination du nombre de groupes
+
+La question est maintenant de savoir où couper cet arbre. La longueur verticale des branches représente la distance (l'hétérogénéité) entre les groupes fusionnés. On cherche généralement à couper l'arbre au niveau des branches les plus longues. Mais on peut aussi utiliser les critères vus précédemment.
+
+Nous allons utiliser ici la méthode de la silhouette avec `fviz_nbclust()` (en lui passant l'argument FUN=hcut pour qu'il utilise une CAH au lieu du k-means) :
+
+```{r}
+fviz_nbclust(clustering_df, FUN=hcut, method="silhouette") +
+  labs(title="Silhouette pour déterminer le nombre optimal de clusters")
+```
+
+Avec ce critère, le nombre de groupes optimal est $k=2$. On peut afficher le dendrogramme avec cette coupe dans `fviz_dend()`:
+
+```{r}
+fviz_dend(cah_res, k=2, 
+          cex=0.5, 
+          color_labels_by_k=TRUE, 
+          rect=TRUE,
+          main="Dendrogramme coupé en 2 groupes")
+```
+
+Pour extraire les groupes dans un vecteur, on utilise la fonction `cutree()` la hauteur correspondant à $k=2$ :
+
+```{r}
+grps_cah = cutree(cah_res, k=2)
+```
+
+### Liens entre les clusters et les variables
+
+Comme pour le résultat du k-means, nous allons rapidement étudier les liens entre ces nouveaux clusters et nos variables. Il sera particulièrement intéressant de comparer le clustering obetnu avec la CAH (k=2) avec celui obtenu avec le k-means (k=4).
+
+On commence par ajouter ces nouveaux clusters dans notre jeu de données étendu :
+
+```{r}
+states_w_res_df = states_w_res_df %>%
+  mutate(clusters2 = factor(grps_cah))
+```
+
+On calcule les F-ratios entre ces 2 clusters CAH et les variables numériques :
+
+```{r}
+summary(aov(Murder ~ clusters2, states_w_res_df))
+summary(aov(Assault ~ clusters2, states_w_res_df))
+summary(aov(UrbanPop ~ clusters2, states_w_res_df))
+summary(aov(Rape ~ clusters2, states_w_res_df))
+summary(aov(abortion ~ clusters2, states_w_res_df))
+summary(aov(environment ~ clusters2, states_w_res_df))
+summary(aov(gay_rights ~ clusters2, states_w_res_df))
+summary(aov(families_payments ~ clusters2, states_w_res_df))
+```
+
+Curieusement, en séparant les données en seulement 2 grands groupes, la variable `UrbanPop` n'est plus du tout significative (p=0.29). Les deux groupes se sont formés purement sur l'axe de la criminalité. De plus, aucune des variables externes n'est significative à ce niveau de granularité.
+
+Regardons les moyennes des variables criminelles pour ces deux clusters :
+
+```{r}
+states_w_res_df %>%
+  group_by(clusters2) %>%
+  summarise(n = n(),
+            m_Murder = mean(Murder),
+            m_Assault = mean(Assault),
+            m_Rape = mean(Rape))
+```
+
+Ces deux grands clusters séparent de manière évidente et binaire les États avec une très forte criminalité globale (groupe 1) des États avec une faible criminalité (groupe 2).
+
+Regardons s'il y a un lien entre la CAH et la variable région :
+
+```{r}
+region_clust2 = states_w_res_df %>%
+  select(region, clusters2) %>%
+  table()
+region_clust2
+```
+
+```{r}
+chisq.test(region_clust2)
+AMI(as.factor(states_w_res_df$region), states_w_res_df$clusters2)
+```
+
+Le lien n'est pas significatif et l'information mutuelle ajustée est très faible. La région géographique est donc un mauvais prédicteur de cette séparation binaire.
+
+Pour finir, comparons nos deux méthodologies de partitionnement :
+
+```{r}
+clust_clust= states_w_res_df %>%
+  select(clusters, clusters2) %>%
+  table()
+clust_clust
+```
+
+```{r}
+chisq.test(clust_clust)
+AMI(as.factor(states_w_res_df$clusters), as.factor(states_w_res_df$clusters2))
+```
+
+Le lien est très fort (AMI = 0.38, p-value microscopique). En observant la table de contingence, on constate que la CAH a agi comme une "méta-classification" des k-means : les clusters 1 et 4 des k-means sont complètement inclus dans le macro-cluster 2 de la CAH, et à deux exceptions près, les clusters 2 et 3 du k-means forment le macro-cluster 1 de la CAH.
+
+## AFC et Clustering sur des données textuelles
+
+Comme vu dans le cours précédant, Une matrice document-terme est généralement immense et l'AFC permet de résumer efficacement les profils des documents. Cependant, nous avons vu que les régions du biplot n'étaient pas si facile à interpréter au niveau des termes, car ceux-ci sont très nombreux et difficile à afficher simultanément.
+
+Une des solutions à ce problème consiste à utiliser les coordonnées factorielles sur les termes pour faire un **clustering sur les termes**, afin d'associer les mots utilisés conjointement par plusieurs documents. Ce clustering nous permet ensuite de décrire certaines régions du biplot.
+
+Cette approche a de forts liens avec le domaine du **topic modeling** en NLP, qui cherche à trouver des "thèmes" ou "topics" dans un corpus de textes. Nos clusters de termes trouvés par cette méthode peuvent être interprétés comme des thèmes récurrents dans les documents.
+
+Nous allons utiliser ici la matrice document-terme `manifesto_dtf.csv`, déjà utilisée lors du cours précédant, qui contient les manifestes politiques de 9 partis politiques français écrits en 2017.
+
+### L'AFC
+
+On charge la matrice document-terme :
+
+```{r}
+dtf = read_csv("data/manifesto_dtf.csv") %>%
+  column_to_rownames("doc_id") 
+as_tibble(dtf)
+```
+
+Puis on effectue l'AFC, avec, comme vu la dernière fois, le document `parti_communiste_francais` comme ligne supplémentaire :
+
+```{r}
+ca_res = CA(dtf + 1e-50, graph=F, row.sup=6)
+```
+
+On affiche ensuite le biplot avec les 30 mots les plus contributifs sur les 2 premiers axes :
+
+```{r}
+fviz_ca_biplot(ca_res, repel=T, select.col=list(contrib=30))
+```
+
+### La CAH sur les termes
+
+Pour faire le clustering sur les termes, on va utiliser les coordonnées factorielles des termes sur les 2 premiers axes de l'AFC. Ces coordonnées résument bien la position de chaque terme dans l'espace factoriel et le fait de ne pas toutes les prendre permet d'éliminer en grande partie le "bruit" présent dans les données :
+
+```{r}
+word_coords = ca_res$col$coord[, 1:2]
+```
+
+On effectue cette fois le clustering hiérachique avec la fonction `HCPC()` du package `FactoMineR`, qui est une fonction très pratique pour faire du clustering hiérarchique sur des données factorielles. L'argument `nb.clust=-1` dit à la fonction de déterminer automatiquement le nombre optimal de clusters (selon un critère maison, voir l'aide) :
+
+```{r}
+hcpc_res = HCPC(as.data.frame(word_coords), nb.clust = -1, graph = FALSE)
+clust_grp = hcpc_res$data.clust$clust
+```
+
+On examine la taille des différents clusters :
+
+```{r}
+table(clust_grp)
+```
+
+Cependant, si l'on essaye de les visualiser, il y a trop de termes présents pour comprendre le résultat :
+
+```{r}
+fviz_cluster(hcpc_res,
+             show.clust.cent = TRUE,
+             ggtheme = theme_minimal(),
+             main = "Clustering Sémantique",
+             labelsize=5
+)
+```
+
+### Caractérisation des clusters et affichage
+
+Pour caractériser les clusters, on peut regarder les termes qui les composent, et en particulier les termes les plus proches des centres (les plus "typiques").
+
+On commence par calculer les coordonnées des centroïdes de chaque cluster (la fonction `aggregate()` permet de calculer une fonction par groupe) :
+
+```{r}
+centroids = aggregate(word_coords, by=list(cluster=clust_grp), FUN=mean)
+```
+
+On calcule maintenant, de manière optimisée pour éviter les boucles (les fonctions de type `apply()` sont fondamentales pour faire du R optimisé sans boucle, mais c'est un sujet avancé), la distance de chaque terme à son centroïde de cluster. On extrait ensuite les 10 termes les plus proches :
+
+```{r}
+n_words = 10
+closest_words = lapply(1:nrow(centroids), function(i) {
+  cluster_center = as.numeric(centroids[i, -1])
+  distances = apply(word_coords, 1, function(word) sqrt(sum((word - cluster_center)^2)))
+  closest_indices = order(distances)[1:n_words]
+  return(names(distances)[closest_indices])
+})
+```
+
+Cela nous permet d'avoir une liste des mots les plus typique par groupe :
+
+```{r}
+closest_words
+```
+
+On met tous ces mots dans un vecteur pour pouvoir les afficher sur le biplot :
+
+```{r}
+all_words = unique(unlist(closest_words))
+```
+
+Toutes ces étapes permettent de visualiser notre biplot avec des "directions sémantiques" plus claires, grâce à l'affichage des mots les plus typiques de chaque cluster :
+
+```{r}
+fviz_ca_biplot(ca_res, 
+               geom.row="text",
+               col.col=clust_grp,
+               repel=T, 
+               select.col=list(name=all_words), 
+               labelsize = 3
+)
+```
+
+Une alternative aurait été d'afficher les 50 mots les plus contributifs et de les colorer par cluster, ce qui est moins couteux au niveau des calculs. Cependant, les mots choisis sont représentatifs du plan factoriel et non pas des clusters :
+
+```{r}
+fviz_ca_biplot(ca_res, 
+               geom.row="text",
+               col.col=clust_grp,
+               repel=T, 
+               select.col=list(contrib=50), 
+               labelsize = 3
+)
+```

@@ -1,0 +1,22 @@
+full_names,codes
+ID,id
+Heure de début,h_deb
+Heure de fin,h_fin
+Adresse de messagerie,mail
+"D’après vous, dans quel(s) milieu(x) utilise-t-on le plus d’anglicismes ?",milieu
+« Nous utilisons des anglicismes par effet de mode »,acc_mode
+« Les anglicismes excluent certains locuteurs plus âgés »,acc_exclu
+« On est obligé d’utiliser des anglicismes pour se faire accepter en société »,acc_accept
+« Les anglicismes enrichissent la langue française »,acc_enrich
+"« Il faudrait supprimer l’anglais dans les publicités, affiches, magazines et médias »",acc_suppr
+« Les anglicismes constituent une menace pour la langue française »,acc_menace
+Où avez-vous l’impression d'entendre le plus d’anglicismes ?,ou
+Dans la mesure du possible essayez-vous d’éviter les anglicismes ?,evite
+"Parmi les mots suivants, cochez ceux que vous utilisez:",mots
+"Pouvez-vous compléter cette liste avec 5 autres anglicismes (Si rien ne vous vient, vous pouvez passer à la suite)?",mots_plus
+Vous êtes,genre
+Quelle est votre année de naissance ?,annee
+Vous êtes principalement,activite
+Parlez-vous anglais ?,parle_ang
+Le français est-il votre langue principale à la maison?,lang_fr
+"Parmi les outils technologiques suivant, lesquels utilisez-vous plusieurs fois par semaine?",outils

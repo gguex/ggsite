@@ -8,7 +8,7 @@ listing:
   sort: "date desc"
   type: grid          
   categories: true
-  fields: [image, title, lang, description, categories, date]
+  fields: [image, title, description, categories, date]
   image-placeholder: ../assets/default-img.png
 title-block-banner: true
 ---

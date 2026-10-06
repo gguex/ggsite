@@ -1,0 +1,255 @@
+---
+title: "XI. Régression logistique régularisée"
+author: "Guillaume Guex"
+number-sections: true
+lang: fr
+---
+
+## Introduction
+
+Nous allons mettre ici en oeuvre certaines pratiques du **Machine Learning** en effectuant une **régression logistique régularisée**. Nous allons utiliser ici le jeu de données `heart_disease.csv` (venant de <https://www.kaggle.com/datasets/dileep070/heart-disease-prediction-using-logistic-regression>) qui porte sur le risque de développer une maladie cardiovasculaire chez des patient·es. Plusieurs colonnes décrivent différentes caractéristiques (démographiques, comportementales, médicales) des patient·es, et la variable cible `TenYearCHD` dit si la personne a développé une maladie cardiovasculaire dans le 10 années qui suivent les mesures (`1` pour oui, `0` pour non). Il s'agira donc de prédire cette dernière variable en fonction de (presque) toutes les autres.
+
+Nous allons utiliser ici les packages suivants :
+
+```{r warning=FALSE, message=FALSE}
+library(tidyverse)
+library(caret) # pour la segmentation du jeu de données
+library(glmnet) # pour la régression logistique régularisée
+```
+
+On fixe la graine pour avoir toujours les mêmes résultats :
+```{r}
+set.seed(2026)
+```
+
+### Les données
+
+On charge maintenant le jeu de données et on élimine les lignes contenant des valeurs manquantes :
+```{r}
+df = read_csv("data/heart_disease.csv") %>%
+  drop_na()
+```
+
+On transforme les variables catégorielles comme telles :
+```{r}
+df = df %>%
+  mutate_at(vars(male, currentSmoker, BPMeds, prevalentStroke, prevalentHyp, diabetes, TenYearCHD), as.factor)
+```
+
+Observons ces variables :
+```{r}
+summary(df)
+```
+
+On voit que, malheureusement, les variables `BPMeds`, `prevalentStroke` et `diabetes` sont fortement déséquilibrées dans ce jeu de données. Idéalement, il faudrait les stratifier pour qu'elles ne manquent pas dans tous les folds testés, mais le peu de mesures fait que c'est difficile à réaliser.
+
+Nous avons donc un jeu de données avec 3656 individus et 16 variables (15 variables indépendantes et 1 variable dépendante).
+```{r}
+df
+```
+
+### Création du jeu d'entraînement-validation et du jeu de test
+
+Nous allons nous occuper ici de construire le **jeu d’entraînement et validation** (qui va servir à la cross-validation) et le **jeu de test**. Le package `caret` est très utile pour cela, car il permet de construire des partitions respectant une certaine stratification. En l'occurrence, il est préférable que les proportions de 0 et de 1 dans la variable cible soient identiques dans les deux jeux de données.
+
+On construit donc nos indices pour le jeu de test (de taille 20%) avec la fonction `createDataPartition()`. Le premier argument de la fonction prends la variable que l'on cherche à stratifier :
+
+```{r}
+test_idx = createDataPartition(df$TenYearCHD, p=0.2)$Resample1
+head(test_idx, 20)
+```
+
+Puis, on crée nos jeux de test et d'entraînement-validation:
+```{r}
+df_test = df[test_idx, ]
+df_train = df[-test_idx, ]
+```
+
+On vérifie les dimensions pour s'assurer que les jeux font à peu près la bonne taille :
+```{r}
+dim(df_test)
+dim(df_train)
+```
+
+Et que les proportions de 1 et de 0 pour `TenYearCHD` soient correctes dans les deux jeux :
+```{r}
+mean(as.numeric(df_test$TenYearCHD))
+mean(as.numeric(df_train$TenYearCHD))
+```
+
+## La régression logistique régularisée
+
+Avant de lancer la procédure de cross-validation, nous allons tester la **méthode de regression logistique régularisée** sur notre jeu d'entraînement en entier. Cela nous permettra également de voir comment calculer les différentes mesures sur les résultat de cette dernière.
+
+Pour effectuer cette régression logistique régularisée, on utilse la fonction `glmnet()` du package `glmnet`. Voici les arguments les plus importants pour cette fonction :
+
+  - Le premier argument (`x`) doit contenir les variables d'entrées.
+  - Le deuxième argument (`y`) doit contenir la variable binaire que l'on cherche à prédire.
+  - L'argument `family` précise quel type de régression utiliser. Pour faire de la régression logistique binaire, on précise `family="binomial"`.
+  - L'argument `lambda` est la paramètre de régularisation. Plus celui-ci est élevé, plus la régularisation est forte.
+  - L'argument `alpha` (entre 0 et 1) précise si il faut utiliser la régularisation de Lasso (`alpha=1`, valeur par défaut) ou Ridge (`alpha=0`). Des valeurs intermédiaires réalise une mixture des deux régularisations (appelée aussi *elasticnet*).
+
+Avant toutes choses, on commence par transfomer nos entrées en version compatible avec `glmnet()` à l'aide de `makeX()` :
+```{r}
+input_train = makeX(df_train %>% select(-TenYearCHD))
+```
+
+Puis on effectue une **régression logistique binaire avec régularisation de Lasso**, avec un `lambda` de `0.01` :
+```{r}
+glm_res = glmnet(input_train, 
+                 df_train$TenYearCHD, 
+                 family="binomial", 
+                 lambda=0.01)
+```
+
+Cette fonction nous donne de nombreux retour (pour les voir `names(glm_res)`), comme par exemple les coefficients de régression résultant :
+```{r}
+glm_res$beta
+```
+On voit que certains coefficients ont été mis à zéro, ce qui est une propriété de la régularisation de type Lasso. 
+
+On va maintenant s'intéresser à faire des prédictions sur le jeu de test, qui s'obtiennent avec `predict()` (l'argument `type="class"` nous donne les classes, et non pas les odd-logs) :
+
+```{r}
+input_test = makeX(df_test %>% select(-TenYearCHD))
+predict_test = factor(predict(glm_res, input_test, type="class"),
+                      levels=c(0, 1))
+```
+
+On peut alors comparer ces classes avec nos vrais valeurs, selon l'**exactitude**, la **précision**, le **rappel** et le **F1** (avec des fonctions contenues dans le package `caret`) :
+
+```{r}
+mean(predict_test == df_test$TenYearCHD) # On teste où les vecteurs sont égaux. 
+precision(predict_test, df_test$TenYearCHD, relevant="1")
+recall(predict_test, df_test$TenYearCHD, relevant="1")
+F_meas(predict_test, df_test$TenYearCHD, relevant="1")
+```
+
+Ici, nous avons directement utilisé la valeur de `lambda=0.01`, regardons dans la partie suivante si nous pouvons trouver un meilleur lambda pour optimiser ces différentes mesures.
+
+## La cross-validation
+
+Nous allons donc faire une **cross-validation à 5 folds** pour voir si nous pouvons trouver les meilleures valeurs de `lambda` pour chaque mesure. Cette optimisation va s'effectuer sur le jeu d’entraînement-validation, pour ensuite voir ce que sont ces mesures sur le jeu de test.
+
+On commence par attribuer nos folds sur le jeu d’entraînement-validation, en faisant attention de bien stratifier :
+
+```{r}
+folds_list = createFolds(df_train$TenYearCHD, k=5)
+```
+
+La réponse est une liste de 5 éléments, chacun contenant les indices des individus appartenant à ce fold.
+
+On définit maintenant toutes les valeurs de `lambda` que nous volons tester (il faut parfois faire quelques essais-erreurs pour trouver des valeurs qui donnent des résultats convaincants) :
+
+```{r}
+lambda_vec = seq(0, 0.02, 0.0001) # Toutes les valeurs de 0 à 0.05 avec un pas de 0.001
+```
+
+On prépare une liste contenant des matrices pour stocker les différents résultats
+
+```{r}
+results_list = list(accuracy=matrix(NA, nrow=length(lambda_vec), ncol=length(folds_list)),
+                    precision=matrix(NA, nrow=length(lambda_vec), ncol=length(folds_list)),
+                    recall=matrix(NA, nrow=length(lambda_vec), ncol=length(folds_list)),
+                    F1=matrix(NA, nrow=length(lambda_vec), ncol=length(folds_list)))
+```
+
+On peut maintenant faire la boucle sur les différentes valeurs de `lambda` et les différents folds :
+
+```{r}
+for(id_lambda in 1:length(lambda_vec)){
+  for(id_fold in 1:length(folds_list)){
+    # On récupère les indices de ce fold
+    fold_idx = folds_list[[id_fold]]
+    
+    # On construit les jeux d'entraînement et de validation pour ce fold
+    df_train_fold = df_train[-fold_idx, ]
+    df_valid_fold = df_train[fold_idx, ]
+    
+    # On effectue la régression logistique régularisée sur le jeu d'entraînement de ce fold
+    input_train_fold = makeX(df_train_fold %>% select(-TenYearCHD))
+    glm_res_fold = glmnet(input_train_fold, 
+                          df_train_fold$TenYearCHD, 
+                          family="binomial", 
+                          lambda=lambda_vec[id_lambda])
+    
+    # On fait des prédictions sur le jeu de validation de ce fold
+    input_valid = makeX(df_valid_fold %>% select(-TenYearCHD))
+    predict_valid_fold = factor(predict(glm_res_fold, input_valid, type="class"),
+                                levels=c(0, 1))
+    
+    # On calcule les différentes mesures et on les stocke dans la matrice correspondante
+    accuracy = mean(predict_valid_fold == df_valid_fold$TenYearCHD)
+    precision = precision(predict_valid_fold, df_valid_fold$TenYearCHD, relevant="1")
+    recall = recall(predict_valid_fold, df_valid_fold$TenYearCHD, relevant="1")
+    F1 = F_meas(predict_valid_fold, df_valid_fold$TenYearCHD, relevant="1")
+    
+    
+    results_list$accuracy[id_lambda, id_fold] = accuracy
+    results_list$precision[id_lambda, id_fold] = precision
+    results_list$recall[id_lambda, id_fold] = recall
+    results_list$F1[id_lambda, id_fold] = F1
+  }
+}
+```
+
+On va maintenant calculer la moyenne de chaque mesure pour chaque valeur de `lambda` :
+
+```{r}
+mean_results = lapply(results_list, rowMeans, na.rm = TRUE)
+```
+
+On transforme cette liste de vecteurs en un data frame pour pouvoir faire des graphiques :
+
+```{r}
+mean_results_df = as.data.frame(mean_results)
+mean_results_df$lambda = lambda_vec
+as_tibble(mean_results_df)
+```
+
+Et on affiche les graphiques :
+
+```{r}
+mean_results_df %>% 
+  pivot_longer(cols=-lambda, names_to="measure", values_to="value") %>%
+  ggplot(aes(x=lambda, y=value)) +
+  geom_line() +
+  facet_wrap(~measure, scales="free_y")
+```
+
+On voit que la précision et le F1 sont parfois inexistant. Cela arrive lorsque notre algorithme ne classe aucun point comme des 1, il est alors impossible de calculer la précision et le F1.
+
+::: {.callout-note}
+Dans une réelle application, on va plutôt utiliser la fonction `cv.glmnet()`, qui s'occupe intégralement de la cross-validation. Regardez l'aide pour l'utiliser.
+:::
+
+## Le "meilleur modèle" 
+
+Capturons les valeurs de lambda où le rappel est maximal, car notre intérêt est de capturer au maximum les personnes présentant un risque. On classe le jeu de données selon les différentes mesures par ordre de priorité :
+```{r}
+mean_results_df %>%
+  arrange(desc(recall), desc(precision), desc(F1), desc(accuracy)) %>%
+  head(10)
+```
+
+La valeur `lambda=0.0005` semble donner de bons résultats équilibrés (c'est très relatif). On va maintenant entraîner ce modèle sur tout le jeu d'entraînement :
+```{r}
+glm_best_res = glmnet(input_train, 
+                      df_train$TenYearCHD, 
+                      family="binomial", 
+                      lambda=0.0005)
+```
+
+```{r}
+predict_test = factor(predict(glm_best_res, input_test, type="class"),
+                      levels=c(0, 1))
+mean(predict_test == df_test$TenYearCHD)
+precision(predict_test, df_test$TenYearCHD, relevant="1")
+recall(predict_test, df_test$TenYearCHD, relevant="1")
+F_meas(predict_test, df_test$TenYearCHD, relevant="1")
+```
+Le rappel reste malheureusement très médiocre. Pour finir, regardons quelles variables ont été utilisées :
+```{r}
+glm_best_res$beta
+```
+A ce niveau de faible régularisation, presque aucune variable n'a été mise de côté.

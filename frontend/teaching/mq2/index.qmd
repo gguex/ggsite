@@ -1,0 +1,86 @@
+---
+title: "Méthodes Quantitatives 2"
+lang: fr
+description: "Cours de Méthodes Quantitatives 2 : tests statistiques, corrélations, entropie et données pondérées, dans la continuité de Méthodes Quantitatives 1."
+date: 2026-02-19
+image: image.png
+categories: [Hypothesis Testing, Correlation, Entropy]
+toc: true
+---
+
+::: {.callout-note appearance="default"}
+**Ce cours est basé en grande partie sur le cours de Méthodes Quantitatives 2 donné durant de nombreuses années par François Bavaud à l'Université de Lausanne.**
+:::
+
+## Session 1 : Introduction à l'inférence statistique (rappels et suite)
+📅 **Date:** Feb 19, 2026
+
+Rappels sur l'inférence statistique. Le test de comparaison de deux moyennes sert d'exemple pour introduire les tests, les approches de Neyman-Pearson et de Fisher, et la valeur p.
+
+[{{< fa file-pdf >}} 1. Introduction à l'inférence statistique](session1/cours_1.pdf){.btn .btn-outline-primary .btn-sm}
+
+## Session 2 : Tests de la moyenne
+📅 **Date:** Feb 26, 2026
+
+Les tests de la moyenne pour un échantillon (variance connue ou inconnue), pour deux échantillons indépendants et pour deux échantillons appariés, illustrés sur un jeu de données de notes.
+
+[{{< fa file-pdf >}} 2. Tests de la moyenne](session2/cours_2.pdf){.btn .btn-outline-primary .btn-sm}
+
+
+## Session 3 : Tests catégoriels et tests du lien entre deux variables
+📅 **Date:** Mar 5, 2026
+
+Tests de proportion pour un et deux échantillons et test du chi-carré pour une variable catégorielle, puis les tests du lien entre deux variables : corrélation, chi-carré pour deux variables et F-ratio. Cette session s'étend sur deux semaines.
+
+[{{< fa file-pdf >}} 3. Tests catégoriels et tests du lien entre deux variables](session3/cours_3.pdf){.btn .btn-outline-primary .btn-sm}
+
+
+## Session 4 : Corrélation de rangs et corrélation partielle
+📅 **Date:** Mar 19, 2026
+
+Le coefficient de corrélation de rangs de Spearman, pour les variables ordinales ou les relations non linéaires, et le coefficient de corrélation partielle, qui contrôle l'effet d'une troisième variable.
+
+[{{< fa file-pdf >}} 4. Corrélation de rangs et corrélation partielle](session4/cours_4.pdf){.btn .btn-outline-primary .btn-sm}
+
+
+## Session 5 : Corrélations inter- et intragroupes et le concept d'entropie
+📅 **Date:** Mar 26, 2026
+
+Décomposition de la corrélation en parts inter- et intragroupes, puis introduction au concept d'entropie comme mesure de l'incertitude d'une variable catégorielle.
+
+[{{< fa file-pdf >}} 5. Corrélations inter- et intragroupes et le concept d'entropie](session5/cours_5.pdf){.btn .btn-outline-primary .btn-sm}
+
+## Session 6 : Entropie pour deux variables catégorielles
+📅 **Date:** Apr 16, 2026
+
+Après un rappel sur l'entropie d'une variable, nous étendons le concept à deux variables catégorielles : entropie conjointe, entropie conditionnelle et information mutuelle.
+
+[{{< fa file-pdf >}} 6. Entropie pour deux variables catégorielles](session6/cours_6.pdf){.btn .btn-outline-primary .btn-sm}
+
+## Session 7 : Dépendances et entropies pour trois variables catégorielles
+📅 **Date:** Apr 23, 2026
+
+Les notions entropiques permettent de décrire les dépendances entre trois variables catégorielles, et de distinguer les effets directs des effets passant par une troisième variable.
+
+[{{< fa file-pdf >}} 7. Dépendances et entropies pour trois variables catégorielles](session7/cours_7.pdf){.btn .btn-outline-primary .btn-sm}
+
+## Session 8 : Distributions empiriques et théoriques : l'entropie relative
+📅 **Date:** Apr 30, 2026
+
+L'entropie relative (divergence de Kullback-Leibler) mesure l'écart entre une distribution empirique et une distribution théorique. Elle fonde une famille de tests et mène au principe du maximum de vraisemblance.
+
+[{{< fa file-pdf >}} 8. Distributions empiriques et théoriques : l'entropie relative](session8/cours_8.pdf){.btn .btn-outline-primary .btn-sm}
+
+## Session 9 : Tests de normalité et test de Kolmogorov-Smirnov
+📅 **Date:** May 7, 2026
+
+La plupart des tests classiques supposent la normalité. Nous voyons comment la vérifier (asymétrie, aplatissement, diagrammes quantile-quantile, tests de normalité), puis le test de Kolmogorov-Smirnov pour comparer des distributions.
+
+[{{< fa file-pdf >}} 9. Tests de normalité et test de Kolmogorov-Smirnov](session9/cours_9.pdf){.btn .btn-outline-primary .btn-sm}
+
+## Session 10 : Données pondérées et agrégation
+📅 **Date:** May 21, 2026
+
+Que deviennent les indicateurs lorsque les unités d'observation n'ont pas le même poids ? Mesures pondérées, systèmes de poids et effets de l'agrégation, illustrés par des cartes en anamorphose.
+
+[{{< fa file-pdf >}} 10. Données pondérées et agrégation](session10/cours_10.pdf){.btn .btn-outline-primary .btn-sm}

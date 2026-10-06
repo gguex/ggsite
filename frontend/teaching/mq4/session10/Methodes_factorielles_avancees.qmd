@@ -1,0 +1,408 @@
+---
+title: "X. Méthodes factorielles avancées"
+author: "Guillaume Guex"
+number-sections: true
+lang: fr
+---
+
+## Introduction
+
+Nous avons déjà exploré les méthodes factorielles avec l'Analyse en Composantes Principales (ACP), le Positionnement Multidimensionnel (MDS) et l'Analyse Factorielle des Correspondances (AFC). Seulement, ces outils s'appliquent à des données plutôt simples. Pour analyser des jeux de données plus complexes, nous allons devoir mobiliser des méthodes factorielles plus avancées. Nous allons voir ici :
+
+- **L'Analyse des Correspondances Multiples (ACM)**, qui permet d'analyser des données composées de plusieurs variables qualitatives. C'est une extension directe de l'AFC, mais qui s'applique sur des données constituées de plus de 2 variables catégorielles.
+
+- **L'Analyse Factorielle Multiple (AFM)**, qui traite de tableaux de données où les variables sont structurées en groupes thématiques. Elle traite chaque groupe de variable séparément (via des ACP et des ACM) puis les combine pour obtenir une analyse globale. Sa force est de pouvoir traiter des variables catégorielles et numériques ensemble et d'équilibrer l'influence de chaque groupe : un bloc de 50 variables compte autant qu'un groupe de 3 variables. Elle est souvent utilisée pour analyser des questionnaires structurés par thématiques.
+
+Nous utiliserons à nouveau le package `FactoMineR` pour les calculs, ainsi que `factoextra` pour les visualisations. Le package `psych` nous servira au calcul d'un indice, le **alpha de Cronbach**, permettant de valider la cohérence de nos groupes dans l'AFM :
+
+```{r warning=FALSE, message=FALSE}
+library(tidyverse)
+library(FactoMineR)
+library(factoextra)
+library(psych)
+```
+
+## L'Analyse des Correspondances Multiples (ACM)
+
+L'**ACM** s'applique sur des données contenant **uniquement des variables catégorielles**. La première étape consiste à transformer ce jeu de données en **tableau disjonctif complet**, en recodant les variables catégorielles avec des *dummies* :
+
+```{r}
+#| layout-ncol: 2
+#| echo: false
+#| message: false
+library(knitr)
+
+# Contruction des données
+donnees = data.frame(
+  Individu = c("P1", "P2", "P3"),
+  Genre = c("Homme", "Femme", "Homme"),
+  Transport = c("Vélo", "Voiture", "Bus")
+)
+
+# Affichage des données
+kable(donnees, caption="Données")
+
+# Transformation en tableau disjonctif complet
+tdc = tab.disjonctif(donnees[, 2:3]) 
+tdc_complet = cbind(Individu=donnees$Individu, as.data.frame(tdc))
+
+# Affichage de ce tableau
+kable(tdc_complet, caption="Tableau disjonctif complet")
+```
+
+L'ACM n'est ensuite rien d'autre qu'une AFC appliquée sur ce tableau disjonctif complet. Ce tableau est donc considéré comme une **table de contingence individus** $\times$ modalités. Cette approche a plusieurs conséquences :
+
+- **Biplot individus-modalités** : Contrairement à l'AFC qui croise deux variables, l'ACM permet de projeter les individus avec les modalités. On peut ainsi voir les attractions entre individus et modalités.
+- **Calculs sur les variables** : On peut calculer des quantités sur un groupe de modalités faisant partie d'une même variable, permettant ainsi de comprendre l'effet global d'une variable.
+- **Poids des variables** : Les variables possédant plus de modalités ont une inertie plus forte. Il est donc parfois nécessaire de regrouper les modalités avant l'analyse, pour avoir des variables avec un nombre de modalités équivalent.
+
+Nous allons voir tous ces concepts plus en détails avec la pratique.
+
+### Chargement des données et pré-traitements
+
+Nous allons utiliser ici le jeu de données `obesity_risk.csv`, issu de l'UCI (<https://archive-beta.ics.uci.edu/dataset/544>). Il concerne l'estimation des niveaux d'obésité basés sur les habitudes alimentaires et la condition physique. Il est composé de nombreuses variables catégorielles (dont la signification est donnée sur le site de l'UCI) :
+
+```{r}
+obesity_risk_df = read_csv("data/obesity_risk.csv")
+obesity_risk_df
+```
+
+Nous allons isoler les variables catégorielles de ce jeu de données et les transformer en facteurs. Le jeu de données initial, contenant les variables numériques, va cependant nous servir plus tard pour distinguer les individus :
+
+```{r}
+mca_df = obesity_risk_df %>%
+  select(where(is.character)) %>%
+  mutate_all(as.factor)
+```
+
+On peut voir un aperçu de ces variables qui vont servir à l'analyse :
+
+```{r}
+summary(mca_df)
+```
+
+### Effectuer l'ACM
+
+Pour effectuer l'ACM, on utilise la fonction `ACM()` :
+
+```{r}
+mca_res = MCA(mca_df, graph=FALSE)
+```
+
+Comme avec toutes les fonctions de `FactoMineR`, le résultat de cette fonction contient un grand nombre d'informations :
+
+```{r}
+mca_res
+```
+
+On voit qu'il y a quelques nouveaux résultats que nous explorerons plus loin. On y trouve aussi le fameux **tableau disjonctif complet** ayant servi à l'analyse :
+
+```{r}
+as_tibble(mca_res$call$Xtot)
+```
+
+Comme pour toutes les méthodes factorielles, nous pouvons afficher la compression d'informations effectuée via le **screeplot** :
+
+```{r}
+fviz_eig(mca_res, ncp=20, addlabels=TRUE)
+```
+
+Avec ACM, les pourcentages de variance expliquée sont fréquemment faibles (au vu de la structure disjonctive). Avec 10-15% d'inertie exprimée sur un axe, c'est déjà le signe d'une structure latente forte.
+
+### Les individus, les modalités et les variables
+
+Comme l'ACM est en réalité une AFC sur le tableau individus-modalités, on peut afficher le **biplot** :
+
+```{r}
+fviz_mca_biplot(mca_res)
+```
+
+Il y a cependant ici trop d'individus, qui sont en plus anonymes. Ce n'est donc pas très utile.
+
+Un des graphiques les plus fondamentaux est en général l'**espace des modalités**, qui s'obtient avec `fviz_mca_var()` :
+
+```{r}
+fviz_mca_var(mca_res, repel=TRUE)
+```
+
+Il est généralement bienvenu ici de **colorer les différentes modalités selon les variables** dont elles sont issues. Il n'existe pas de méthode directe pour y arriver, et il nous faut construire un vecteur qui contient toutes les appartenances des modalités.
+
+On commence donc par construire le tableau croisé avec toutes les modalités afin d'extraire le nombre de modalités par variable :
+
+```{r}
+cross_tab = table(mca_df)
+nb_mods = dim(cross_tab)
+```
+
+Puis on construit un vecteur contenant le nom des variables répétées par le nombre de modalités :
+
+```{r}
+mod_var = as.factor(rep(names(mca_df), nb_mods))
+mod_var
+```
+
+On peut ainsi construire le tableau des modalités colorées par variables :
+
+```{r}
+fviz_mca_var(mca_res,
+             repel = TRUE, 
+             col.var = mod_var,
+             mean.point = FALSE,
+             legend.title = "Variables")
+```
+
+L'interprétation est ici similaire à l'AFC :
+
+- Si deux modalités sont proches, cela signifie qu'elles apparaissent souvent ensemble.
+- Plus une modalité est loin du centre, plus elle est rare et discriminante. Les modalités banales sont au centre.
+- Le centre (pondéré) pour chaque groupe de modalités est l'origine (l'affichage des centres non-pondérés a été désactivé avec `mean.point = FALSE`).
+
+### Les quantités dérivées
+
+Comme avec une ACP ou une AFC, nous pouvons observer les **contributions** et les **cos2** (qualité de la représentation) pour les individus ou les modalités par rapport à des axes :
+
+```{r}
+# Les contributions des modalités à la formation des axes 1 et 2
+fviz_contrib(mca_res, choice="var", axes=1:2)
+# Les cosinus carrés des modalités (qualité de représentation) sur les axes 1 et 2
+fviz_cos2(mca_res, choice="var", axes=1:2)
+```
+
+Il y a cependant une nouvelle quantité, spécifique à l'ACM : les **eta2** pour chaque variable. Ces dernières sont équivalentes au R-carré dans une ANOVA. Elles mesurent (entre 0 et 1) à quel point une variable "explique" la position des individus sur un axe. On peut les obtenir avec `mca_res$var$eta2`, ou sous forme graphique en précisant l'argument `choice="mca.cor"` dans `fviz_mca_var()` :
+
+```{r}
+mca_res$var$eta2
+fviz_mca_var(mca_res, choice="mca.cor", repel = TRUE, title="Correlation des variables (Eta2)")
+```
+
+### Les graphiques avancés
+
+Avec tous ces éléments, nous pouvons affiner nos graphiques afin d'améliorer leur lisibilité.
+
+On peut par exemple n'afficher que les modalités les plus contributives aux 2 premiers axes :
+
+```{r}
+fviz_mca_var(mca_res, 
+             col.var = mod_var, 
+             repel = TRUE, 
+             mean.point = FALSE,
+             select.var=list(contrib=15))
+```
+
+Concernant l'affichage des individus, des variables numériques (ou catégorielles, supplémentaires ou non) peuvent nous permettre de comprendre leur position sur le plan factoriel. On peut par exemple afficher le poids des individus de la manière suivante :
+
+```{r}
+fviz_mca_ind(mca_res, 
+             geom = "point",
+             alpha.ind = 0.6,
+             col.ind = obesity_risk_df$Weight, 
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             legend.title = "Poids (kg)")
+```
+
+On voit que l'axe 1 explique en grande partie le poids des individus.
+
+Une fonctionnalité intéressante des fonctions de `factoextra` est de pouvoir afficher des **ellipses** résumant la position des différents groupes de points (bon à savoir : si vous précisez l'argument `ellipse.type="confidence"`, vous tracez des ellipses sur la position moyenne des individus) :
+
+```{r}
+fviz_mca_biplot(mca_res, 
+                geom.ind = "point",
+                repel = TRUE,
+                alpha.ind = 0, # On rend les points invisibles
+                col.var = mod_var, 
+                col.ind = obesity_risk_df$Gender,   
+                select.var=list(contrib=15),
+                mean.point = FALSE,
+                addEllipses = TRUE) # L'argument pour mettre des ellipses
+```
+
+D'ailleurs, la fonction `plotellipses()` de FactoMineR permet de tracer automatiquement toutes les ellipses pour nos variables catégorielles (supplémentaires ou non) ayant été entrées dans la fonction `MCA()` :
+
+```{r}
+plotellipses(mca_res, 
+             means = FALSE) # Ellipse sur les individus, par sur les moyennes
+```
+
+## L'Analyse Factorielle Multiple (AFM)
+
+L'**AFM** s'applique sur des tableaux de données où les variables sont structurées en **groupes** ou **blocs**. Contrairement à l'ACP ou l'ACM, elle permet d'analyser simultanément des blocs de variables quantitatives ET qualitatives. Elle propose donc d'analyser un jeu de données qui a la forme suivante :
+
+```{r}
+#| layout-ncol: 3
+#| echo: false
+#| message: false
+
+# Les données
+donnees_afm = data.frame(
+  Individu = c("P1", "P2", "P3"),
+  Age = c(25, 42, 33),             
+  Score = c(12.5, 18.0, 9.5),      
+  Sexe = c("H", "F", "H"),         
+  Emploi = c("Oui", "Oui", "Non") 
+)
+
+# Affichage
+kable(donnees_afm, caption="Données globales")
+
+# Le bloc 1
+kable(donnees_afm[, 1:3], caption="Bloc 1 (Numérique)")
+
+# Le bloc 2
+kable(donnees_afm[, c(1, 4, 5)], caption="Bloc 2 (Catégoriel)")
+```
+
+L'AFM n'est ensuite rien d'autre qu'une ACP globale appliquée sur l'ensemble de ces données, après avoir équilibré chaque bloc. Pour cela, elle réalise d'abord une analyse séparée sur chaque groupe (une ACP pour les blocs numériques, une ACM pour les blocs catégoriels), puis agrège les différents résultats. Cette approche a plusieurs conséquences :
+
+- **Équilibre des poids** : L'algorithme divise chaque bloc par sa première valeur propre. Ainsi, on évite qu'un groupe contenant 50 variables n'écrase mathématiquement un groupe n'en contenant que 3. Chaque bloc pèse le même poids dans la construction de l'espace global.
+
+- **Représentation des groupes** : L'AFM offre des graphiques permettant de projeter non pas les variables, mais les blocs entiers. On peut ainsi évaluer visuellement la proximité et les corrélations entre les différents blocs.
+
+- **Individus partiels** : En plus de projeter l'individu "moyen" au centre de gravité de ses réponses, l'AFM permet de projeter ses "points partiels". On peut ainsi voir la position d'un même individu s'il n'était évalué que par le Bloc 1, puis que par le Bloc 2, révélant ses éventuelles contradictions.
+
+Passons à la pratique pour mieux comprendre tout ceci.
+
+### Chargement et pré-traitements
+
+Nous allons utiliser ici le jeu de données `bfi` issu du package `psych`. Ce dernier contient les réponses de 2800 personnes à 25 questions mesurant les 5 grands traits de personnalité (Agréabilité, Conscience, Extraversion, Névrosisme, Ouverture) nommés en psychologie les *Big Five*. Il contient également 3 variables socioéconomiques. Pour plus de détails, regardez l'aide (`?bfi`) sur ce jeu de données :
+
+```{r}
+data(bfi)
+as_tibble(bfi)
+```
+
+Ce jeu de données contient plusieurs valeurs manquantes (`NA`). Pour simplifier l'analyse, on enlève toutes les lignes qui en contiennent :
+
+```{r}
+bfi = bfi %>% 
+  drop_na()
+```
+
+Le groupe des variables socioéconomiques va être utilisé comme **groupe supplémentaire**. Cependant, un groupe doit être défini avec un seul type de variables (numériques ou catégorielles). Nous allons donc recoder la variable `age` en variable catégorielle et préciser les différents niveaux des variables `gender` et `education`. Le jeu de données résultant sera celui qui nous servira à l'analyse :
+
+```{r}
+afm_df = bfi %>%
+  mutate(gender = ifelse(gender == 1, "male", "female"),
+         education = case_when(
+           education == 1 ~ "HS", 
+           education == 2 ~ "finished HS",
+           education == 3 ~ "some college", 
+           education == 4 ~ "college grad",
+           education == 5 ~ "grad degree"),
+         age_cat = cut(age, breaks=3, labels=c("young", "adult", "senior"))) %>%
+  select(-age)
+```
+
+Il s'agit maintenant de définir nos blocs de variables. Pour cela, on doit préciser leur **taille**, leur **type** et leur **nom** :
+
+```{r}
+grp_sizes = c(5, 5, 5, 5, 5, 3) 
+grp_types = c("s", "s", "s", "s", "s", "n") 
+grp_names = c("Agréabilité", "Conscience", "Extraversion", 
+              "Névrosisme", "Ouverture", "Démographie")
+```
+
+Les groupes peuvent être définis comme `"s"` (contenant des variables numériques) et `"n"` (contenant des variables catégorielles). Il existe aussi les options `"c"` (numériques non-réduites), `"m"` (variables mixtes) et `"f"` (table de contingence). Il est cependant recommandé de ne **pas les utiliser** sans une bonne maîtrise des outils statistiques sous-jacents, car l'interprétation devient difficile.
+
+### Le alpha de Cronbach
+
+Pour valider la construction de nos blocs, on peut s'aider d'un indice nommé le **alpha de Cronbach**. Ce dernier mesure la **cohérence interne d'un groupe de variables numériques** en analysant les corrélations croisées. Son score varie de 0 à 1 et une valeur supérieure à 0.6 est généralement considérée comme acceptable pour dire que le groupe mesure un concept latent identique.
+
+On peut obtenir cette mesure à l'aide de la fonction `alpha()` du package `pysch` :
+
+```{r}
+alpha_A = afm_df %>% select(A1:A5) %>% alpha(check.keys=TRUE)
+alpha_A$total$raw_alpha
+alpha_C = afm_df %>% select(C1:C5) %>% alpha(check.keys=TRUE)
+alpha_C$total$raw_alpha
+alpha_E = afm_df %>% select(E1:E5) %>% alpha(check.keys=TRUE)
+alpha_E$total$raw_alpha
+alpha_N = afm_df %>% select(N1:N5) %>% alpha(check.keys=TRUE)
+alpha_N$total$raw_alpha
+alpha_O = afm_df %>% select(O1:O5) %>% alpha(check.keys=TRUE)
+alpha_O$total$raw_alpha
+```
+
+Nos groupes semblent tous être relativement cohérents.
+
+### Effectuer l'AFM
+
+L'AFM s'effectue avec la fonction `MFA()`. Il faut lui donner tous les vecteurs servant à la définition de nos groupes, et `num.group.sup = 6` précise que le 6ème groupe est en réalité un groupe de variables supplémentaires :
+
+```{r}
+mfa_res = MFA(afm_df, 
+              name.group = grp_names,
+              group = grp_sizes,
+              type = grp_types,
+              num.group.sup = 6,
+              graph = FALSE)
+```
+
+Examinons l'objet de retour :
+
+```{r}
+mfa_res
+```
+
+On voit que ce dernier contient de nombreuses sorties inhabituelles, comme par exemple :
+
+- `$group` : Contient des statistiques sur les groupes entiers, considérés comme "une seules variables".
+- `$inertia.ratio` : Contient l'accord global entre les différents groupes.
+- `$ind$coord.partiel` : Contient la position de l'individu calculée pour chaque bloc séparément.
+
+Et bien d'autres que nous n'aurons pas le temps d'examiner en détail ici. Le nombre de résultats montre la complexité de cette analyse, qui s'effectue d'abord sur chaque bloc et ensuite de manière globale, permettant de calculer de nombreuses quantités à plusieurs échelons.
+
+Comme pour toutes les méthodes factorielles, nous pouvons examiner l'information exprimée sur chaque axe :
+
+```{r}
+fviz_eig(mfa_res, addlabels=TRUE)
+```
+
+## Sorties de l'AFM
+
+Comme avec une ACP classique, on peut voir le **cercle des corrélations** :
+
+```{r}
+fviz_mfa_var(mfa_res)
+```
+
+Ainsi que les **coordonnées des individus** (que nous colorions avec `age_cat`) :
+
+```{r}
+fviz_mfa_ind(mfa_res, 
+             geom="point",
+             habillage = "age_cat",
+             addEllipses = TRUE, 
+             col.quali.var.sup = rgb(1, 1, 1, 0)) # élimine l'affichage des variables supplémentaires
+```
+
+Cependant, il existe également des graphiques plus spécifiques, comme par exemple les **coordonnées des groupes** (c'est l'affiche de l'information contenue dans `mfa_res$group$coord`) :
+
+```{r}
+fviz_mfa_var(mfa_res, choice = "group", repel = TRUE)
+```
+
+On voit que ces coordonnées sont entre 0 et 1. Elles représentent en réalité une **intensité de liaison** entre chaque groupe et les différents axes (formellement $\text{coord}_{g, \alpha} = \frac{\sum_{i \in g} \text{corr}(i, \alpha)^2}{\lambda_{g, \alpha}}$). C'est un concept proche des contributions, mais contrairement à ces dernières qui sont relatives (la somme des contributions sur un axe donne 100%), l'intensité de liaison peut être partagée entre plusieurs groupes de variables.
+
+Dans notre résultat, "Extraversion", "Agréabilité" et "Conscience" sont fortement liés à l'axe 1, et "Névrosisme" et "Ouverture" plutôt à l'axe 2.
+
+Le deuxième graphique spécifique à l'AFM est l'**espace des individus partiels**. Il est plus aisé à interpréter lorsque les individus ne sont pas anonymes, car il se focalise sur ces derniers. Ici, nous allons extraire les 5 individus les mieux représentés sur les deux premiers axes afin de les représenter :
+
+```{r}
+n_top = 5
+perc_12 = rowSums(mfa_res$ind$cos2[, 1:2]) # la somme des cos2 sur l'axe 1 et 2
+top_ind_indices = order(perc_12, decreasing=TRUE)[1:n_top] # les indices des individus avec les cos2 les plus élevées
+```
+
+On affiche ensuite ce graphique en précisant les indices de ces individus :
+
+```{r}
+fviz_mfa_ind(mfa_res,
+             select.ind = list(cos2=n_top),
+             geom = "point",
+             partial = top_ind_indices,
+             repel = TRUE)
+```
+
+Chaque branche représente ici la **position de l'individu par rapport à un seul bloc de variables**, et le centre est le **profil global**, qui est le barycentre des autres points.
+
+Ainsi, les différentes branches de l'étoile montrent les "contradictions" entre son profil global et ses profils par rapport aux différents blocs. Une étoile compacte dénote donc une personnalité cohérente, alors qu'une étoile avec de longues branches dénote des tensions et contradictions fortes entre ses différents traits de personnalité.

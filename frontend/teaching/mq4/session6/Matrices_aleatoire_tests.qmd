@@ -1,0 +1,560 @@
+---
+title: "VI. Le calcul matriciel, l'aléatoire et les tests statistiques"
+author: "Guillaume Guex"
+number-sections: true
+lang: fr
+---
+
+## Le calcul matriciel
+
+Le **calcul matriciel** est un outil mathématique incontournable pour résoudre des systèmes d'équations, effectuer des transformations linéaires et manipuler de vastes jeux de données. La quasi-totalité des méthodes statistiques, d'analyses multivariées et d'algorithmes de Machine Learning s'appuient dessus "sous le capot".
+
+Le maîtriser vous confère donc un avantage technique majeur : vous aurez la capacité de programmer et de comprendre vos propres modèles de A à Z, d'optimiser vos temps de calcul, et de vous affranchir de nombreux packages externes.
+
+Contrairement à d'autres langages qui nécessitent des librairies supplémentaires (comme `numpy` en Python), le calcul matriciel est **totalement natif** dans R.
+
+### Création de matrices et de vecteurs
+
+Une matrice $\mathbf{A}=(a_{ij})$ de type $n\times m$ est un tableau de nombres disposés selon $n$ lignes et $m$ colonnes. La quantité $a_{ij}$ désigne la **composante** $ij$ de $\mathbf{A}$, i.e. le nombre situé à la ligne $i$ et la colonne $j$.
+
+En R, on utilise la commande `matrix()` pour en créer une (`byrow=T` permet de remplir en ligne) :
+
+```{r}
+A = matrix(c(2, 1, 3, 2), 2, 2)
+A
+B = matrix(c( 1, 1, 
+             -1, 0), 2, 2, byrow=T)
+B
+```
+
+Une matrice de type $n\times m$ est **carrée** si $n=m$.
+
+-   Lorsque $m=1$, c'est un **vecteur-colonne**.
+
+-   Lorsque $n=1$, c'est un **vecteur-ligne**.
+
+-   Lorsque $n=m=1$, c'est un est un **scalaire**, i.e. un nombre ordinaire d'un point de vue mathématique. Toutefois, R **distingue les deux** :
+
+```{r}
+matrix(-0.73, 1, 1)
+as.numeric(matrix(-0.73, 1, 1)) # en scalaire.
+```
+
+Les vecteurs de R (`c()`) sont considérés comme **vecteurs sans dimension**. Ils peuvent être utilisés dans un calcul matriciel, mais s'interprètent comme vecteurs-lignes ou vecteurs-colonnes en fonction du calcul demandé. (nous le verrons plus tard)
+
+### Opérations sur les matrices
+
+L'**addition** de deux matrices $\mathbf{A}=(a_{ij})$ et $\mathbf{B}=(b_{ij})$ de même type $n\times m$ est une matrice de même type, dont les composantes sont données par $a_{ij}+b_{ij}$ :
+
+```{r}
+A
+B
+A + B   
+```
+
+La **multiplication** (matricielle) de deux matrices $\mathbf{A}=(a_{ik})$ (de type $n\times l$) et $\mathbf{B}=(b_{kj})$ (de type $l\times m$) est une matrice $\mathbf{C}=(c_{ij})$ de type $n\times m$, dont les composantes sont données par $c_{ij}=\sum_{k=1}^l a_{ik}b_{kj}$.
+
+Si le nombre de colonnes de $\mathbf{A}$ diffère du nombre de lignes de $\mathbf{B}$, le produit (matriciel) n'est pas défini.
+
+En R, le calcul matriciel s'effectue à l'aide de l'opérateur `%*%` :
+
+```{r}
+A %*% B
+```
+
+La multiplication matricielle n'est **pas commutative** : $\mathbf{AB}\neq \mathbf{BA}$ en général :
+
+```{r}
+B %*% A
+```
+
+La multiplication matricielle entre une matrice et un vecteur (défini avec `c()`) et aussi possible, le vecteur sera transformé en vecteur-colonne ou vecteur-ligne en fonction de sa position dans le calcul :
+
+```{r}
+C = matrix(c(1, 10, 100, 1000), 2, 2)
+C
+C %*% c(1, 2) # le vecteur est interprété comme un vecteur-colonne
+c(1, 2) %*% C # le vecteur est interprété comme un vecteur-ligne
+```
+
+La multiplication matricielle diffère de la multiplication **composante par composante** entre $\mathbf{A}$ et $\mathbf{B}$ (qui doivent être de même type), notée $\mathbf{A}\odot \mathbf{B}$, appelée aussi **multiplication de Hadamard** :
+
+```{r}
+A*B 
+```
+
+Les autres opérateurs de calcul standards (`-`, `/`, `^`) s'effectuent également composante par composante.
+
+Si on utilise un opérateur de calcul standard entre un vecteur et une matrice, le vecteur sera "dupliqué" en boucle (en suivant les colonnes) pour atteindre la taille de la matrice : c'est encore une fois le principe de **recyclage** qui s'applique :
+
+```{r}
+C * c(1, 2) # le vecteur est répété pour correspondre au nombre de lignes de C
+D = matrix(1:9, 3, 3)
+D * c(1, 10) # Un avertissement que le vecteur n'est pas un multiple, mais le calcul s'effectue
+D^2 # toutes les composantes de D sont élevées au carré (par recyclage)
+```
+
+La **transposée** de la matrice $\mathbf{A}=(a_{ij})$ est la matrice $\mathbf{A}'\equiv \mathbf{A}^\top=(a_{ji})$ obtenue en échangeant les lignes et les colonnes. On utilise la fonction `t()` en R :
+
+```{r}
+t(A)
+```
+
+L'**inverse** d'une matrice carrée $\mathbf{A}$ est la matrice carrée de même type, notée $\mathbf{A}^{-1}$, telle que $\mathbf{A}^{-1}\mathbf{A}=\mathbf{I}$ (et $\mathbf{A}\mathbf{A}^{-1}=\mathbf{I}$). Si l'inverse existe, elle s'obtient avec la fonction `solve()`:
+
+```{r}
+solve(A) # l'inverse de A
+```
+
+La **partie diagonale** d'une matrice carré $\mathbf{A}=(a_{ij})$ de type $n\times n$ est le vecteur $\mbox{diag}(\mathbf{A})$ dont les $n$ composantes sont $a_{ii}$ pour $i=1,\ldots,n$. On l'obtient avec la fonction `diag()` :
+
+```{r}
+G = matrix(c(1, 2, 3, 
+             4, 5, 6, 
+             7, 8, 9), 3, 3, byrow=T)
+G
+diag(G)
+```
+
+La fonction `diag()` **appliquée à un vecteur** $\mathbf{x}$ donne une matrice dont la partie diagonale vaut $\mathbf{x}$, et les composantes hors de la diagonale valent zéro. Une telle matrice est dite **diagonale** :
+
+```{r}
+x = c(1, 2, 3)
+diag(x)
+```
+
+En particulier, `diag(diag(A))` remplace toutes les composantes hors diagonale de la matrice carrée $A$ par zéro:
+
+```{r}
+diag(diag(G))
+```
+
+Enfin, lorsque l'argument de `diag()` est un **nombre entier** $n$, la matrice produite est une matrice diagonale $n\times n$ contenant des 1 sur la partie diagonale. C'est la **matrice identité** $n \times n$, notée $\mathbf{I}_n$ ou simplement $\mathbf{I}$ :
+
+```{r}
+I3 = diag(3)
+I3
+```
+
+### Calcul matriciel et géométrie
+
+Le **produit scalaire** de deux vecteurs $\mathbf{x}$ et $\mathbf{y}$ à $n$ composantes est le nombre, noté $(\mathbf{x},\mathbf{y})$, défini par $\sum_{i=1}^n x_iy_i$ :
+
+```{r}
+x = c(1, 2, 3, 4) 
+y = c(0, -1, 1, 10)
+# Le produit scalaire (x, y)
+t(x) %*% y 
+# Le produit scalaire (y, x) = (x, y)
+t(y) %*% x 
+```
+
+Comme les vecteurs de R sont considérés comme des vecteurs sans dimension, le produit scalaire peut être calculé sans spécifier la transposition du premier élément (le vecteur de gauche et considéré comme un vecteur-colonne et celui de droite comme vecteur-ligne) :
+
+```{r}
+x %*% y
+```
+
+On a que $\mathbf{x}^\top \mathbf{y}=\mathbf{y}^\top \mathbf{x}$ (car le résultat est un scalaire). Par contre, $\mathbf{x} \mathbf{y}^\top$ et $\mathbf{y} \mathbf{x}^\top$ sont deux matrices $n\times n$ **distinctes**, transposées l'une de l'autre :
+
+```{r}
+x %*% t(y)   
+y %*% t(x)  
+```
+
+La **norme euclidienne** de $\mathbf{x}$, notée $\|\mathbf{x}\|$, est définie par $\|\mathbf{x}\|=\sqrt{(\mathbf{x},\mathbf{x})}$ :
+
+```{r}
+# Le carré scalaire (x,x), donnant 
+# le carré de la norme euclidienne de x
+t(x) %*% x 
+# Expression équivalente
+sum(x^2)  
+# Norme euclidienne de x
+sqrt(t(x) %*% x) 
+```
+
+Il découle de l'identité (cf. cours de géométrie) : $$
+  (\mathbf{x},\mathbf{y})=\|\mathbf{x}\|\|\mathbf{y}\|\cos\alpha
+$$ où $\alpha=\angle(\mathbf{x},\mathbf{y})$ est l'angle entre $\mathbf{x}$ et $\mathbf{y}$, que : $$
+  \cos\alpha=\frac{(\mathbf{x},\mathbf{y})}{\|\mathbf{x}\|\|\mathbf{y}\|}
+$$
+
+```{r}
+# Cosinus de l'angle entre x et y
+cosa = (t(x) %*% y) / sqrt(sum(x^2)*sum(y^2))  
+# Angle entre x et y, en radians
+acos(cosa) 
+# Angle entre x et y en degrés
+acos(cosa) * (360 / (2*pi)) 
+```
+
+Une matrice carrée $\mathbf{U}$ est **orthogonale** ssi $\mathbf{U}\mathbf{U}^\top=\mathbf{U}^\top \mathbf{U}=I$, ou, de façon équivalente, ssi $\mathbf{U}^{-1}=\mathbf{U}^\top$ :
+
+```{r}
+# Angle en radians; correspond à 45 degrés
+alpha = pi / 4 
+# Matrix de rotation de 45 degrés
+U = matrix(c(cos(alpha), -sin(alpha),
+             sin(alpha), cos(alpha)), 2, 2, byrow=T)
+U
+# U est orthogonale : UU' = U'U = I
+U %*% t(U) 
+```
+
+Toute matrice $n\times n$ **symétrique** (i.e. telle que $\mathbf{A}^\top=\mathbf{A}$) se décompose de façon (presque) unique comme : $$
+  \mathbf{A}=\mathbf{U}\Lambda\mathbf{U}^\top,
+$$ où $\mathbf{U}$ est une matrice orthogonale $n\times n$, et $\Lambda=\mbox{diag}(\mathbf{\lambda})$ est une matrice orthogonale, dont les composantes $\lambda_\alpha$ sont ordonnées de façon décroissante : $\lambda_1\ge\lambda_2\ge\ldots\ge\lambda_\alpha\ge\ldots\ge\lambda_n$.
+
+Les vecteurs colonne dans $\mathbf{U}=(\mathbf{u}_1|\ldots |\mathbf{u}_\alpha|\ldots |\mathbf{u}_n)$ sont les **vecteur propres** de $\mathbf{A}$, et les composantes $\lambda_\alpha$ sont les **valeurs propres** correspondantes. On a $\mathbf{A}\mathbf{u}_\alpha=\lambda_\alpha \mathbf{u}_\alpha$.
+
+En R, la décomposition spectrale s'effectue avec la fonction `eigen()`
+
+```{r}
+# On crée une matrice 4x4 avec 16 valeurs distribuées normalement
+A = matrix(rnorm(16, mean=0, sd=1), 4, 4)
+# On symétrise A, pour pourvoir y appliquer la décomposition spectrale  
+A = (A + t(A)) / 2 
+# Résultat de la décomposition spectrale
+eigen(A) 
+```
+
+Le résultat est une liste qui contient les éléments `values` (les valeurs propres) et `vectors` (les vecteurs propres) :
+
+```{r}
+# Donne les vecteurs propres de A
+U = eigen(A)$vectors
+# Donne les valeurs propres de A, ordonnées par valeurs décroissantes
+lambda = eigen(A)$values 
+# Vaut A en vertu du théorème de décomposition spectrale
+U %*% diag(lambda) %*% t(U)
+# Vérification
+U %*% diag(lambda) %*% t(U) - A 
+```
+
+$\mbox{det}(\mathbf{A})$ désigne le **déterminant** de la matrice carrée $\mathbf{A}$, défini comme le produit $\prod_{\alpha=1}^n\lambda_\alpha$ de ses valeurs propres. La fonction `det()` calcule le déterminant d'une matrice carrée :
+
+```{r}
+A = matrix(c(1, 2, 3,
+             2, 4, 5,
+             3, 5, 6), c(3, 3), byrow=T)
+A
+eigen(A)$values
+det(A)
+```
+
+Une matrice $\mathbf{A}$ possède un inverse ssi $\mbox{det}(\mathbf{A})\neq0$. C'est bien le cas ici :
+
+```{r}
+solve(A)
+```
+
+Par contre le déterminant de $\mathbf{B}$ ci-dessous est nul, et $\mathbf{B}$ ne possède pas d'inverse:
+
+```{r error=TRUE}
+B = matrix(c(1, 2, 3, 
+             2, 4, 5,
+             2, 4, 5), 3, 3, byrow=T)
+det(B)
+solve(B)
+```
+
+Le **rang** $\mbox{rang}(\mathbf{A})$ d'une matrice $n\times m$ est le nombre de lignes (ou, de façon équivalente, de colonnes) **linéairement indépendantes**. Aucune ligne (ou colonne) ne peut s'exprimer comme **combinaison linéaire** des autres lignes (ou colonnes). On doit charger le package `Matrix` pour calculer le rang d'une matrice avec la fonction `rankMatrix()` :
+
+```{r}
+# Chargement du package R "Matrix"
+library(Matrix) 
+# La première composante de la fonction rankMatrix() 
+# donne le rang
+rankMatrix(A)[1] 
+rankMatrix(B)[1]
+```
+
+## Nombres aléatoires et lois de probabilité
+
+En statistique, il est parfois nécessaire de **générer ses propres données**, par exemple pour voir comment se comporte une méthode si l’échantillon choisi vient d’une loi particulière de probabilité. Pour cela, R contient beaucoup d’outils permettant de générer des nombres ou des échantillons **aléatoires**. R possède également plusieurs fonctions qui se rapportent à certaines **lois de probabilité**, permettant d'obtenir des quantiles, la densité, etc.
+
+### Génération aléatoire
+
+La fonction permettant de tirer un échantillon aléatoire parmi un vecteur donné, est **sample()** :
+
+```{r}
+# Création d'une séquence de 1 à 10
+x = 1:10
+# Permutation aléatoire
+sample(x)
+# Tirage de 3 éléments sans remise
+sample(x, 3)
+# Tirage de 3 éléments avec remise
+sample(x, 3, replace=T)
+```
+
+On peut également générer des nombres aléatoires issus de différentes **lois de probabilité** avec les fonctions suivantes :
+
+-   `rnorm()` : loi normale.
+-   `rpois()` : loi de Poisson.
+-   `rbinom()` : loi binomiale.
+-   `runif()` : loi uniforme.
+-   `rchisq()` : loi du chi2.
+-   `rt()` : loi de Student.
+
+Par exemple :
+
+```{r}
+# 10000 points N(2,2)
+a = rnorm(10000, mean=2, sd=2) 
+ # 10000 points Chi2(4)
+b = rchisq(10000, 4)
+```
+
+### Densité, distribution, quantile
+
+La lettre **"r"** devant le nom abrégé de la loi dans ces fonctions veut dire *random generation*. Mais il nous est également possible, pour toutes les lois, d'utiliser :
+
+-   **"d"** : donne la **densité**.
+
+-   **"p"** : donne la **distribution**.
+
+-   **"q"** : donne un **quantile**.
+
+Par exemple pour une loi Normale $N(0,1)$ :
+
+```{r mysize=TRUE, size='\\tiny'}
+# La densité en 0
+dnorm(0)
+# La distribution en 2.58
+pnorm(2.58)
+# Le quantile 0.975
+qnorm(0.975)
+```
+
+## Tests statistiques
+
+R contient de nombreuses fonctions pour effectuer des **tests statistiques**, comme les tests de Student, les tests du chi2, les tests de corrélation. Ici, on va s'intéresser aux tests suivants :
+
+-   Tests univariés
+    -   Test de la moyenne pour 1 échantillon
+    -   Test de la moyenne pour 2 échantillons non-appariés
+    -   Test de la moyenne pour 2 échantillons appariés
+-   Tests bivariés
+    -   Test de corrélation
+    -   Test du F-ratio
+    -   Test du chi2
+
+On va utiliser ici le jeu de données `phonétique.xlsx` pour illustrer ces tests, qui s'intéresse à la prononciation, en français, de différentes voyelles par des locuteurs faisant partie de différentes régions francophones (voir le fichier `phonétique_info.docx`) pour plus d'information. On va avoir besoin des deux packages suivants :
+
+```{r}
+library(tidyverse)
+library(readxl)
+```
+
+Et on charge le jeu de données :
+
+```{r}
+phonetique_df = read_excel("data/phonétique.xlsx")
+```
+
+### Tests univariés
+
+Les tests **univariés** concernent une seule variable, que l'on peut éventuellement mesurer sur deux échantillons (deux groupes) différents. Tous ces tests s'effectuent avec la même fonction `t.test()` (car on utilise à chaque fois la loi $t$ de Student), mais en modifiant ses paramètres.
+
+#### Test de la moyenne pour un échantillon
+
+Commençons par le test le plus simple, le **test de la moyenne pour un échantillon**. On pose l'hypothèse que la moyenne de la durée de prononciation des voyelles en français est de 180ms, on a donc les hypothèses suivantes : $$
+  \begin{cases}
+    H_0 : \mu_x = 180 \\
+    H_1 : \mu_x \neq 180
+  \end{cases}
+$$ où $\mu_x$ est la moyenne théorique de la durée de prononciation des voyelles en français.
+
+On teste ces hypothèses avec :
+
+```{r}
+t.test(phonetique_df$Dur_V, mu=180)
+```
+
+Et avec un **p-valeur = 0.2578**, on voit que cette hypothèse semble tenir la route dans ce jeu de données. (si l'on avait voulu faire un test unilatéral, on aurait dû mettre l'argument de la fonction `alternative` sur `"less"` ou `"greater"`).
+
+Notons ici que la sortie d'un test est une **sortie composite**, qui contient plusieurs éléments, comme la moyenne de l'échantillon, la statistique du test, la p-valeur, etc. Il est possible d'extraire chacun de ces éléments de la sortie du test avec l'opérateur `$` :
+
+```{r}
+t_test_res = t.test(phonetique_df$Dur_V, mu=180)
+names(t_test_res) # Liste de ce que l'on peut extraire
+t_test_res$estimate # La moyenne de l'échantillon
+t_test_res$statistic # La statistique du test
+t_test_res$p.value # La p-valeur
+```
+
+#### Test de la moyenne pour deux échantillons non-appariés
+
+Ce test consiste à vérifier si la **moyenne d'une variable numérique est significativement différente dans deux groupes constitués de personnes différentes**.
+
+Ici, nous allons tester si la durée de prononciation des mots est significativement différente entre les femmes et les hommes : $$
+  \begin{cases}
+    H_0 : \mu_x = \mu_y  \\
+    H_1 : \mu_x \neq \mu_y
+  \end{cases}
+$$ où $\mu_x$ est la moyenne théorique chez les femmes et $\mu_y$ la moyenne théorique chez les hommes.
+
+Pour cela on peut extraire deux vecteurs de notre jeu de données. Le vecteurs de durée pour les femmes :
+
+```{r}
+duree_f = phonetique_df %>%
+  filter(Sexe=="F") %>%
+  .$Dur_M # Le pipe envoie le résultat à la place du "."
+head(duree_f, 100)
+```
+
+Et pour les hommes :
+
+```{r}
+duree_m = phonetique_df %>%
+  filter(Sexe=="M") %>%
+  .$Dur_M
+head(duree_m, 100)
+```
+
+Et on utilise encore une fois la fonction `t.test()` avec cette fois-ci deux vecteurs en entrée :
+
+```{r}
+t.test(duree_f, duree_m)
+```
+
+Le résultat est ici très **significatif** (p-valeur = 8.265e-05), et on peut voir que la durée moyenne des mots est plus élevée chez les femmes que chez les hommes.
+
+#### Test de la moyenne pour deux échantillons appariés
+
+Ce test consiste à vérifier si **la moyenne d'une variable numérique est significativement différente dans deux groupes constitués de personnes identiques**. Ce test consiste en fait à calculer la différence entre les valeurs de cette variable pour chaque personne, puis à vérifier si la moyenne de cette différence est significativement différente de 0.
+
+Nous allons tester ici s'il existe une différence significative de durée entre la prononciation de \[e\] et \[e:\]. Pour obtenir la tableau des durées de ces deux voyelles par locuteur, on fait les opérations suivantes :
+
+-   On filtre les observations sur l'opposition désirée.
+-   On groupe par locuteur·trice et par voyelle.
+-   On fait la moyenne de la durée pour chaque locuteur·trice et chaque voyelle.
+-   On pivote le jeu de données pour avoir la durée de chaque voyelle sur deux colonnes différentes.
+
+```{r}
+duree_e = phonetique_df %>%
+  filter(Opposition=="e(:)") %>%
+  group_by(Locuteur, Voyelle) %>%
+  summarise(duree=mean(Dur_V)) %>%
+  pivot_wider(names_from=Voyelle, values_from=duree)
+duree_e
+```
+
+On va maintenant créer la différence de durée moyenne pour chaque locuteur·trice :
+
+```{r}
+duree_e = duree_e %>%
+  mutate(diff_duree=`e:` - e)
+duree_e
+```
+
+Par défaut, la fonction `t.test()` teste si la moyenne du vecteur est significativement différente de 0, c'est à dire : $$
+  \begin{cases}
+    H_0 : \mu_z = 0  \\
+    H_1 : \mu_z \neq 0
+  \end{cases}
+$$ où les $z_i$ sont les différences de durée pour chaque locuteur·trice, i.e. $z_i = x_i - y_i$ avec $x_i$ la durée pour `e:` et $y_i$ la durée pour `e`. On peut donc directement appliquer le test de Student à ce vecteur de différences :
+
+```{r}
+t.test(duree_e$diff_duree)
+```
+
+Notez, qu'on aurait aussi pu tester directement avec les deux vecteurs, en précisant que les groupes sont appariés avec l'option `paired=T` :
+
+```{r}
+t.test(duree_e$`e:`, duree_e$e, paired=T)
+```
+
+### Tests bivariés
+
+Pour tester les liens entre deux variables, on effectue des **tests bivariés**. Le test à utiliser dépend des types de variables que nous voulons tester :
+
+-   Numérique-numérique : test de la corrélation
+-   Numérique-catégorielle : test du F-Ratio
+-   Catégorielle-catégorielle : test du Chi2
+
+#### Test de la corrélation
+
+Le **lien entre deux variables numériques** se mesure avec la **corrélation**. Un test de corrélation va déterminer si cette corrélation est significativement différente de 0 : $$
+  \begin{cases}
+    H_0 : \rho_{xy} = 0  \\
+    H_1 : \rho_{xy} \neq 0
+  \end{cases}
+$$
+
+Ici, nous allons tester s'il existe un lien entre la durée de la voyelle et sa valeur du premier formant F1. On effectue ce test avec **`cor.test()`**, en fournissant les deux vecteurs de variables numériques :
+
+```{r}
+cor.test(phonetique_df$Dur_V, phonetique_df$F1)
+```
+
+La corrélation est négative et fortement significative (p-valeur \< 2.2e-16).
+
+#### Test du F-ratio
+
+Le **lien entre une variable numérique et catégorielle** se mesure avec le **F-ratio**. Un test du F-ratio va définir si ce ratio est significativement différent de 0. Si le F-ratio = 0, il n'y a pas de lien entre les deux variables et les groupes définis par la variables catégorielles ont des moyennes (de la variable numérique) identiques : $$
+  \begin{cases}
+    H_0 : \mu_1 = \mu_2 = \ldots = \mu_m \\
+    H_1 : H_0 \text{ est fausse}
+  \end{cases}
+$$ où $\mu_j$ est la moyenne de la variable numérique dans le groupe $j$ défini par la variable catégorielle. Nous testons ici si la variable région a une influence sur la durée de prononciation des mots.
+
+Un F-test se fait de manière un peu particulière dans R. On doit d'abord faire appel à un **modèle d'analyse de variance**, grâce à la fonction **`aov()`** qui utilise une **formule**. Ici, pour tester si `Dur_M` dépend de `Region`, le modèle à créer est le suivant :
+
+```{r}
+f_test_model = aov(Dur_M ~ Region, phonetique_df)
+```
+
+On peut voir le résultat du test en passant notre modèle dans la fonction **`summary()`** :
+
+```{r}
+summary(f_test_model)
+```
+
+Encore une fois, le test est très fortement significatif et il y a un lien fort entre les régions et la durée de prononciation des mots.
+
+Notez que ce test nous dit uniquement s'il y a une différence significative de la durée parmi les régions, mais on ne peut pas savoir, uniquement avec ce résultat, quelles régions ont une tendance à la hausse ou à la baisse. On peut étudier ce lien plus en profondeur à l'aide d'un graphique :
+
+```{r}
+ggplot(phonetique_df, aes(x=Region, y=Dur_M)) +
+  geom_boxplot() +
+  theme_minimal()
+```
+
+#### Test du chi2
+
+Finalement, pour tester le **lien entre deux variables catégorielles**, on utilise un **test du chi2** sur une **table de contingence**. Ce test regarde si le **chi2** (qui mesure l'écart entre notre table et la table que l'on devrait avoir en cas d'indépendance des variables catégorielles) est significativement différent de 0. Les hypothèses de ce test se formulent généralement de la façon suivante : $$
+  \begin{cases}
+    H_0 : X \text{ et } Y \text{ sont indépendantes}  \\
+    H_1 : H_0 \text{ est fausse}
+  \end{cases}
+$$ où $X$ et $Y$ sont les deux variables catégorielles que l'on veut tester.
+
+Par exemple, on peut tester ici si il y a un lien entre la variable `Region` et la `Sexe` (l'existence d'un lien montrerait que notre échantillonnage est particulier).
+
+Avant de faire un test du chi2, il nous faut créer une **table de contingence**. On peut utiliser pour cela la fonction **`table()`**, en ne gardant au préalable que les 2 colonnes des variables catégorielles :
+
+```{r}
+cont_table = phonetique_df %>%
+  select(Region, Sexe) %>%
+  table()
+cont_table
+```
+
+On peut alors directement utiliser `chisq.test()` sur cette table pour faire un test du chi2 entre les deux variables catégorielles :
+
+```{r}
+chisq.test(cont_table)
+```
+
+Un lien semble exister, nous pouvons représenter graphiquement les proportions femmes-hommes dans chaque région :
+
+```{r}
+ggplot(phonetique_df) +
+  geom_bar(aes(x=Region, fill=Sexe), position="fill") +
+  theme_minimal()
+```
+
+On voit que la vallée de Joux semble avoir une surreprésentation masculine dans notre échantillon.

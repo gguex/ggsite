@@ -1,0 +1,450 @@
+---
+title: "VII. La régression linéaire et logistique"
+author: "Guillaume Guex"
+number-sections: true
+lang: fr
+---
+
+## Introduction et Préparation des données
+
+Dans ce cours, nous allons voir comment faire des modèles de **régression linéaire multiple** et de **régression logistique** avec R. Une troisième partie va également s'intéresser aux stratégies de **sélection de modèles**, applicables aussi bien à la régression linéaire qu'à la régression logistique.
+
+Les fonctions fondamentales pour faire ces modèles, qui sont **`lm()`** et **`glm()`**, sont déjà présentes dans la base de R. Cependant de nombreuses extensions proposent des résultats, diagnostiques et procédures supplémentaires qui s'avèrent très utiles. Les packages nécessaires pour cette session sont donc les suivants :
+
+```{r, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(ISLR2) # Contient le jeu de données `Wage` sur lequel nous allons travailler
+library(broom) # Pour extraire les résultats des modèles de manière "tidy"
+library(car) # Pour un test global sur les variables catégorielles
+library(MuMIn) # Pour la sélection de modèles exhaustive
+```
+
+Tout au long de ce cours, nous allons utiliser le jeu de données `Wage` du package `ISLR`. Il contient les informations salariales et démographiques de 3000 travailleurs masculins de la région "Mid-Atlantic" aux États-Unis.
+
+Commençons par le charger, transformons-le en tibble, et examinons-le :
+
+```{r}
+wage_df = as_tibble(Wage)
+wage_df
+```
+
+Ce jeu de données est déjà très propre, il n'y a donc pas beaucoup de pré-traitements à effectuer. Cependant, avec de nombreuses méthodes statistiques en R, dont les modèles de régression, définir le bon **type** des variables (numériques, catégorielles, ordinales) est très important, car les calculs effectués de manière sous-jacente ne seront pas les mêmes.
+
+Ici, les variables catégorielles sont déjà correctement typées. Il nous reste à formater les variables ordinales, ce qui est facile à faire ici car, comme elles commencent par des numéros, l'ordre alphabétique correspond naturellement à l'ordre hiérarchique (sinon, on aurait dû définir l'ordre via le vecteur donné dans l'argument `levels`) :
+
+```{r}
+wage_df = wage_df %>%
+  mutate(
+    education = factor(education, ordered=T),
+    health = factor(health, ordered=T)
+  )
+head(wage_df$education)
+head(wage_df$health)
+```
+
+Nous le verrons plus tard, mais dans le cadre de la régression, les variables ordinales sont traitées de manière très particulière, à mi-chemin entre des variables numériques et des variables catégorielles. Nous allons créer deux autres versions de ces dernières, une numérique et une catégorielle, qui nous permettront de les intégrer dans les modèles de régression d'une manière ciblée :
+
+```{r}
+wage_df = wage_df %>%
+  mutate(
+    education_num = as.numeric(education),
+    education_cat = factor(education, ordered=F),
+    health_num = as.numeric(health),
+    health_cat = factor(health, ordered=F)
+  )
+head(wage_df$education_num)
+head(wage_df$education_cat)
+```
+
+## La régression linéaire
+
+### Théorie (rappel)
+
+La régression linéaire (multiple) est un modèle qui postule qu'une variable numérique $Y$, appelée **variable dépendante** ou **critère**, peut s'exprimer en fonction de $p$ autres variables numériques $X_1, \ldots X_p$, appelées **variables indépendantes** ou **prédicteurs**, selon la formule suivante : $$  
+Y = b_0 + b_1 X_1 + b_2 X_2 + \ldots + b_p X_p + \epsilon
+$$ où les $b_i$ sont les **coefficients de régression**, $b_0$ est l'**ordonnée à l'origine** ou l'**intercept**, et $\epsilon$ représente le **terme d'erreur** ou le **résidu** (c'est-à-dire la part de $Y$ qui n'est pas expliquée par les variables indépendantes).
+
+Cette relation est dite **linéaire** car elle suppose qu'il y a une structure sous-jacente de type "hyperplan", autrement dit une droite dans la cas de la régression simple :
+
+```{r}
+x = runif(50)
+y = 2 + 3 * x + rnorm(50, sd=0.5)
+df = tibble(x, y)
+ggplot(df, aes(x=x, y=y)) +
+  geom_point() +
+  geom_abline(intercept=2, slope=3, color="red", linetype="dashed")
+```
+
+On trouve les coefficients de régression par la méthode des **moindres carrés ordinaires** (OLS). L'algorithme va chercher l'unique droite qui minimise l'**erreur carrée moyenne** (MSE), c'est-à-dire qui minimise la distance verticale entre chaque point réel $y_i$ et la prédiction du modèle $\hat{y}_i$ : $$
+  \text{MSE} = \tfrac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2
+$$ avec $\hat{y}_i = b_0 + b_1 x_{i1} + \ldots + b_p x_{ip}$.
+
+### Construire un modèle linéaire avec `lm()`
+
+Un **modèle linéaire** s'obtient avec la fonction `lm()` de R. Cette dernière demande comme premier argument une **formule** qui a une structure particulière et qui utilise l'opérateur tilde `~`.
+
+La structure usuelle d'une formule est la suivante :
+
+```         
+<variable réponse> ~ <variable 1> + <variable 2> + ... + <variable p>
+```
+
+Mais on peut également utiliser d'autres syntaxes :
+
+-   En utilisant `<variable réponse> ~ .`, on indique que l'on prédit avec toutes les variables du jeu de données.
+-   En ajoutant `-1` à la formule, la droite de régression passera par l'origine (on omet l'intercept).
+-   `<variable i>^n` permet d'ajouter l'ordre $n$ de la variable
+-   `<variable i>*<variable j>` permet d'ajouter les termes d'interaction.
+-   Plusieurs fonctions peuvent être utilisées sur les variables, comme `exp()` ou `log()`.
+
+Dans le jeu de données `Wage`, l'objectif sera de prédire la variable `wage` (le salaire annuel en milliers de \$) en fonction d'autres variables du jeu de données. Pour commencer, nous allons faire un modèle linéaire en utilisant simplement deux autres variables numériques, `age` et `education_num` :
+
+```{r}
+lm_res = lm(wage ~ age + education_num, data=wage_df)
+```
+
+Nous avons sauvegardé le résultat dans la variable `lm_res`, car il s'agit d'une sortie qui est utilisable dans plusieurs contextes (une manière de travailler fréquente en R). En premier lieu, cette sortie s'utilise avec `summary()`, qui donne de nombreuses informations sur la régression effectuée :
+
+```{r}
+summary(lm_res)
+```
+
+Examinons cette sortie :
+
+-   **Call:** donne la formule utilisée.
+-   **Residuals:** donne un aperçu de la distribution des résidus, qui devraient suivre une distribution normale centrée autour de zéro pour que les hypothèses du modèle soient respectées.
+-   **Coefficients:** donne les estimations des coefficients de régression, leur erreur standard, la statistique $t$ et la valeur $p$ associée. Ces valeurs permettent de tester l'hypothèse nulle selon laquelle le coefficient est égal à zéro (c'est-à-dire que la variable n'a pas d'effet sur la variable dépendante).
+-   **En bas:** on trouve plusieurs statistiques globales du modèle, comme le $R^2$ et le $R^2$-ajusté, qui permettent d'évaluer sa qualité globale.
+
+On voit que ce modèle explique environ 25% de la variance totale des salaires, que l'intercept et nos deux coefficients sont significatifs, et que les deux variables associées ont un effet positif sur le salaire.
+
+Notez que l'on peut extraire plusieurs informations de ce résultat via l'opérateur `$` :
+
+```{r}
+names(lm_res)
+
+```
+
+Comme par exemple, les coefficients de régression :
+
+```{r}
+lm_res$coefficients
+```
+
+Si l'on cherche à faire des **prédictions** à l'aide de ce modèle, on peut utiliser la fonction `predict()`, qui prend en argument la variable contenant le modèle ainsi qu'un nouveau jeu de données (avec des variables ayant le même nom que celles utilisées pour construire le modèle) :
+
+```{r}
+# Les nouvelles données avec 2 individus
+new_df = tibble(age=c(30, 40), education_num=c(2, 4))
+# La prédiction du salaire sur ces nouveaux individus
+predict(lm_res, new_df)
+```
+
+### Extraire les résultats avec `broom`
+
+Bien que `summary()` soit un standard historique, sa sortie est du texte brut, difficilement manipulable dans un "pipeline" d'opérations. Au sain du `tidyverse`, c'est le package `broom` qui s'utilise pour transformer les sorties statistiques complexes de plusieurs modèles en tableaux de données propres (des tibbles).
+
+Pour les **coefficents** de régression, on utilise la fonction \``tidy()` :
+
+```{r}
+tidy(lm_res)
+```
+
+Pour les **métriques globales** du modèle, on utilise la fonction `glance()`, qui donne un résumé de la qualité du modèle :
+
+```{r}
+glance(lm_res)
+```
+
+Nous nous pencherons plus en détails sur ces critères dans la @sec-select, consacrée à la sélection des modèles.
+
+Pour les **résidus** et les **prédictions** du modèle, on utilise la fonction `augment()`, qui ajoute des colonnes au jeu de données original (avec uniquement les variables retenues) avec les valeurs ajustées, les résidus, et d'autres diagnostics :
+
+```{r}
+augment(lm_res)
+```
+
+On peut ainsi facilement visualiser le **diagramme des résidus**, qui permet de vérifier visuellement les hypothèses de notre modèle (homoscédasticité, linéarité et normalité) :
+
+```{r}
+ggplot(augment(lm_res)) +
+  geom_point(aes(x=.fitted, y=.resid)) +
+  geom_hline(yintercept=0, color="red", linetype="dashed") +
+  labs(title = "Graphique des Résidus vs Valeurs Prédites",
+       x = "Salaire Prédit",
+       y = "Résidus")
+```
+
+Ces hypothèses semblent vérifiées ici (les erreurs sont à peu près symétriques autour de la ligne rouge).
+
+### Les prédicteurs catégoriels ou ordinaux
+
+Il est possible d'intégrer directement des variables catégorielles ou ordinales dans un modèle de régression linéaire, en tant que **prédicteurs**, et R va les traiter automatiquement de la manière la plus adéquate possible.
+
+#### Les variables catégorielles dans le modèle linéaire
+
+Que se passe-t-il lorsque nous incluons dans notre fonction `lm()` une variable catégorielle comme `maritl`, qui contient 5 modalités ?
+
+```{r}
+levels(wage_df$maritl)
+```
+
+R gère cela grâce à un processus appelé **Dummy Encoding** (ou création de variables indicatrices). Si une variable catégorielle possède $m$ modalités, R va créer $m-1$ nouvelles variables binaires (contenant uniquement des 0 et des 1).
+
+La raison pour laquelle R crée $m-1$ modalités au lieu de $m$ est qu'il faut éviter la redondance parfaite d'information dans le jeu de données, et si l'on ajoute toutes les colonnes, l'une d'elle est déductible des $m-1$ autres. Pour éviter cela, R enlève toujours une modalité qui devient la **catégorie de référence** (par défaut, la première dans l'ordre alphabétique, ou la première définie dans le `factor`). Cette catégorie de référence est comme "absorbée" par l'intercept et les coefficients des autres modalités représentent donc la **différence par rapport à cette catégorie de référence**.
+
+Pour voir exactement le tableau de données que R construit avant d'ajuster le modèle linéaire, nous pouvons utiliser la fonction `model.matrix()` :
+
+```{r}
+dummies_encoding = model.matrix(wage ~ maritl, wage_df)
+head(dummies_encoding, 10)
+```
+
+Si l'on ajoute donc cette variable catégorielle `maritl` dans le modèle précédent, on obtient :
+
+```{r}
+lm_res = lm(wage ~ age + education_num + maritl, wage_df)
+summary(lm_res)
+```
+
+Attention cependant à l'interprétation. Ici, seul les niveaux `Married` et `Separated` sont significatifs, mais **en référence au niveau `Never Married`**. Le salaire des personnes de ces deux catégories est donc significativement différent par rapport aux personnes n'ayant jamais été mariées. Pour les autres statuts maritaux, l'échantillon ne permet pas de prouver qu'ils gagnent significativement plus ou moins que les gens n'ayant jamais été mariés.
+
+Pour tester si la variable `maritl` a un impact global sur le modèle (malgré le fait que certaines de ses modalités ne soient pas significatives), la bonne pratique consiste à faire une analyse de variance avec la fonction `Anova()` du package `car` :
+
+```{r}
+Anova(lm_res)
+```
+
+Ici, la valeur p très faible de `maritl` nous confirme que le statut marital, dans son ensemble, est une variable pertinente à conserver dans notre modèle.
+
+Pour avoir d'autres contrastes, il est possible de changer le niveau de référence d'une variable avec `relevel()` :
+
+```{r}
+rlv_wage_df = wage_df %>%
+  mutate(maritl = relevel(maritl, ref="2. Married"))
+lm_res = lm(wage ~ age + education_num + maritl, rlv_wage_df)
+summary(lm_res)
+```
+
+#### Les variables ordinales dans le modèle linéaire
+
+Pour ces variables, on sait qu'il y a un ordre, mais **on ne sait pas si les écarts entre les modalités sont tous équivalents**. R les traite de manière assez particulière.
+
+Prenons directement un exemple avec la variable `education` (ordinale cette fois). Si l'on crée un modèle avec cette dernière, on obtient :
+
+```{r}
+lm_res = lm(wage ~ age + education, wage_df)
+summary(lm_res)
+```
+
+On voit que cette variable été incluse avec **différentes tendances**, résumées par les indications `L`, `Q`, `C` et `^4` :
+
+-   **Tendance Linéaire `L`** : le modèle teste s'il y a une tendance linéaire globale. Autrement dit, on regarde si le fait de monter d'un niveau de diplôme augmente le salaire de manière régulière et constante.
+
+-   **Tendance Quadratique `Q`** : le modèle teste s'il y a une courbure (une forme en "U"). Ici, la supposition est que les petits diplômes ne changent pas beaucoup le salaire, mais que l'effet augmente lorsque l'on arrive au Master ou au Doctorat.
+
+-   **Tendance Cubique `C`** : le modèle teste s'il y a deux courbures (une forme en "S"). En gros, est-ce qu'on a un gros gain avec les premiers diplômes, puis un plateau (stagnation), puis de nouveau un gros gain avec les plus hauts diplômes.
+
+-   **Tendance Quartique** `^4` : au-delà du cubique, les niveaux deviennent difficiles à interpréter et l'on a presque intérêt à traiter la variable comme une variable catégorielle sans ordre.
+
+Il peut parfois être préférable d'utiliser les versions purement numériques ou catégorielles de cette variable, car l'interprétation s'en trouve allégée. D'une manière générale, si le `L` est le principal facteur significatif, alors la relation est presque linéaire et on peut utiliser sa version numérique. À l'inverse, si les tendances d'ordres supérieurs (cubique, quartique) sont les seules à être très significatives, la relation d'ordre devient difficile à interpréter et il est peut-être préférable de considérer la variable comme une variable catégorielle non-ordinale.
+
+## La régression logistique
+
+### Théorie
+
+Jusqu'à présent, nous avons cherché à prédire le salaire (`wage`), qui est une variable numérique continue. Mais que se passe-t-il si nous voulons prédire une **variable catégorielle binaire** $Y$ (0 ou 1, Oui ou Non, Succès ou Échec) ?
+
+Imaginons que nous voulions prédire si un travailleur a un salaire considéré comme "élevé" (que nous définirons arbitrairement à plus de 120 000\$ par an). Créons cette variable :
+
+```{r}
+wage_df = wage_df %>%
+  mutate(high_wage = ifelse(wage > 120, 1, 0))
+# On regarde les proportions de chaque catégorie dans le jeu de données
+table(wage_df$high_wage) 
+```
+
+Si nous utilisons une régression linéaire classique (`lm()`) pour modéliser cette variable binaire, nous faisons face à un problème : une droite infinie finira inévitablement par prédire des valeurs absurdes, c'est-à-dire négatives ou supérieures à 1 (100%).
+
+Pour résoudre ce problème, la régression logistique n'utilise pas une droite, mais une courbe en forme de "S" **la fonction sigmoïde**, notée $\sigma()$, qui s'applique sur la formule de régression pour prédire une probabilité : $$
+  P(Y = 1) = \sigma(b_0 + b_1 X_1 + b_2 X_2 + \ldots + b_p X_p + \epsilon) 
+$$
+
+La fonction sigmoïde se définit comme : $$
+\sigma(z) = \frac{1}{1 + e^{-z}}
+$$ et transforme n'importe quelle valeur réelle $z$ en une valeur comprise entre 0 et 1, interprétable comme une probabilité. On le voit avec sa courbe :
+
+```{r}
+x = seq(-10, 10, length.out=100)
+y = 1 / (1 + exp(-x))
+df = tibble(x, y)
+ggplot(df, aes(x=x, y=y)) +
+  geom_line(color="blue") +
+  labs(title="Fonction Sigmoïde",
+       x="x",
+       y="sigmoid(x)")
+```
+
+En réalité, on peut aussi voir la régression logistique comme une modélisation des **log-odds** (le logarithme du rapport des probabilités) de la variable dépendante avec une relation linéaire : $$
+\ln\left(\frac{P(Y=1)}{1 - P(Y=1)}\right) = b_0 + b_1 X_1 + b_2 X_2 + \ldots + b_p X_p
+$$ Nous le verrons plus tard, cette manière de poser le problème permet de mieux interpréter les coefficients de la régression logistique.
+
+Notez que la régression logistique ne minimise pas les moindres carrées pour trouver les coefficients de régression, mais une **entropie relative entre les probabilités prédites et les probabilités réelles** (i.e. la variable binaire). À cause de cela, sa résolution algorithmique est plus lente.
+
+### Construire un modèle de régression logistique avec `glm()`
+
+En R, nous n'utilisons plus `lm()`, mais `glm()` (pour *Generalized Linear Model*). La syntaxe de la formule est exactement la même, mais nous devons ajouter l'argument `family="binomial"` pour indiquer à R d'utiliser la transformation logistique.
+
+Essayons de prédire la probabilité d'avoir un haut salaire en fonction de l'âge et du niveau d'éducation (version numérique) :
+
+```{r}
+glm_res = glm(high_wage ~ age + education_num, wage_df, family="binomial")
+summary(glm_res)
+```
+
+Ce qui change fondamentalement ici, c'est l'**interprétation des coefficients de régression**. Si vous regardez la colonne `Estimate`, ces chiffres expriment une *variation dans les log-odds* par rapport à la référence définie par l'intercept (-4.95). Pour rendre ces coefficients interprétables, nous devons annuler le logarithme en appliquant une fonction exponentielle, qui nous donne alors des **odds ratios**, ou en français, des **rapports de cotes**.
+
+Le package `broom` est ici très utile car la fonction `tidy()` possède un argument (`exponentiate=T`) qui les calcule automatiquement :
+
+```{r}
+tidy(glm_res, exponentiate=T, conf.int=T)
+```
+
+La colonne estimate contient désormais les **odds ratios**, autrement dit un rapport d'**odds** ou de **cotes** entre deux popultions (entre la population avec une différence de 1 dans cette variable). Les **odds** sont définis de la manière suivantes $$
+  \text{odds} = \frac{P(Y=1)}{P(Y=0)} \quad \text{ou à l'inverse} \quad P(Y=1) = \frac{\text{odds}}{1 + \text{odds}}
+$$ On peut voir ces odds ratios comme des **facteurs multiplicatifs** sur les odds : la valeur neutre (l'absence d'effet) n'est plus 0, mais 1, et :
+
+-   Si l'odds ratio est \> 1 : La variable augmente les chances de succès.
+-   Si l'odds ratio est \< 1 : La variable diminue les chances de succès.
+
+Par exemple, comme l'odds ratio pour education_num vaut 2.39, cela signifie que pour chaque niveau d'éducation supplémentaire acquis, en maintenant l'âge constant, les chances d'avoir un haut salaire sont multipliées par 2.39 par rapport aux chances d'avoir un bas salaire (on passe, p.ex, de 2 chances contre une à 4.78 chances contre une).
+
+Contrairement à la fonction `augment()` classique (de `broom`), pour un `glm`, il faut explicitement préciser que l'on veut récupérer des probabilités (et non des log-odds) en utilisant l'argument `type.predict="response"` :
+
+```{r}
+glm_augm = augment(glm_res, type.predict = "response")
+glm_augm
+```
+
+`.fitted` indique alors les probabilités prédites d'avoir un haut salaire pour chaque individu du jeu de données.
+
+Pour évaluer la qualité du modèle, nous devons d'abord transformer ces probabilités continues en décisions d'affectation rigides (0 ou 1, en utilisant le seuil de 0.5), et calculer la **matrice de confusion** :
+
+```{r}
+glm_augm = glm_augm %>%
+  mutate(prediction = ifelse(.fitted > 0.5, 1, 0))
+table(real=glm_augm$high_wage, prediction=glm_augm$prediction)
+```
+
+Dans un prochain cours, cette matrice va nous servir à calculer plusieurs métriques d'évaluation du modèle, comme l'**exactitude** (accuracy), la **précision** (precision) ou le **rappel** (recall).
+
+## La sélection de modèles {#sec-select}
+
+Dans cette dernière partie, nous abordons un problème central en statistiques appliquées : comment choisir le "meilleur" modèle parmi toutes les combinaisons possibles de variables ?
+
+On pourrait être tenté d'inclure systématiquement toutes les variables disponibles dans notre jeu de données. Cependant, c'est une très mauvaise pratique à cause du **surapprentissage** (*overfitting*). Un modèle trop complexe, avec trop de variables, va apprendre "par coeur" l'échantillon (y compris le bruit aléatoire) et sera incapable de faire de bonnes prédictions sur de nouvelles données. Le principe de base est celui de la **parcimonie** (le rasoir d'Ockham) : on cherche le modèle qui explique le maximum de variance avec le minimum de complexité.
+
+### Les critères d'information : AIC et BIC
+
+Pour comparer des modèles, nous ne pouvons pas utiliser le simple $R^2$. En effet, mathématiquement, le $R^2$ augmente toujours lorsqu'on ajoute une variable, même si celle-ci est totalement absurde.
+
+À la place, nous utilisons les **critères d'information**, qui mesurent l'erreur du modèle tout en appliquant une pénalité pour chaque variable ajoutée. Ces métriques fonctionnent dans le même sens : on cherche le modèle qui les minimise.
+
+-   **L'AIC (Akaike Information Criterion)** : $$AIC = 2k - 2\ln(\hat{L})$$ (où $k$ est le nombre de paramètres et $\hat{L}$ la vraisemblance du modèle). L'AIC est très utilisé lorsque l'objectif du modèle est de faire de la **prédiction**.
+
+-   **Le BIC (Bayesian Information Criterion)** : $$BIC = \ln(n)k - 2\ln(\hat{L})$$ (où $n$ est la taille de l'échantillon). La pénalité du BIC dépend de la taille de l'échantillon. En pratique, dès que l'on a plus de 8 observations, le BIC pénalise la complexité beaucoup plus sévèrement que l'AIC. Il favorise des modèles plus simples et est idéal lorsque l'objectif est d'**expliquer** le phénomène et d'identifier les vrais facteurs clés.
+
+Comparons manuellement deux modèles avec la fonction `glance()` (du package `broom`) qui nous donne ces différentes métriques :
+
+```{r}
+# Modèle simple
+lm_simple = lm(wage ~ age, wage_df)
+
+# Modèle plus complexe
+lm_complex = lm(wage ~ age + education_num + jobclass, wage_df)
+
+# Comparaison des métriques
+glance(lm_simple)
+glance(lm_complex)
+```
+
+Le modèle complexe possède un AIC et un BIC légérement inférieurs à ceux du modèle simple. L'ajout des variables `education_num` et `jobclass` est donc statistiquement justifié : le gain d'information dépasse la pénalité de complexité.
+
+Regradons maintenant deux méthodes automatiques de recherche de modèles, qui marchent aussi bien avec `lm()` qu'avec `glm()`.
+
+### L'approche gloutonne
+
+Lorsque nous avons de nombreuses variables potentielles, comparer les modèles à la main devient impossible. R propose une fonction native, `step()`, qui automatise ce processus.
+
+C'est un algorithme dit **glouton** ou **heuristique**, qui part d'un modèle initial, et "avance" (comprendre: retire ou ajoute une variable) dans la direction qui améliore au mieux la métrique choisie. Par exemple, si l'on choisit la direction "backward", l'algorithme part d'un modèle complet (toutes les variables), évalue quelle variable retirer pour améliorer au mieux le BIC, la retire, et recommence jusqu'à ce que plus aucun retrait n'améliore le score. Regardons justement comment cet exemple fonctionne ici.
+
+On commence par sélectionner toutes le variables qui nous semblent pertinentes pour notre modèle :
+
+```{r}
+wage_reduced_df = wage_df %>%
+  select(age, maritl, race, education_num, jobclass, wage, health_cat)
+```
+
+On va maintenant définir le modèle complet, c'est-à-dire avec toutes les variables restantes :
+
+```{r}
+lm_full = lm(wage ~ ., wage_reduced_df)
+```
+
+Avec, `step()`, on lance la sélection automatique en choisissant la `direction="backward"` (on peut aussi faire "forward" ou "both") et en précisant que l'on veut utiliser le BIC pour évaluer les modèles (pour cela on doit définir l'argument `k` comme $\ln(n)$, avec $n$ le nombre d'observations) :
+
+```{r}
+n = nrow(wage_reduced_df)
+lm_optimal_wstep = step(lm_full, direction="backward", k=log(n))
+```
+
+On peut ensuite examiner le meilleur modèle retenu :
+
+```{r}
+summary(lm_optimal_wstep)
+```
+
+La limite de cet algorithme est qu'il n'explore pas toutes les possibilités. Il risque donc de se retrouver bloqué dans un optimum local et de rater le meilleur modèle absolu.
+
+### L'approche exhaustive
+
+Pour obtenir le meilleur modèle possible (selon un certain critère), on peut utiliser une approche **exhaustive** qui va calculer et comparer absolument toutes les combinaisons possibles des variables. Prenons ici un nouvel objectif de prédiction : prédire si les personnes ont une assurance maladie (`health_ins`), en fonction de plusieurs variables sélectionnées.
+
+On commence par sélectionner nos variables :
+
+```{r}
+wage_reduced2_df = wage_df %>%
+  select(age, maritl, race, education_num, jobclass, health_ins, wage, health_cat)
+```
+
+On fait notre `glm` complet :
+
+```{r}
+glm_full = glm(health_ins ~ ., wage_reduced2_df, family="binomial")
+```
+
+Puis on lance la sélection exhaustive avec la fonction `dredge()` du package `MuMIn`, qui va calculer tous les modèles possibles à partir du modèle complet et les classer selon la métrique choisie (ici le BIC) :
+
+```{r}
+# Changement de l'option pour la gestion des NA, requis par MuMIn
+options(na.action = "na.fail")
+# On lance la sélection exhaustive sur notre modèle complet précédent
+all_model_eval = dredge(glm_full, rank="BIC")
+```
+
+On peut ensuite examiner tous les différents modèles, dans l'ordre croissant. Ici, on va afficher uniquement les 10 permiers :
+
+```{r}
+head(all_model_eval, 10)
+```
+
+Si le coefficient de régression apparaît ou une croix est présente, c'est que la variable a été retenue dans le modèle. On voit que le meilleur modèle selon le BIC est celui qui contient les variables `age`, `jobclass` et `wage`.
+
+On peut ensuite obtenir ce modèle avec la fonction `get.models()`, cela nous permet d'examiner les valeurs de ses coefficients, de faire des prédictions, ou autre :
+
+```{r}
+glm_best = get.models(all_model_eval, 1)[[1]]
+tidy(glm_best, exponentiate=T)
+```
+
+Attention cependant, `dredge()` est soumis au problème d'**explosion combinatoire**. Au delà d'un certain nombre de variables, le nombre de modèles à tester devient trop grand pour un ordinateur standard. Dans ces situations, pour trouver un modèle adéquat, il faudra se tourner vers la sélection gloutonne ou vers des méthodes de régression pénalisée couplées avec des techniques de Machine Learning.

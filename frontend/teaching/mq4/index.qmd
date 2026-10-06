@@ -1,0 +1,167 @@
+---
+title: "Méthodes Quantitatives 4"
+lang: fr
+description: "Cours de Méthodes Quantitatives 4 : mise en pratique en R des méthodes des cours précédents, du tidyverse aux méthodes factorielles, au clustering, à la régression et à l'analyse de réseaux, avec une introduction à LaTeX et au machine learning."
+date: 2026-02-19
+image: image.png
+categories: [R, Tidyverse, Data Analysis, Machine Learning]
+toc: true
+---
+
+::: {.callout-note appearance="default"}
+**Chaque session est accompagnée d'un notebook Quarto**, consultable en ligne ou téléchargeable avec ses sources et ses données, et d'une série d'exercices avec son corrigé.
+:::
+
+## Session 1 : Introduction à R et RStudio
+📅 **Date:** Feb 19, 2026
+
+Prise en main de R et de RStudio : types de données, vecteurs, data frames, importation de fichiers CSV et Excel, et premières fonctions.
+
+[{{< fa brands r-project >}} I. Introduction à R et RStudio : notebook](session1/Introduction_a_R.qmd){.btn .btn-outline-success .btn-sm}
+
+[{{< fa file-zipper >}} Sources et données du notebook](session1/Introduction_a_R_sources.zip){.btn .btn-outline-secondary .btn-sm}
+
+[{{< fa file-pdf >}} Exercices 1](session1/Ex1.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Exercices 1 : données et corrigé](session1/ex1_donnees_corrige.zip){.btn .btn-outline-secondary .btn-sm}
+
+## Session 2 : Le Tidyverse I
+📅 **Date:** Feb 26, 2026
+
+Introduction au tidyverse : le pipe, la manipulation de tableaux avec `dplyr` et leur restructuration avec `tidyr`, appliquées à un jeu de données sociolinguistiques.
+
+[{{< fa brands r-project >}} II. Le Tidyverse I : notebook](session2/Tidyverse_I.qmd){.btn .btn-outline-success .btn-sm}
+
+[{{< fa file-zipper >}} Sources et données du notebook](session2/Tidyverse_I_sources.zip){.btn .btn-outline-secondary .btn-sm}
+
+[{{< fa file-pdf >}} Exercices 2](session2/Ex2.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Exercices 2 : données et corrigé](session2/ex2_donnees_corrige.zip){.btn .btn-outline-secondary .btn-sm}
+
+## Session 3 : Le Tidyverse II et les statistiques uni- et bi-variées
+📅 **Date:** Mar 5, 2026
+
+Suite du tidyverse (jointures, regroupements, résumés), puis calcul des statistiques descriptives uni- et bi-variées sur un jeu de données de marqueurs pragmatiques.
+
+[{{< fa brands r-project >}} III. Le Tidyverse II et les statistiques : notebook](session3/Tidyverse_II.qmd){.btn .btn-outline-success .btn-sm}
+
+[{{< fa file-zipper >}} Sources et données du notebook](session3/Tidyverse_II_sources.zip){.btn .btn-outline-secondary .btn-sm}
+
+[{{< fa file-pdf >}} Exercices 3](session3/Ex3.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Exercices 3 : données et corrigé](session3/ex3_donnees_corrige.zip){.btn .btn-outline-secondary .btn-sm}
+
+## Session 4 : Les graphiques en R
+📅 **Date:** Mar 12, 2026
+
+La grammaire des graphiques avec `ggplot2` : histogrammes, boîtes à moustaches, nuages de points, facettes et personnalisation, avec une ouverture sur les graphiques interactifs.
+
+[{{< fa brands r-project >}} IV. Les graphiques en R : notebook](session4/Graphiques_en_R.qmd){.btn .btn-outline-success .btn-sm}
+
+[{{< fa file-zipper >}} Sources et données du notebook](session4/Graphiques_en_R_sources.zip){.btn .btn-outline-secondary .btn-sm}
+
+[{{< fa file-pdf >}} Exercices 4](session4/Ex4.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Exercices 4 : données et corrigé](session4/ex4_donnees_corrige.zip){.btn .btn-outline-secondary .btn-sm}
+
+## Session 5 : Introduction à LaTeX
+📅 **Date:** Mar 19, 2026
+
+Rédiger un rapport scientifique avec LaTeX : structure d'un document, formules mathématiques, figures, tableaux et bibliographie.
+
+[{{< fa file-pdf >}} V. Introduction à LaTeX](session5/introduction_latex.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-pdf >}} Exercices 5](session5/exercices_latex.pdf){.btn .btn-outline-primary .btn-sm}
+
+## Session 6 : Le calcul matriciel, l'aléatoire et les tests statistiques
+📅 **Date:** Mar 26, 2026
+
+Le calcul matriciel en R, la génération de nombres aléatoires et la simulation, puis les tests statistiques classiques appliqués à un jeu de données phonétiques.
+
+[{{< fa brands r-project >}} VI. Calcul matriciel, aléatoire et tests : notebook](session6/Matrices_aleatoire_tests.qmd){.btn .btn-outline-success .btn-sm}
+
+[{{< fa file-zipper >}} Sources et données du notebook](session6/Matrices_aleatoire_tests_sources.zip){.btn .btn-outline-secondary .btn-sm}
+
+[{{< fa file-pdf >}} Exercices 6](session6/Ex6.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Exercices 6 : données et corrigé](session6/ex6_donnees_corrige.zip){.btn .btn-outline-secondary .btn-sm}
+
+## Session 7 : La régression linéaire et logistique
+📅 **Date:** Apr 2, 2026
+
+Régression linéaire simple et multiple, diagnostic du modèle et sélection de variables, puis régression logistique pour les variables binaires.
+
+[{{< fa brands r-project >}} VII. La régression linéaire et logistique : notebook](session7/Regression.qmd){.btn .btn-outline-success .btn-sm}
+
+[{{< fa file-zipper >}} Sources du notebook](session7/Regression_sources.zip){.btn .btn-outline-secondary .btn-sm}
+
+[{{< fa file-pdf >}} Exercices 7](session7/Ex7.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Exercices 7 : données et corrigé](session7/ex7_donnees_corrige.zip){.btn .btn-outline-secondary .btn-sm}
+
+## Session 8 : Les méthodes factorielles
+📅 **Date:** Apr 16, 2026
+
+L'analyse en composantes principales et l'analyse des correspondances avec `FactoMineR`, de l'exécution à l'interprétation des graphiques.
+
+[{{< fa brands r-project >}} VIII. Les méthodes factorielles : notebook](session8/Methodes_factorielles.qmd){.btn .btn-outline-success .btn-sm}
+
+[{{< fa file-zipper >}} Sources et données du notebook](session8/Methodes_factorielles_sources.zip){.btn .btn-outline-secondary .btn-sm}
+
+[{{< fa file-pdf >}} Exercices 8](session8/Ex8.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Exercices 8 : données et corrigé](session8/ex8_donnees_corrige.zip){.btn .btn-outline-secondary .btn-sm}
+
+## Session 9 : Le clustering
+📅 **Date:** Apr 23, 2026
+
+Classification hiérarchique et k-means, choix du nombre de groupes et validation des partitions, sur les programmes des partis politiques.
+
+[{{< fa brands r-project >}} IX. Le clustering : notebook](session9/Clustering.qmd){.btn .btn-outline-success .btn-sm}
+
+[{{< fa file-zipper >}} Sources et données du notebook](session9/Clustering_sources.zip){.btn .btn-outline-secondary .btn-sm}
+
+[{{< fa file-pdf >}} Exercices 9](session9/Ex9.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Exercices 9 : corrigé](session9/ex9_donnees_corrige.zip){.btn .btn-outline-secondary .btn-sm}
+
+## Session 10 : Méthodes factorielles avancées
+📅 **Date:** Apr 30, 2026
+
+L'analyse des correspondances multiples et l'analyse factorielle de données mixtes, pour des tableaux mêlant variables catégorielles et numériques.
+
+[{{< fa brands r-project >}} X. Méthodes factorielles avancées : notebook](session10/Methodes_factorielles_avancees.qmd){.btn .btn-outline-success .btn-sm}
+
+[{{< fa file-zipper >}} Sources et données du notebook](session10/Methodes_factorielles_avancees_sources.zip){.btn .btn-outline-secondary .btn-sm}
+
+[{{< fa file-pdf >}} Exercices 10](session10/Ex10.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Exercices 10 : corrigé](session10/ex10_donnees_corrige.zip){.btn .btn-outline-secondary .btn-sm}
+
+## Session 11 : Introduction au machine learning
+📅 **Date:** May 7, 2026
+
+Les concepts du machine learning (apprentissage supervisé, généralisation, validation croisée), puis la régression logistique régularisée avec `glmnet` sur des données médicales.
+
+[{{< fa file-pdf >}} XI. Introduction au machine learning (slides)](session11/Introduction_au_ML.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa brands r-project >}} XI. Régression logistique régularisée : notebook](session11/Regression_logistique_regularisee.qmd){.btn .btn-outline-success .btn-sm}
+
+[{{< fa file-zipper >}} Sources et données du notebook](session11/Regression_logistique_regularisee_sources.zip){.btn .btn-outline-secondary .btn-sm}
+
+[{{< fa file-pdf >}} Exercices 11](session11/Ex11.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Exercices 11 : script de départ et corrigé](session11/ex11_donnees_corrige.zip){.btn .btn-outline-secondary .btn-sm}
+
+## Session 12 : Analyse de réseaux
+📅 **Date:** May 21, 2026
+
+Représenter et analyser des réseaux avec `igraph` et `ggraph` : mesures de centralité, détection de communautés et visualisation.
+
+[{{< fa brands r-project >}} XII. Analyse de réseaux : notebook](session12/Reseaux.qmd){.btn .btn-outline-success .btn-sm}
+
+[{{< fa file-zipper >}} Sources du notebook](session12/Reseaux_sources.zip){.btn .btn-outline-secondary .btn-sm}
+
+[{{< fa file-pdf >}} Exercices 12](session12/Ex12.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Exercices 12 : données et corrigé](session12/ex12_donnees_corrige.zip){.btn .btn-outline-secondary .btn-sm}

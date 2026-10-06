@@ -1,5 +1,5 @@
 ---
-title: "Méthodes Quantitatives 3"
+title: "Méthodes Quantitatives 3"
 lang: fr
 description: "Cours de Méthodes Quantitatives 3, qui aborde plusieurs méthodes de d'analyse multivariée de manière théorique."
 date: 2026-01-15
@@ -9,10 +9,8 @@ toc: true
 ---
 
 ::: {.callout-note appearance="default"}
-**Ce cours est basé en grande partie sur le cours de Méthodes Quantitatives 3 donné durant de nombreuses années par François Bavaud à l'Université de Lausanne. Son polycopié, disponible ci-dessous, fait office de support.**
+**Ce cours est basé en grande partie sur le cours de Méthodes Quantitatives 3 donné durant de nombreuses années par François Bavaud à l'Université de Lausanne.**
 :::
-
-[{{< fa file-pdf >}} Méthodes quantitatives III : analyse des données multivariées par François Bavaud](MQ_III_v1.pdf){.btn .btn-outline-primary .btn-sm}
 
 ## Session 1: Introduction et rappels d’algèbre linéaire
 📅 **Date:** Sept 18, 2025

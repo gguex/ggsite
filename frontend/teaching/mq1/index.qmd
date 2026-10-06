@@ -1,0 +1,83 @@
+---
+title: "Méthodes Quantitatives 1"
+lang: fr
+description: "Cours de Méthodes Quantitatives 1 : probabilités, statistique descriptive, variables aléatoires et premiers pas vers l'inférence statistique."
+date: 2025-09-18
+image: image.png
+categories: [Probability, Descriptive Statistics, Inference]
+toc: true
+---
+
+::: {.callout-note appearance="default"}
+**Ce cours est basé en grande partie sur le cours de Méthodes Quantitatives 1 donné durant de nombreuses années par François Bavaud à l'Université de Lausanne.**
+:::
+
+## Session 1 : Introduction et rappels mathématiques
+📅 **Date:** Sept 18, 2025
+
+Introduction aux méthodes quantitatives : pourquoi et comment quantifier en sciences humaines et sociales. La seconde partie rappelle les outils mathématiques utilisés tout au long du semestre, dont la factorielle et les coefficients binomiaux.
+
+[{{< fa file-pdf >}} 1. Introduction et rappels mathématiques](session1/cours_1.pdf){.btn .btn-outline-primary .btn-sm}
+
+## Session 2 : Ensembles et probabilités
+📅 **Date:** Sept 25, 2025
+
+Les ensembles et les opérations qui les relient servent de langage pour introduire les probabilités : axiomes, probabilités conditionnelles et indépendance.
+
+[{{< fa file-pdf >}} 2. Ensembles et probabilités](session2/cours_2.pdf){.btn .btn-outline-primary .btn-sm}
+
+## Session 3 : Données, variables, visualisations et indicateurs
+📅 **Date:** Oct 2, 2025
+
+Qu'est-ce qu'un jeu de données et quels types de variables peut-il contenir ? Nous voyons ensuite comment décrire une variable seule : visualisations uni-variées, fonction de répartition et quantiles.
+
+[{{< fa file-pdf >}} 3. Données, variables, visualisations et indicateurs](session3/cours_3.pdf){.btn .btn-outline-primary .btn-sm}
+
+## Session 4 : Visualisations et indicateurs (suite)
+📅 **Date:** Oct 9, 2025
+
+Moyenne et variance, pondération et standardisation (scores z), puis passage à deux variables avec les visualisations catégorielles et bi-variées et la table de contingence.
+
+[{{< fa file-pdf >}} 4. Visualisations et indicateurs (suite)](session4/cours_4.pdf){.btn .btn-outline-primary .btn-sm}
+
+## Session 5 : Liens entre deux variables
+📅 **Date:** Oct 16, 2025
+
+Comment mesurer la dépendance entre deux variables ? Le chi-carré pour deux variables catégorielles, puis la covariance et la corrélation pour deux variables numériques.
+
+[{{< fa file-pdf >}} 5. Liens entre deux variables](session5/cours_5.pdf){.btn .btn-outline-primary .btn-sm}
+
+## Session 6 : Liens entre deux variables (suite)
+📅 **Date:** Oct 23, 2025
+
+La régression linéaire simple prolonge la corrélation, puis le lien entre une variable catégorielle et une variable numérique est mesuré par la décomposition de la variance en parts intra- et inter-groupes et par le F-ratio.
+
+[{{< fa file-pdf >}} 6. Liens entre deux variables (suite)](session6/cours_6.pdf){.btn .btn-outline-primary .btn-sm}
+
+## Session 7 : Modèles et variables aléatoires
+📅 **Date:** Nov 13, 2025
+
+Du jeu de données au modèle : les variables aléatoires, leurs distributions et leurs quantités théoriques (espérance, variance), ainsi que les distributions et densités bivariées.
+
+[{{< fa file-pdf >}} 7. Modèles et variables aléatoires](session7/cours_7.pdf){.btn .btn-outline-primary .btn-sm}
+
+## Session 8 : Lois de probabilité
+📅 **Date:** Nov 20, 2025
+
+Tour d'horizon des principales lois discrètes (Bernoulli, binomiale, Poisson, etc.) et continues (uniforme, exponentielle, normale, etc.), avec leurs usages en sciences humaines.
+
+[{{< fa file-pdf >}} 8. Lois de probabilité](session8/cours_8.pdf){.btn .btn-outline-primary .btn-sm}
+
+## Session 9 : Théorèmes, lois dérivées et estimations
+📅 **Date:** Nov 27, 2025
+
+La loi des grands nombres et le théorème central limite expliquent le rôle central de la loi normale. Nous voyons ensuite les lois qui en dérivent (chi-carré, t de Student, F), puis les estimations ponctuelles et les intervalles de confiance.
+
+[{{< fa file-pdf >}} 9. Théorèmes, lois dérivées et estimations](session9/cours_9.pdf){.btn .btn-outline-primary .btn-sm}
+
+## Session 10 : Introduction à l'inférence statistique
+📅 **Date:** Dec 11, 2025
+
+En guise d'ouverture vers les tests statistiques : la formule de Bayes pour l'induction, la classification et la classification binaire, avec la matrice de confusion et les erreurs de première et de seconde espèce.
+
+[{{< fa file-pdf >}} 10. Introduction à l'inférence statistique](session10/cours_10.pdf){.btn .btn-outline-primary .btn-sm}
