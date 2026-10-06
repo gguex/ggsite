@@ -1,0 +1,314 @@
+---
+title: "Wealth Sandpile: Wealth Concentration in the United States"
+description: "Falling grains of sand show how the share of national wealth held by the bottom 50%, middle 40%, top 9% and top 1% has shifted since 1962 (World Inequality Database)."
+date: 2026-04-08
+categories: [USA, Inequality, OJS, R]
+image: image.png
+format:
+  html:
+    page-layout: article
+execute:
+  echo: false
+---
+
+Each glowing sphere falling from the sky is a grain of the **total net wealth of US households**, and the sand piles up in four bins. The small aligned silhouettes under each bin show the **share of the population** it stands for: 50 red figures for the poorest half, a single blue figure for the top 1%. Move the year slider, or switch on Auto-play, and watch the sand drift towards the lone blue figure.
+
+**Data source:** *World Inequality Database* (WID), share of net personal wealth by percentile group.
+
+```{r}
+#| label: data-prep
+#| message: false
+#| warning: false
+
+library(dplyr)
+library(tidyr)
+
+# Raw WID extract (see data/wid/README.md); the variable shweal992f is the
+# share of net personal wealth, equal-split adults, all ages.
+raw_data <- read.csv("../../data/wid/wid_shweal_US_raw.csv")
+
+# Gini index of a vector of individual wealths (same formula as ineq::Gini)
+gini_index <- function(x) {
+  x <- sort(x)
+  n <- length(x)
+  (2 * sum(seq_len(n) * x)) / (n * sum(x)) - (n + 1) / n
+}
+
+clean_data <- raw_data %>%
+  filter(variable == "shweal992f") %>%
+  select(year, percentile, value) %>%
+  pivot_wider(names_from = percentile, values_from = value) %>%
+  drop_na() %>%
+  # WID gives the top 10% and the top 1%; the "Top 9%" is their difference
+  mutate(
+    `Bottom 50%` = pmax(0, p0p50),
+    `Middle 40%` = pmax(0, p50p90),
+    `Top 9%`     = pmax(0, p90p100 - p99p100),
+    `Top 1%`     = pmax(0, p99p100)
+  ) %>%
+  rowwise() %>%
+  mutate(
+    # A synthetic population of 100 people, each group's wealth split equally
+    gini = round(gini_index(c(
+      rep(`Bottom 50%` / 50, 50),
+      rep(`Middle 40%` / 40, 40),
+      rep(`Top 9%` / 9, 9),
+      `Top 1%`
+    )), 3)
+  ) %>%
+  ungroup() %>%
+  select(year, `Bottom 50%`, `Middle 40%`, `Top 9%`, `Top 1%`, gini) %>%
+  mutate(across(-c(year, gini), ~ round(.x * 100, 2))) %>%
+  arrange(year)
+
+ojs_define(wealthData = clean_data)
+```
+
+```{ojs}
+// 1. Data from R, as an array of objects
+data = transpose(wealthData)
+minYear = d3.min(data, d => d.year)
+maxYear = d3.max(data, d => d.year)
+currentData = data.find(d => d.year === currentYear)
+```
+
+```{ojs}
+// 2. Controls
+viewof currentYear = Inputs.range([minYear, maxYear], {value: minYear, step: 1, label: "Year"})
+viewof isPlaying = Inputs.toggle({label: "Auto-play", value: false})
+```
+
+```{ojs}
+//| output: false
+// 3. Auto-play: advance one year every 700 ms and loop back to the start
+{
+  while (isPlaying) {
+    yield Promises.delay(700);
+    const nextYear = (currentYear >= maxYear) ? minYear : currentYear + 1;
+    viewof currentYear.value = nextYear;
+    viewof currentYear.dispatchEvent(new Event("input", {bubbles: true}));
+  }
+}
+```
+
+```{ojs}
+// 4. Scene: the SVG, the four bins, the labels and the physics engine
+chartWidth = Math.max(640, Math.min(900, width))
+
+chart = {
+  const width = chartWidth;
+  const height = 600;
+
+  const svg = d3.create("svg")
+      .attr("width", width)
+      .attr("height", height)
+      .style("background", "#1a1a2e")
+      .style("border-radius", "8px")
+      .style("box-shadow", "0 4px 12px rgba(0,0,0,0.5)");
+
+  // The four bins (the floor sits at 65% of the height to leave room for the figures)
+  const floorY = height * 0.65;
+  const targets = [
+    { name: "Bottom 50%", id: "Bottom 50%", x: width * 0.15, y: floorY, color: "#e94560", iconCount: 50, cols: 10 },
+    { name: "Middle 40%", id: "Middle 40%", x: width * 0.40, y: floorY, color: "#f9a03f", iconCount: 40, cols: 8 },
+    { name: "Top 9%",     id: "Top 9%",     x: width * 0.65, y: floorY, color: "#f2dc5d", iconCount: 9,  cols: 3 },
+    { name: "Top 1%",     id: "Top 1%",     x: width * 0.85, y: floorY, color: "#00bbf9", iconCount: 1,  cols: 1 }
+  ];
+
+  // Big year in the background
+  const yearText = svg.append("text")
+    .attr("x", width / 2)
+    .attr("y", 140)
+    .attr("text-anchor", "middle")
+    .attr("fill", "rgba(255, 255, 255, 0.08)")
+    .attr("font-family", "sans-serif")
+    .attr("font-size", "140px")
+    .attr("font-weight", "bold");
+
+  // Gini index, from a muted red to a vivid red (never green: it is never a good situation)
+  const giniColor = d3.scaleLinear()
+    .domain([d3.min(data, d => d.gini), d3.max(data, d => d.gini)])
+    .range(["#ffb3b3", "#ff0000"]);
+
+  const giniText = svg.append("text")
+    .attr("x", width / 2)
+    .attr("y", 200)
+    .attr("text-anchor", "middle")
+    .attr("font-family", "sans-serif")
+    .attr("font-size", "22px")
+    .attr("font-weight", "bold");
+
+  // "xx% of wealth" above each bin
+  const valueLabels = svg.selectAll("text.value-label")
+    .data(targets)
+    .join("text")
+    .attr("class", "value-label")
+    .attr("x", d => d.x)
+    .attr("y", d => d.y + 25)
+    .attr("text-anchor", "middle")
+    .attr("fill", "white")
+    .attr("font-family", "sans-serif")
+    .attr("font-size", "15px")
+    .attr("font-weight", "bold");
+
+  // Bin names
+  svg.selectAll("text.name-label")
+    .data(targets)
+    .join("text")
+    .attr("class", "name-label")
+    .attr("x", d => d.x)
+    .attr("y", d => d.y + 45)
+    .attr("text-anchor", "middle")
+    .attr("fill", "lightgray")
+    .attr("font-family", "sans-serif")
+    .attr("font-size", "13px")
+    .text(d => d.name);
+
+  // The grid of little figures (Material "person" icon)
+  const svgPathPerson = "M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z";
+
+  const peopleGroups = svg.selectAll("g.people")
+    .data(targets)
+    .join("g")
+    .attr("class", "people")
+    .attr("transform", d => `translate(${d.x}, ${d.y + 60})`);
+
+  peopleGroups.selectAll("path")
+    .data(d => Array.from({length: d.iconCount}).map((_, i) => ({...d, i})))
+    .join("path")
+    .attr("d", svgPathPerson)
+    .attr("fill", d => d.color)
+    .attr("opacity", 0.8)
+    .attr("transform", function(d) {
+        const spacingX = 14, spacingY = 14;
+        const col = d.i % d.cols;
+        const row = Math.floor(d.i / d.cols);
+        const gridWidth = d.cols * spacingX;
+        const offsetX = - gridWidth / 2 + col * spacingX;
+        const offsetY = row * spacingY;
+        // scale 0.55 makes the 24px icon about 14px wide; -4 centres the path
+        return `translate(${offsetX - 4}, ${offsetY}) scale(0.55)`;
+    });
+
+  // Floor line of each bin
+  svg.selectAll("line")
+    .data(targets)
+    .join("line")
+    .attr("x1", d => d.x - 45)
+    .attr("x2", d => d.x + 45)
+    .attr("y1", d => d.y + 10)
+    .attr("y2", d => d.y + 10)
+    .attr("stroke", d => d.color)
+    .attr("stroke-width", 2)
+    .attr("stroke-linecap", "round");
+
+  // --- Physics engine: 300 grains of sand ---
+  const numParticles = 300;
+  const particles = Array.from({ length: numParticles }, (_, i) => ({
+    id: i,
+    x: width / 2 + (Math.random() - 0.5) * width,
+    y: Math.random() * -100 - 50,          // start above the scene
+    radius: 4 + Math.random() * 2,
+    targetForceX: width / 2,
+    targetForceY: height + 100,            // fall straight down until assigned to a bin
+    color: "#ffffff"
+  }));
+
+  const node = svg.append("g")
+    .selectAll("circle")
+    .data(particles)
+    .join("circle")
+    .attr("r", d => d.radius)
+    .attr("fill", d => d.color)
+    .attr("opacity", 0.9);
+
+  const simulation = d3.forceSimulation(particles)
+    .force("charge", d3.forceManyBody().strength(-0.5))
+    .force("collide", d3.forceCollide().radius(d => d.radius + 1).iterations(2))
+    .on("tick", () => {
+      node
+        .attr("cx", d => {
+            d.x = Math.max(d.radius, Math.min(width - d.radius, d.x));   // stay inside the scene
+            return d.x;
+        })
+        .attr("cy", d => {
+            const trueFloor = Math.min(height, d.targetForceY);           // never fall below the bin floor
+            d.y = Math.min(trueFloor - d.radius, d.y);
+            return d.y;
+        });
+    });
+
+  invalidation.then(() => simulation.stop());
+
+  const chartElement = svg.node();
+
+  // Feed a new year into the scene without rebuilding it: only the net flow of
+  // grains between bins moves, so the piles drift rather than restart.
+  chartElement.updateSimulation = function(newData) {
+    if (!newData) return;
+    const bounciness = 0.3;
+
+    yearText.text(newData.year);
+    giniText
+       .text(`Gini index: ${newData.gini.toFixed(3)}`)
+       .attr("fill", giniColor(newData.gini));
+    valueLabels.text(d => `${newData[d.id] || 0}% of wealth`);
+
+    // 1. Target number of grains per bin (exactly 300 in total)
+    const targetCounts = {};
+    let totalAssigned = 0;
+    targets.forEach((t, i) => {
+      const val = Math.max(0, newData[t.id] || 0);
+      let count = Math.round((val / 100) * numParticles);
+      if (i === targets.length - 1) count = numParticles - totalAssigned;
+      totalAssigned += count;
+      targetCounts[t.id] = count;
+    });
+
+    // 2. Current grains per bin
+    const groups = { "Bottom 50%": [], "Middle 40%": [], "Top 9%": [], "Top 1%": [], "Unassigned": [] };
+    particles.forEach(p => {
+       (p.categoryId && groups[p.categoryId] ? groups[p.categoryId] : groups["Unassigned"]).push(p);
+    });
+
+    // 3. Bins with too many grains give their surplus away
+    const surplus = [];
+    targets.forEach(t => {
+       const extra = groups[t.id].length - targetCounts[t.id];
+       if (extra > 0) surplus.push(...groups[t.id].splice(0, extra));
+    });
+    surplus.push(...groups["Unassigned"]);
+
+    // 4. Bins with too few grains take from the surplus
+    targets.forEach(t => {
+       const needed = targetCounts[t.id] - groups[t.id].length;
+       if (needed > 0) {
+           surplus.splice(0, needed).forEach(p => {
+               p.categoryId = t.id;
+               p.color = t.color;
+               p.targetForceX = t.x;
+               p.targetForceY = t.y;
+           });
+       }
+    });
+
+    node.transition().duration(800).attr("fill", d => d.color);
+
+    simulation
+      .force("x", d3.forceX(d => d.targetForceX).strength(0.08))
+      .force("y", d3.forceY(d => d.targetForceY).strength(0.02 + bounciness * 0.1))
+      .alpha(0.8)
+      .restart();
+  };
+
+  return chartElement;
+}
+```
+
+```{ojs}
+//| output: false
+// 5. Reactive link: re-runs whenever the selected year changes
+{
+  chart.updateSimulation(currentData);
+}
+```

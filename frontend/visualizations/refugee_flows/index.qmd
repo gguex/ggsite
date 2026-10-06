@@ -1,0 +1,274 @@
+---
+title: "Forced Displacements Worldwide"
+description: "Animated map of refugee and asylum-seeker flows between countries of origin and asylum since 2000 (UNHCR), with a year slider."
+date: 2026-04-15
+categories: [World, Migration, Maps, OJS, R]
+image: image.png
+format:
+  html:
+    page-layout: custom
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+Each moving particle is a group of refugees or asylum-seekers travelling from their country of origin to their country of asylum, as recorded by the UNHCR for the selected year. The brighter and thicker a corridor, the more people it carries, and the colour tells the continent of origin. Move the year slider to watch crises appear and fade, and hover a country to read how many people left it or found refuge there. Only corridors above 5,000 people are drawn.
+
+```{r}
+#| label: data-preparation
+
+library(dplyr)
+
+# Pre-computed from the UNHCR "refugees" R package and country centroids,
+# see data/unhcr/README.md for the pipeline.
+migrations_geo <- read.csv("../../data/unhcr/refugee_flows_2000_2025.csv")
+global_totals  <- read.csv("../../data/unhcr/global_totals_2000_2025.csv")
+
+ojs_define(
+    migration_data = migrations_geo,
+    global_totals_data = global_totals
+)
+```
+
+```{ojs}
+//| label: data-timeline
+//| panel: center
+
+// --- 1. Data ---
+data = transpose(migration_data)
+globalTotals = transpose(global_totals_data)
+minYear = d3.min(globalTotals, d => d.year)
+maxYear = d3.max(globalTotals, d => d.year)
+mapWidth = Math.min(1100, width)
+
+// --- 2. Timeline: big year, ticks every 5 years, native range slider ---
+viewof selectedYear = {
+  const ticks = d3.range(minYear, maxYear + 1, 5);
+  if (ticks[ticks.length - 1] !== maxYear) ticks.push(maxYear);
+  const pct = y => (y - minYear) / (maxYear - minYear) * 100;
+
+  const form = html`
+  <form style="width: ${mapWidth}px; max-width: 100%; margin: 20px auto 10px auto; font-family: sans-serif; color: #888;">
+    <div style="font-size: 38px; font-weight: 300; letter-spacing: 2px; color: #e67e22; text-align: center; margin-bottom: 25px;">
+      <output name="out">${maxYear}</output>
+    </div>
+    <div style="position: relative; width: 100%; height: 20px; font-size: 13px; margin-bottom: 2px;">
+      ${ticks.map(y => html`<span style="position: absolute; left: ${pct(y)}%; transform: translateX(${y === minYear ? "-10%" : y === maxYear ? "-90%" : "-50%"});">${y}</span>`)}
+    </div>
+    <input type="range" name="range" min="${minYear}" max="${maxYear}" step="1" value="${maxYear}"
+           style="width: 100%; cursor: pointer; accent-color: #e67e22; height: 4px;">
+  </form>`;
+
+  form.range.oninput = () => {
+    form.value = form.range.valueAsNumber;
+    form.out.value = form.range.valueAsNumber;
+  };
+  form.value = form.range.valueAsNumber;
+  return form;
+}
+
+// --- 3. Aesthetics ---
+trailOpacity = 0.25
+particleSize = 0.7
+particleSpeed = 0.002
+
+// --- 4. Reactive accessors ---
+currentMapData = data.filter(d => d.year === selectedYear)
+trueGlobalTotal = globalTotals.find(d => d.year === selectedYear)?.true_total || 0
+
+// --- 5. Global counter ---
+html`<div style="text-align: center; font-family: sans-serif; font-size: 16px; color: #666; margin-top: 10px; margin-bottom: 20px;">
+  Refugees & asylum-seekers recorded worldwide: <strong style="color: #2c3e50; font-size: 22px;">${d3.format(",")(trueGlobalTotal)}</strong> people<br>
+  <span style="font-size: 11px; color: #888;">Only corridors above 5,000 people are drawn on the map.</span>
+</div>`
+```
+
+```{ojs}
+//| label: map-imports
+// --- 6. World map (TopoJSON) ---
+topojson = require("topojson-client@3")
+worldAtlas = d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json")
+countriesData = topojson.feature(worldAtlas, worldAtlas.objects.countries)
+```
+
+```{ojs}
+//| label: geovisualization
+//| panel: center
+
+// --- 7. Map + particle engine ---
+mapContainer = {
+  const width = mapWidth;
+  const height = Math.round(width * 650 / 1100);
+
+  const inhabitedWorldData = {
+    type: "FeatureCollection",
+    features: countriesData.features.filter(d => d.properties.name !== "Antarctica")
+  };
+
+  const projection = d3.geoEqualEarth().fitSize([width, height], inhabitedWorldData);
+  const path = d3.geoPath(projection);
+
+  const container = d3.create("div")
+    .style("position", "relative")
+    .style("width", `${width}px`)
+    .style("height", `${height}px`)
+    .style("margin", "0 auto")
+    .style("border-radius", "8px")
+    .style("overflow", "hidden");
+
+  // Layer 1: static SVG map, which also handles the mouse
+  const svgBg = container.append("svg")
+    .attr("width", width)
+    .attr("height", height)
+    .style("position", "absolute")
+    .style("top", "0px")
+    .style("left", "0px");
+
+  svgBg.append("rect").attr("width", width).attr("height", height).attr("fill", "#0e0e12");
+
+  svgBg.append("path")
+    .datum(d3.geoGraticule10())
+    .attr("d", path)
+    .attr("fill", "none")
+    .attr("stroke", "#1e1e24")
+    .attr("stroke-width", 0.5);
+
+  const countryPaths = svgBg.selectAll(".country")
+    .data(inhabitedWorldData.features)
+    .join("path")
+    .attr("class", "country")
+    .attr("d", path)
+    .attr("fill", "#2e2e36")
+    .attr("stroke", "#6a6a76")
+    .attr("stroke-width", 0.6)
+    .style("transition", "fill 0.2s, stroke 0.2s");
+
+  // --- 8. Tooltip ---
+  const tooltip = container.append("div")
+    .style("position", "absolute")
+    .style("visibility", "hidden")
+    .style("background", "rgba(10, 10, 12, 0.95)")
+    .style("color", "#fff")
+    .style("padding", "12px 18px")
+    .style("border", "1px solid #333")
+    .style("border-radius", "6px")
+    .style("font-family", "sans-serif")
+    .style("font-size", "14px")
+    .style("pointer-events", "none")
+    .style("box-shadow", "0 4px 6px rgba(0,0,0,0.5)")
+    .style("z-index", 100);
+
+  countryPaths.on("mousemove", function(event, d) {
+    const countryName = d.properties.name;
+    const numId = parseInt(d.id, 10);
+
+    const departures = currentMapData
+        .filter(f => f.origin_num === numId)
+        .reduce((sum, f) => sum + f.total, 0);
+    const arrivals = currentMapData
+        .filter(f => f.dest_num === numId)
+        .reduce((sum, f) => sum + f.total, 0);
+
+    d3.select(this)
+      .raise()                 // bring the hovered polygon above its neighbours
+      .attr("fill", "#45454f")
+      .attr("stroke", "#FFAA00");
+
+    let text = `<strong style="color:#FFAA00; font-size:16px;">${countryName}</strong><br><br>`;
+    if (departures > 0 || arrivals > 0) {
+      if (departures > 0) text += `<span style="color:#ff5c5c">Outgoing:</span> ${d3.format(",")(departures)}<br>`;
+      if (arrivals > 0)   text += `<span style="color:#66D28C">Incoming:</span> ${d3.format(",")(arrivals)}`;
+    } else {
+      text += `<span style="color:#888">Movements below threshold.</span>`;
+    }
+
+    const [mx, my] = d3.pointer(event, container.node());
+    tooltip.style("visibility", "visible")
+      .html(text)
+      .style("left", (mx + 15) + "px")
+      .style("top", (my + 15) + "px");
+  }).on("mouseout", function() {
+    d3.select(this)
+      .attr("fill", "#2e2e36")
+      .attr("stroke", "#6a6a76");
+    tooltip.style("visibility", "hidden");
+  });
+
+  // --- 9. Layer 2: canvas particle engine ---
+  const ctxFg = container.append("canvas")
+    .attr("width", width)
+    .attr("height", height)
+    .style("position", "absolute")
+    .style("top", "0px")
+    .style("left", "0px")
+    .style("pointer-events", "none")
+    .node().getContext("2d");
+
+  let particles = [];
+  let frameId;
+
+  const volumeScale = d3.scaleLinear().domain([0, 500000]).range([0, 0.4]).clamp(true);
+  const regions = Array.from(new Set(data.map(d => d.origin_continent))).filter(d => d);
+  const colorScale = d3.scaleOrdinal(d3.schemeTableau10).domain(regions);
+  const thicknessScale = d3.scaleSqrt().domain([0, 500000]).range([0.8, 4]).clamp(true);
+
+  // One simulation step: fade the trails, emit new particles, move and draw them
+  function step() {
+    ctxFg.globalCompositeOperation = 'destination-out';
+    ctxFg.fillStyle = `rgba(0, 0, 0, ${trailOpacity})`;
+    ctxFg.fillRect(0, 0, width, height);
+    ctxFg.globalCompositeOperation = 'source-over';
+
+    if (currentMapData) {
+      currentMapData.forEach(flow => {
+        const pLocOr = projection([flow.origin_lon, flow.origin_lat]);
+        const pLocDest = projection([flow.dest_lon, flow.dest_lat]);
+        if (!pLocOr || !pLocDest) return;
+        if (Math.random() < volumeScale(flow.total)) {
+          particles.push({
+            x: pLocOr[0], y: pLocOr[1],
+            tx: pLocDest[0], ty: pLocDest[1],
+            progress: 0,
+            thickness: thicknessScale(flow.total),
+            color: colorScale(flow.origin_continent),
+            speed: particleSpeed + Math.random() * (particleSpeed / 2)
+          });
+        }
+      });
+    }
+
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.progress += p.speed;
+      if (p.progress >= 1) {
+        particles.splice(i, 1);
+      } else {
+        const curX = p.x + (p.tx - p.x) * p.progress;
+        const curY = p.y + (p.ty - p.y) * p.progress;
+        ctxFg.fillStyle = p.color;
+        ctxFg.beginPath();
+        ctxFg.arc(curX, curY, particleSize * p.thickness, 0, 2 * Math.PI);
+        ctxFg.fill();
+      }
+    }
+  }
+
+  function simulate() {
+    step();
+    frameId = requestAnimationFrame(simulate);
+  }
+  simulate();
+
+  invalidation.then(() => cancelAnimationFrame(frameId));
+
+  return container.node();
+}
+```
+
+```{ojs}
+//| panel: center
+html`<div style="color: #888; font-family: sans-serif; font-size: 13px; width: ${mapWidth}px; max-width: 100%; margin: 8px auto 40px auto;">
+  Source: UNHCR Refugee Data Finder (refugees and asylum-seekers by country of origin and asylum).
+</div>`
+```
