@@ -12,15 +12,15 @@ TODO LIST
 # TEACHING 
 
 - Mettre le cours de Machine Learning (OK)
-- Mettre le cours de MQ I 
-- Mettre le cours de MQ III
-- Mettre le cours pour les linguistes
-- Mettre les parties de mon cours MQ IV
+- Mettre le cours de MQ I (OK)
+- Mettre le cours de MQ III (OK)
+- Mettre le cours pour les linguistes (OK)
+- Mettre les parties de mon cours MQ IV (OK)
 - Mettre quelques contributions eparses
 
 # VIZ
 
-- Faire la visualisation des cantons (leaflet)
+- Faire la visualisation des cantons (leaflet) (OK)
 - Faire une visualisation plus statistique (idée : jeux vidéo)
 - Faire une visualisation plus algorithmique (les discussions politiques ?)
 
