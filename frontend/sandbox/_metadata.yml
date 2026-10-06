@@ -1,5 +1,7 @@
 # Work in progress and experiments.
-# Pages here are rendered by `quarto preview` but excluded from the published
-# site and from every listing (draft: true). Move a folder to visualizations/
+# Pages here are drafts: excluded from the published site and from every
+# listing, and replaced by empty stubs in a normal render or preview.
+# To see them in full locally: `quarto preview --profile sandbox`, then open
+# them by URL (e.g. /sandbox/leaflet_tuto/). Move a folder to visualizations/
 # or simulations/ and drop the draft flag once it is ready.
 draft: true

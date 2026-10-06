@@ -1,0 +1,4 @@
+# Profile for local work: `quarto preview --profile sandbox`
+# Renders draft pages (sandbox/, backend demo) in full and links them.
+website:
+  draft-mode: visible

@@ -41,10 +41,15 @@ R packages used by the pages: `tidyverse`, `readr`, `dplyr`, `tidyr`,
 
 ```bash
 cd frontend
-quarto preview                 # http://localhost:4200, drafts (sandbox/) visible
-quarto render                  # builds _site/, drafts excluded
-quarto publish gh-pages        # renders and pushes _site/ to the gh-pages branch
+quarto preview                   # http://localhost:4200, published pages only
+quarto preview --profile sandbox # same, plus the draft pages (sandbox/, backend demo) in full
+quarto render                    # builds _site/, drafts excluded
+quarto publish gh-pages          # renders and pushes _site/ to the gh-pages branch
 ```
+
+Draft pages are not linked from any listing, so open them by URL, e.g.
+`http://localhost:4200/sandbox/leaflet_tuto/`. The `sandbox` profile lives in
+`frontend/_quarto-sandbox.yml` and only sets `draft-mode: visible`.
 
 Computational outputs are cached in `_freeze/` (`execute: freeze: auto`):
 a page is re-executed only when its source changes. Commit `_freeze/` together

@@ -1,0 +1,166 @@
+---
+title: "Swiss Cantons Explorer"
+description: "An interactive map of the 26 Swiss cantons. Click a canton to zoom in and read its key facts: coat of arms, capital, population, area, languages and what makes it special."
+date: 2026-02-03
+categories: [Switzerland, Maps, Leaflet, OJS]
+image: image.png
+execute:
+  echo: false
+---
+
+Switzerland is a federation of 26 cantons, each with its own constitution, parliament and schools, and six of them are "half-cantons" with a single seat in the Council of States. Click a canton on the map to zoom in and discover its coat of arms, its capital, a few key figures and a short portrait. Click the lake or outside the borders, or use the button, to return to the whole country.
+
+```{=html}
+<style>
+.canton-card { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); padding: 22px 24px; min-height: 520px; display: flex; flex-direction: column; }
+.canton-card .empty { text-align: center; color: #8a949e; margin: auto 0; }
+.canton-card .empty img { width: 72px; height: 72px; opacity: 0.85; margin-bottom: 14px; }
+.canton-head { display: flex; align-items: center; gap: 16px; margin-bottom: 6px; }
+.canton-head img { width: 64px; height: 64px; object-fit: contain; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.25)); }
+.canton-head h2 { margin: 0; font-size: 1.45em; line-height: 1.15; color: #2c3e50; }
+.canton-head .abbr { display: inline-block; font-size: 0.7em; font-weight: 700; letter-spacing: 1px; color: #fff; background: #2c3e50; border-radius: 4px; padding: 2px 7px; margin-left: 8px; vertical-align: middle; }
+.canton-sub { color: #6c757d; font-size: 0.92em; margin: 0 0 14px 0; }
+.canton-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; margin-bottom: 14px; }
+.canton-stat { background: #f8f9fa; border-radius: 6px; padding: 8px 10px; }
+.canton-stat .lbl { font-size: 0.72em; text-transform: uppercase; letter-spacing: 0.6px; color: #8a949e; }
+.canton-stat .val { font-size: 1.15em; font-weight: 700; color: #2c3e50; }
+.canton-stat .val small { font-size: 0.7em; font-weight: 400; color: #6c757d; }
+.canton-desc { font-size: 0.95em; line-height: 1.5; color: #343a40; margin: 0; border-left: 3px solid #e67e22; padding-left: 12px; }
+.canton-note { font-size: 0.78em; color: #8a949e; margin-top: auto; padding-top: 14px; }
+.leaflet-container { font-family: inherit; }
+.g-col-lg-4 form { margin-top: 12px; }
+.g-col-lg-4 form button { background: #2c3e50; color: #fff; border: none; border-radius: 6px; padding: 8px 16px; font-weight: 600; cursor: pointer; }
+.g-col-lg-4 form button:hover { background: #e67e22; }
+</style>
+```
+
+::: {.grid}
+
+::: {.g-col-12 .g-col-lg-8}
+```{ojs}
+//| label: leaflet-map
+
+// Leaflet library and stylesheet
+L = {
+  const L = await require("leaflet@1.9.4/dist/leaflet.js");
+  if (!document.getElementById("leaflet-css")) {
+    const link = document.createElement("link");
+    link.id = "leaflet-css";
+    link.rel = "stylesheet";
+    link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+    document.head.appendChild(link);
+  }
+  return L;
+}
+
+// Data: canton facts (data/swiss_data/cantons.csv) and boundaries
+cantons = FileAttachment("../../data/swiss_data/cantons.csv").csv({typed: true})
+geo = FileAttachment("../../data/geojson/switzerland.geojson").json()
+statsMap = new Map(cantons.map(d => [d.geo_name, d]))
+flagsDir = "../../assets/swiss_flags/"
+mutable selected = null
+
+// The map
+mapContainer = {
+  const container = document.createElement("div");
+  container.style.height = "520px";
+  container.style.width = "100%";
+  container.style.borderRadius = "8px";
+  container.style.border = "1px solid #dee2e6";
+  container.style.overflow = "hidden";
+
+  // Yield the container first so Leaflet can measure it
+  yield container;
+
+  const home = {center: [46.8, 8.2], zoom: 7.8};
+  const map = L.map(container, {zoomSnap: 0, zoomDelta: 1, wheelPxPerZoomLevel: 5})
+    .setView(home.center, home.zoom);
+
+  // Swiss tiles from OpenStreetMap Switzerland, bounded to the country
+  L.tileLayer("https://tile.osm.ch/switzerland/{z}/{x}/{y}.png", {
+    maxZoom: 18,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    bounds: [[45, 5], [48, 11]]
+  }).addTo(map);
+
+  const baseStyle = {color: "#2c3e50", weight: 1, fillColor: "#2c3e50", fillOpacity: 0.12};
+  const hoverStyle = {weight: 1.5, fillOpacity: 0.28};
+  const selectedStyle = {weight: 2.5, color: "#e67e22", fillColor: "#ffffff", fillOpacity: 0};
+
+  const geoLayer = L.geoJSON(geo, {
+    style: () => baseStyle,
+    onEachFeature: (feature, layer) => {
+      const info = statsMap.get(feature.properties.name);
+      layer.bindTooltip(info ? info.name : feature.properties.name, {sticky: true, direction: "top", offset: [0, -6]});
+      layer.on("mouseover", e => { if (mutable selected !== feature) e.target.setStyle(hoverStyle); });
+      layer.on("mouseout",  e => { if (mutable selected !== feature) geoLayer.resetStyle(e.target); });
+      layer.on("click", e => {
+        mutable selected = feature;
+        geoLayer.resetStyle();
+        e.target.setStyle(selectedStyle);
+        e.target.bringToFront();
+        map.flyToBounds(e.target.getBounds(), {padding: [20, 20], duration: 1.0});
+        L.DomEvent.stopPropagation(e);
+      });
+    }
+  }).addTo(map);
+
+  // Back to the whole country (used by the button and by clicks outside the cantons)
+  container.resetMap = () => {
+    mutable selected = null;
+    geoLayer.resetStyle();
+    map.flyTo(home.center, home.zoom, {duration: 1.0});
+  };
+  map.on("click", container.resetMap);
+}
+```
+:::
+
+::: {.g-col-12 .g-col-lg-4}
+```{ojs}
+//| label: info-card
+
+fmt = d3.format(",")
+
+html`<div class="canton-card">
+  ${selected
+    ? (() => {
+        const c = statsMap.get(selected.properties.name);
+        if (!c) return html`<p>No data for this canton.</p>`;
+        const density = Math.round(c.population / c.area_km2);
+        return html`
+          <div class="canton-head">
+            <img src="${flagsDir}${c.flag}" alt="Coat of arms of ${c.name}">
+            <h2>${c.name}<span class="abbr">${c.abbr}</span></h2>
+          </div>
+          <p class="canton-sub">Capital: <strong>${c.capital}</strong>${c.half_canton ? " · half-canton" : ""} · in the Confederation since <strong>${c.joined}</strong></p>
+          <div class="canton-stats">
+            <div class="canton-stat"><div class="lbl">Population</div><div class="val">${fmt(c.population)}</div></div>
+            <div class="canton-stat"><div class="lbl">Area</div><div class="val">${fmt(c.area_km2)} <small>km²</small></div></div>
+            <div class="canton-stat"><div class="lbl">Density</div><div class="val">${fmt(density)} <small>/ km²</small></div></div>
+            <div class="canton-stat"><div class="lbl">Official language${c.languages.includes(",") ? "s" : ""}</div><div class="val" style="font-size:1em">${c.languages}</div></div>
+          </div>
+          <p class="canton-desc">${c.description}</p>
+          <div class="canton-note">Population: Federal Statistical Office, provisional figures at 31 December 2025.</div>`;
+      })()
+    : html`
+        <div class="empty">
+          <img src="${flagsDir}Flag_of_Switzerland.svg" alt="Flag of Switzerland">
+          <h3 style="margin: 0 0 8px 0; color: #2c3e50;">Switzerland</h3>
+          <p style="margin: 0 0 6px 0;"><strong>${fmt(d3.sum(cantons, d => d.population))}</strong> inhabitants · <strong>${fmt(d3.sum(cantons, d => d.area_km2))}</strong> km²</p>
+          <p style="margin: 0;">${cantons.length} cantons · 4 national languages</p>
+          <p style="margin-top: 22px; font-size: 0.9em;">Click a canton on the map to see its details.</p>
+        </div>`
+  }
+</div>`
+```
+
+```{ojs}
+//| label: reset-button
+viewof resetBtn = Inputs.button("Back to the whole country", {
+  reduce: () => { if (mapContainer && mapContainer.resetMap) mapContainer.resetMap(); }
+})
+```
+:::
+
+:::
