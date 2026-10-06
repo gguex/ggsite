@@ -1,0 +1,379 @@
+---
+title: "II. Le Tidyverse I"
+author: "Guillaume Guex"
+number-sections: true
+lang: fr
+---
+
+## Le Tidyverse : qu'est-ce ?
+
+Le **Tidyverse** (<https://www.tidyverse.org/>) est une collection de plusieurs librairies, créé par *posit* (RStudio), spécialement conçue pour le traitement de données dans R. On y trouve par exemple :
+
+-   `dplyr` / `tidyr` / `tibble` : packages pour la manipulation de jeux de données
+-   `stringr` : package pour la manipulation de chaînes de caractères
+-   `ggplot2` : package pour la création de graphiques
+
+Ces librairies partagent une "philosophie" de programmation commune qui change la manière habituelle de programmer en R, en particulier grâce à (ou à cause de) l'opérateur **pipe**: `%>%`. Cette philosophie permet d'avoir des codes très **lisibles**, mais peut parfois être déroutante pour les personnes habituées à la base de R.
+
+L'utilisation du tidyverse devient de plus en plus importante dans la communauté R, il est donc important de le voir si l'on veut continuer à comprendre les codes R trouvés en ligne.
+
+Le tidyverse s'installe et se charge de la manière habituelle
+
+```{r}
+# install.packages("tidyverse") # à décommenter pour installer la première fois
+library(tidyverse)
+```
+
+Dans ce code, nous allons également besoin de lire des fichiers excel, nous chargeons donc également `readxl` (pour rappel: on met généralement au début du code tous les packages que nous allons utiliser).
+
+```{r}
+library(readxl)
+```
+
+Dans ce TP nous allons également utiliser la fonction `remove_empty()` du package `janitor`, qui permet d'enlever les lignes et colonnes vides d'un jeu de données.
+
+```{r}
+library(janitor)
+```
+
+Ce TP s'inspire fortement du livre **R for Data Science** (2017), de Garrett Grolemund et Hadley Wickham, disponible en ligne : https://r4ds.had.co.nz/.
+
+## Éléments centraux du Tidyverse
+
+### Les tibbles
+
+Les données dans le tidyverse se présentent sous la forme de **tibbles**, c'est-à-dire une sorte de dataframe mais avec quelques avantages par rapport à ces dernières. La plupart des opérations sur les dataframes sont possibles, mais les tibbles présentent l'avantage d'avoir un **affichage plus élégant** et des **types de données plus variés**. On trouve comme tibble d'exemple contenu dans le tidyverse :
+
+```{r}
+mpg
+```
+
+Il est possible de passer d'une dataframe à un tibble avec `as_tibble()` :
+
+```{r}
+head(iris) # head() donne seulement les premières observations
+iris_tbl = as_tibble(iris)
+iris_tbl
+```
+
+L'opération inverse n'est généralement pas nécessaire, car **un tibble est un dataframe**, toutes les opérations que l'on effectue sur un dataframe sont valables sur un tibble.
+
+------------------------------------------------------------------------
+
+### Le pipe (`%>%`)
+
+Avec le tidyverse, on utilise fréquemment l'opérateur **pipe**, noté `%>%`. Pour comprendre son utilisation, prenons un exemple simple de manipulations (nous verrons ces fonctions par la suite) :
+
+```{r}
+# On ne garde que les modèles de classe "compact" de l'année "1999"
+mpg2 = filter(mpg, year=="1999", class=="compact")
+# On calcule une nouvelle variable ratio = displ / cyl
+mpg3 = mutate(mpg2, ratio=displ/cyl)
+# On ne garde que les variables displ, cyl et ratio
+mpg4 = select(mpg3, displ, cyl, ratio)
+# On affiche les 3 premières lignes
+head(mpg4, 3)
+```
+
+Cette suite d'opérations n'est pas idéale, car nous avons créé un nouveau tibble pour chaque opération. On aurait aussi pu emboîter les opérations les unes dans les autres, mais la lisibilité devient difficile :
+
+```{r}
+head(
+  select(
+    mutate(
+      filter(mpg, 
+             year=="1999", class=="compact")
+      , ratio=displ/cyl)
+    , displ, cyl, ratio)
+  , 3)
+```
+
+Pour faciliter la lecture du code dans ce genre de situation, on peut utiliser le **pipe**:
+
+```{r}
+mpg %>% 
+  filter(year=="1999", class=="compact") %>%
+  mutate(ratio=displ/cyl) %>%
+  select(displ, cyl, ratio) %>%
+  head(3)
+```
+
+Grâce au pipe, l'**objet sortant** (résultat de l'opération à gauche du pipe) vient se mettre **à la place premier argument de la fonction qui suit** (il n'y donc plus besoin de donner le premier argument). Cette façon de coder permet de se **concentrer sur les "verbes" (les noms des fonctions) et les "compléments" (les arguments) plutôt que les "noms" (les variables)**.
+
+Bien entendu, on peut toujours stocker le résultat d'une série d'opérations avec pipe dans une nouvelle variable :
+
+```{r}
+mpg2 = mpg %>% 
+  filter(year=="1999", class=="compact") %>%
+  mutate(ratio=displ/cyl) %>%
+  select(displ, cyl, ratio)
+head(mpg2)
+```
+
+Notez que depuis la version R 4.1.0, on peut également utiliser l'opérateur `|>` à la place de `%>%`.
+
+## Pré-traitements des données
+
+Après avoir chargé un jeux de données, l'étape suivante consiste généralement à effectuer des **pré-traitements** sur ce dernier, afin de pouvoir faire nos analyses par la suite. Le tidyverse offre de nombreuses fonctions qui permettent de faire ces pré-traitements :
+
+-   `remove_empty()` (package `janitor`) : enlève les lignes ou colonnes vides.
+-   `rename()` : renomme les colonnes.
+-   `select()` : sélectionne des variables.
+-   `mutate()` : crée de nouvelles variables.
+-   `filter()` : sélectionne des individus.
+-   `separate()`, `unite()` `pivot_longer()`, `pivot_wider()` : opérations de reconfiguration d'une table.
+-   (Non vu ici) `inner_join()`, `left_join()`, `right_join()`, `full_join()` : opérations de jointure entre deux tables.
+
+Nous allons utiliser ces différentes opérations sur le jeu de données `sociolinguistique_raw.xlsx`, qui contient des données sur la perception des anglicismes par de nombreux individus (pour plus de détails, voir `data/Margot_2022.pdf`).
+
+La plupart des opérations vues ici sont disponibles sous la forme de **cheatsheets** (feuilles de triche) publiées par Posit <https://posit.co/resources/cheatsheets/>). Ici, on utilise principalement :
+
+-   La cheatsheet pour "transformer les données" avec `dplyr` : <https://rstudio.github.io/cheatsheets/data-transformation.pdf>
+
+<!-- -->
+
+-   La cheatsheet pour "restructurer les données" avec `tidyr` : <https://rstudio.github.io/cheatsheets/tidyr.pdf>
+
+### Chargement du jeu de données
+
+Notre de jeu de données est contenu dans le dossier `data/`, qui se situe juste à côté de notre script, nous allons donc commencer par le charger dans R :
+
+```{r}
+# `read_excel()` est une fonction du package `readxl`
+raw_df = read_excel("data/sociolinguistique_raw.xlsx")
+```
+
+On peut ensuite voir notre jeu de données en cliquant sur l'icone à côté de son nom dans l'environnement, ou avec :
+
+```{r}
+view(raw_df)
+```
+
+En l'état, ce jeu est difficile à analyser. Nous allons préparer ces données pour de futures analyses.
+
+### Suppression des lignes et colonnes vides
+
+On commence par supprimer toutes les colonnes et lignes vides, pour cela, on utilise `remove_empty()` du package `janitor` :
+
+```{r}
+final_df = raw_df %>%
+  remove_empty(c("rows", "cols"))
+```
+
+On peut voir qu'il y a toujours 113 lignes, mais qu'il ne nous reste plus que 21 colonnes pertinentes :
+
+```{r}
+final_df
+```
+
+### Renommer les colonnes
+
+Les noms des colonnes s'obtiennent avec :
+
+```{r}
+names(final_df)
+```
+
+Dans le tidyverse, la plupart des opérations se font à l'aide des noms de colonnes, c'est pourquoi il est utile d'avoir des noms qui sont courts et si possible respectant les règles de nommage des variables R (pas d'espace, pas de caractères spéciaux, etc.)
+
+Pour renommer une ou plusieurs colonne, on peut faire :
+
+```{r}
+final_df %>%
+  rename(h_deb = "Heure de début",
+         h_fin = "Heure de fin")
+```
+
+Mais comme notre table est longue , nous allons plutôt utiliser une **table de recodage**.
+
+On commence par créer un vecteur contenant les noms des lignes actuels :
+
+```{r}
+full_names = names(final_df)
+```
+
+Puis on sauvegarde ces noms dans un fichier de données que nous allons éditer à la main pour créer notre table de recodage :
+```{r}
+write_csv(tibble(full_names), "data/full_names.csv")
+```
+
+Le fichier, une fois édité, s'appelle `lookup_table.csv`. Nous allons maintenant 
+le charger dans R pour l'utiliser comme table de recodage :
+```{r}
+lookup_df = read_csv("data/lookup_table.csv")
+lookup_df
+```
+
+Le recode se fait ensuite avec les commandes (`deframe()` transforme une table à 
+deux colonnes en un vecteur de recodage) :
+```{r}
+lookup_vec = deframe(lookup_df)
+final_df = final_df %>%
+  rename(any_of(lookup_vec))
+```
+
+Nos colonnes sont maintenant correctement nommées :
+
+```{r}
+final_df
+```
+
+### Sélection des variables
+
+Certaines variables de notre jeu de données ne sont pas pertinentes. Il est possible d'effectuer une *sélection* de variables avec `select()` :
+
+```{r}
+final_df %>%
+  select(acc_mode, acc_exclu, acc_accept, acc_enrich, acc_suppr, acc_menace)
+```
+
+Notez que `select()` s'utilise de nombreuses manières (voir l'aide). Ici, nous aimerions surtout éliminer certaines colonnes, on peut pour cela utiliser l'opérateur "-" :
+
+```{r}
+final_df = final_df %>%
+  select(-mail, -mots_plus, -outils)
+```
+
+### Filtrer des individus
+
+La fonction `filter()` permet quant à elle de filtrer les individus selon des conditions logiques. Supposons que les données des individus dont l'entretien s'est déroulé après le 1 janvier 2021 ont été enregistrées de manière erronée, et que nous désirons enlever ces lignes.
+
+Tester les dates selon cette condition correspond à l'expression suivante :
+
+```{r}
+final_df$h_deb < "2021-01-01"
+```
+
+On peut donc sélectionner les individus pertinents avec `filter()` et une condition logique :
+
+```{r}
+final_df = final_df %>%
+  filter(h_deb < "2021-01-01")
+```
+
+L'aide de cette fonction fournit ne nombreuses manières d'écrire une condition logique permettant un filtre particulier.
+
+### Création de nouvelles variables
+
+Pour créer de nouvelle variables, on utilise la fonction `mutate()`.
+
+Par exemple, si l'on veut créer une variable contenant la durée de l'entretien :
+
+```{r}
+final_df = final_df %>%
+  mutate(duree = h_fin - h_deb)
+```
+
+Ou en numérique :
+
+```{r}
+final_df = final_df %>%
+  mutate(duree_num = as.numeric(duree))
+final_df
+```
+
+La variable `annee`, contenant le date de naissance, contient des entrées incohérentes. Nous allons utiliser une expressions régulière (4 "digits") et la fonction `str_extract()` pour extraire l'année de naissance sur chaque entrée :
+
+```{r}
+final_df = final_df %>%
+  mutate(annee=str_extract(annee, regex("\\d{4}")))
+```
+
+Il s'agit maintenant de modifier le format de cette variable en nombre :
+
+```{r}
+final_df = final_df %>%
+  mutate(annee=as.numeric(annee))
+```
+
+### Reconfiguration de la table
+
+Il existe également de nombreuses opérations (`separate()`, `unite()` `pivot_longer()`, `pivot_wider()`, etc.), plus complexes, qui permettent de "reconfigurer" notre table de données.
+
+Pour comprendre ces opérations, nous allons essayer d'extraire les mots de la colonne `mots`, afin d'avoir ces derniers comme variables binaires représentant l'utilisation (ou non) de ce mot par l'individu. En résumé, un tableau de cette forme (0 = non-utilisation, 1 = utilisation) :
+
+```{r}
+tibble(Noms=c("Individu 1", "Individu 2", "Individu 3"), 
+       Hashtag=c(0, 1, 0), Selfie=c(0, 1, 1), Jetlag=c(1, 0, 0))
+```
+
+Pour commencer, on sépare la colonne "mots" en plusieurs colonnes, contenant sur chacune un mot de la liste (ou des valeurs maquantes), avec la fonction `separate()` :
+
+```{r}
+# Ci-dessous, paste0("mot_", 1:39) crée un vecteur de chaînes de caractères
+# contenant ("mot_1", "mot_2", "mot_3", ... , "mot_39"), i.e., les noms des 
+# nouvelles colonnes.
+aux_df = final_df %>%
+  separate(mots, into=paste0("mot_", 1:39), sep=";", fill="right")
+aux_df %>%
+  select(mot_1:mot_5)
+```
+
+L'opération inverse de `separate()` est `unite()`, qui permet d'agréger plusieurs colonnes en une seule.
+
+On va mettre tous ces mots sur une seule colonne, en dupliquant le nombre de lignes. Cette opération se fait avec `pivot_longer()` :
+
+```{r}
+table4a
+table4a %>% 
+  pivot_longer(cols=c("1999", "2000"), 
+               names_to="year", 
+               values_to="cases")
+```
+
+![pivot_longer](fig/tidy-9.png)
+
+Sur notre table cela donne :
+
+```{r}
+aux_df = aux_df %>%
+  pivot_longer(cols=mot_1:mot_39, 
+               names_to="place", 
+               values_to="word", 
+               values_drop_na=T)
+aux_df %>%
+  select(id, place, word)
+```
+
+On enlève les mots vides et la colonne `place` qui ne sont pas utiles :
+
+```{r}
+aux_df = aux_df %>%
+  filter(word != "") %>%
+  select(-place)
+```
+
+On va également enlever tous les espaces supplémentaires de nos colonnes de type caractères :
+
+```{r}
+aux_df = aux_df %>%
+  mutate(across(where(is.character), str_trim))
+```
+
+L'opération inverse de `pivot_longer()` est `pivot_wider()`, qui fonctionne de la manière suivante :
+
+```{r}
+table2
+table2 %>% 
+  pivot_wider(names_from=type, values_from=count)
+```
+
+![pivot_wider](fig/tidy-8.png)
+
+On l'utilise alors (en créant au préalable une variable constante `const`) pour arriver à notre table finale :
+
+```{r}
+final_df = aux_df %>%
+  mutate(const = 1) %>%
+  pivot_wider(names_from="word", values_from=const, values_fill=0)
+final_df %>% 
+  select(id, Hashtag:Coach)
+```
+
+### Sauvegarde de la table finale
+
+Une fois tous les pré-traitements effectués, on peut sauvegarder notre table finale. Cela nous permettera de travailler sur le traitement statistique dans un autre script :
+
+```{r}
+write_csv(final_df, "data/sociolinguistique_v1.csv")
+```

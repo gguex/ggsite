@@ -1,0 +1,335 @@
+---
+title: "XII. Clustering"
+author: "Guillaume Guex"
+number-sections: true
+lang: fr
+---
+
+## Introduction
+
+Dans ce TP, nous allons nous intéresser aux méthodes de **clustering**, aussi appelées méthodes de **classification non-supervisée**. Ces méthodes permettent d'obtenir des groupes parmi les individus (lignes) d'un jeu de données, en utilisant les *motifs* ou *régularités* présentent. Nous allons appliquer ici la méthode des **k-moyennes**, ou **k-means**, ainsi qu'une **classification ascendante hiérarchique**.
+
+Les librairies nécessaires sont les suivantes
+
+```{r warning=FALSE, message=FALSE}
+library(tidyverse)
+library(readxl)
+library(FactoMineR)
+library(factoextra)
+library(aricode)
+library(dendextend)
+```
+
+### Chargement et pré-traitements du jeu de données
+
+Nous allons utiliser ici le jeu de données de phonétique. Commençons par le charger (et on corrige une erreur dans le jeu de données) : knitr
+
+```{r}
+phonetique_df = read_excel("data/phonétique.xlsx") %>%
+  mutate(Opposition = ifelse(Opposition=="e(:)(:)", "e(:)", Opposition))
+```
+
+Il est possible d'effectuer des méthodes de clustering sur des variables catégorielles, en effectuant un recodage binaire de ces dernières. Ici, nous utiliserons uniquement les variables numériques `F1`, `F2`, `F3` et `Dur_V` :
+
+```{r}
+phonetique_num_df = phonetique_df %>%
+  select(F1, F2, F3, Dur_V) 
+phonetique_num_df
+```
+
+Comme ces variables numériques peuvent avoir des échelles différentes, et donc ne pas avoir la même importance lors d'un clustering, nous allons les **standardiser**. On utilise pour cela la fonction `scale()` (et on transforme à nouveau le résultat en tibble) :
+
+```{r}
+phonetique_num_df = phonetique_num_df %>%
+  scale() %>%
+  as_tibble()
+phonetique_num_df
+```
+
+### Analyse en composantes principales
+
+Avant d'effectuer la méthode des k-moyennes, nous allons observer comment les lignes de notre jeu de données peuvent être représenter dans l'espace. Comme notre jeu de données possède 4 variables, on peut voir nos lignes comme des points dans un espace à 4 dimensions. Nous allons faire ici une **Analyse en composantes principales (ACP)** afin de projeter ces points dans un plan optimal (optimal dans le sens affichant au mieux les contrastes).
+
+Cette méthode est similaire à l'AFC ou la ACM, mais on l'utilise sur un jeu de donnée contenant uniquement des **variables numériques**. Les résultats que donnent cette méthode sont :
+
+1.  **les corrélations entre les axes factoriels et les variables du jeu de données**, permettant d’interpréter nos axes. Nous n'allons pas utiliser ces corrélations ici, mais elles sont utilies si on veut comprendre la disposition des points.
+
+2.  **carte factorielle** qui représente aux mieux nos individus dans les $q$ premières coordonnées (généralement $q=2$, pour pouvoir les afficher sur un plan). C'est ce résultat qui nous intéresse ici.
+
+Nous n'allons pas étudier plus en longueur cette méthode, mais comme elle permet d'afficher nos individus (définis par des variables numériques) dans un plan, nous allons l'utiliser en combinaison avec nos méthodes de clustering pour voir comment nos groupes sont constitués.
+
+On utilise la méthode `PCA()` du package `FactoMiner` pour faire l'ACP. On va ajouter à nos coordonnées la variable catégorielle `phonetique_df$Voyelle`, afin de pouvoir afficher les différentes voyelles sur la projection (en précisant que c'est une variable catégorielle supplémentaire en passant son identifiant dans l'argument `quali.sup`) :
+
+```{r}
+pca_res = PCA(cbind(phonetique_df$Voyelle, phonetique_num_df), graph=F, 
+              quali.sup=1)
+```
+
+On utilise `fviz_pca_ind()` de `factoextra` pour afficher nos individus :
+
+```{r}
+fviz_pca_ind(pca_res, labels=F, habillage=1)
+```
+
+Et sur les dimensions 3 et 4 :
+
+```{r}
+fviz_pca_ind(pca_res, axes=c(3, 4), labels=F, habillage=1)
+```
+
+En faisant notre méthode des k-moyennes, nous allons voir si les différentes voyelles peuvent être retrouvées.
+
+## Les k-moyennes
+
+### Théorie
+
+L'algorithme du **k-means**, ou des **k-moyennes** en français, est une méthode de partitionnement itérative. Son fonctionnement est assez intuitif à comprendre :
+
+1.  **Initialisation** : L'utilisateur choisit le nombre de groupes k. L'algorithme place aléatoirement k points (les "centroïdes") dans l'espace des données.
+2.  **Affectation** : Chaque individu est assigné au centroïde le plus proche (via la distance euclidienne), formant ainsi k groupes initiaux.
+3.  **Mise à jour** : L'algorithme recalcule la position exacte de chaque centroïde pour qu'il se place parfaitement au milieu (la moyenne) des individus de son groupe.
+4.  **Convergence** : Puisque les centroïdes ont bougé, on recommence l'étape 2. On boucle ainsi jusqu'à ce que plus aucun individu ne change de groupe.
+
+![Illustration du k-means](fig/k-means.png)
+
+### Application
+
+La méthode des k-moyennes s'effectue sur un tableau de données numérique à l'aide de la fonction `kmeans()`. Ici, on précise dans l'argument `centers`, le nombre de groupes que nous désirons obtenir (en l'occurrence 9, comme le nombre de voyelles) :
+
+```{r}
+kmeans_res = kmeans(phonetique_num_df, centers=9)
+kmeans_res
+```
+
+En affichant le retour de cette fonction, la dernière ligne nous dit ce que l'on peut obtenir de cette variable. Nous allons sauvegarder ici les groupes attribués aux différents points avec `kmeans_res$cluster` :
+
+```{r}
+clust_res = kmeans_res$cluster
+```
+
+Affichons ces groupes dans l'espace avec une ACP :
+
+```{r}
+pca_kmeans_res = PCA(cbind(clust_res, phonetique_num_df), graph=F, 
+                     quali.sup=1)
+fviz_pca_ind(pca_kmeans_res, labels=F, habillage=1)
+fviz_pca_ind(pca_kmeans_res,  axes=c(3, 4), labels=F, habillage=1)
+```
+
+On peut aussi utiliser `fviz_cluster()` de `factoextra`, qui trace des zones sur les différents groupes :
+
+```{r}
+fviz_cluster(kmeans_res, data=phonetique_num_df)
+```
+
+On voit que ces groupes diffèrent de nos voyelles (ce qui est attendu, l'information utilisée pour le k-means n'est pas confondue avec la "définition" de ces dernières), , mais il est difficile de se rendre compte de l'**information partagée par ces deux regroupements**. Nous allons donc voir maintenant comment mesurer la part d'association entre ces clusters et les voyelles.
+
+### Comparaison entre partitions
+
+Afin de voir si le résultat de notre clustering et les voyelles sont associés, on peut, pour commencer, examiner la **table de contingence** formée par ces deux partitions :
+
+```{r}
+contingency_table = table(phonetique_df$Voyelle, clust_res)
+contingency_table
+```
+
+Notez que les groupes sont **anonymes**, ce qui veut dire que l'on ne sait pas comment relier chaque cluster à chaque voyelle. Il existe cependant des manières de mesurer l'accord entre deux partitions sans relier explicitement chaque groupe à chaque voyelle.
+
+Par exemple, en effectuant un **test du chi2** sur cette table, on peut voir que ces deux partitions partagent une information commune significative :
+
+```{r}
+chisq.test(contingency_table)
+```
+
+Il existe en réalité de nombreux indices pour évaluer l'information commune de deux partitions. Le chi2 en est une, mais peut poser problème car sa valeur n'est pas bornée et dépend du nombre de classes dans les deux partitions.
+
+Un autre indice souvent utilisé pour mesure l'accord entre deux partitions est la **Adjusted Mutual Information (NMI)**. Cette mesure est comprise entre 0 et 1 avec 0 si les deux partitions ne sont pas du tout liées et 1 si elles sont identiques. On peut obtenir cette mesure avec la fonction `AMI()` du package `aricode` (ce package contient de nombreuses autres mesures) :
+
+```{r}
+AMI(as.factor(phonetique_df$Voyelle), clust_res)
+```
+
+### Nombre de groupes inconnu
+
+Parfois, on cherche à effectuer un clustering *exploratoire*, sans connaitre à priori le nombre de groupes à assigner aux données. Il existe alors de nombreux critères qui permettent d'évaluer la pertinence d'une partition, c'est-à-dire sa capacité à séparer de manière distincte nos données.
+
+Un des critères les plus utilisé est le `Average Silhouette Width (AWS)`, qui mesure à quel point les données sont *proches à l'intérieur des clusters*, et *éloignés entre les clusters*. En utilisant la fonction `fviz_nbclust()` de `factoextra`, qui attend notre jeu de données et une méthode de clustering, on peut avoir la valeur du AWS en fonction du nombre de groupes :
+
+```{r}
+fviz_nbclust(phonetique_num_df, kmeans)
+```
+
+On voit ici que le nombre de groupes optimal selon ce critère est 2. Effectuons donc un k-means avec ce nombre de groupes :
+
+```{r}
+kmeans_2g_res = kmeans(phonetique_num_df, centers=2)
+clust_2g_res = kmeans_2g_res$cluster
+```
+
+Et observons le résultat sur notre jeu de données :
+
+```{r}
+fviz_cluster(kmeans_2g_res, data=phonetique_num_df)
+```
+
+On peut maintenant regarder l'accord maximal de cette partition selon plusieurs de nos variables catégorielles :
+
+```{r}
+chisq.test(table(phonetique_df$Opposition, clust_2g_res))
+AMI(as.factor(phonetique_df$Opposition), clust_2g_res)
+chisq.test(table(phonetique_df$Voyelle, clust_2g_res))
+AMI(as.factor(phonetique_df$Voyelle), clust_2g_res)
+chisq.test(table(phonetique_df$Mot, clust_2g_res))
+AMI(as.factor(phonetique_df$Mot), clust_2g_res)
+chisq.test(table(phonetique_df$Tache, clust_2g_res))
+AMI(as.factor(phonetique_df$Tache), clust_2g_res)
+chisq.test(table(phonetique_df$Region, clust_2g_res))
+AMI(as.factor(phonetique_df$Region), clust_2g_res)
+chisq.test(table(phonetique_df$Sexe, clust_2g_res))
+AMI(as.factor(phonetique_df$Sexe), clust_2g_res)
+```
+
+On voit que ces deux groupes semblent recouper partiellement les modalités de la variable `Opposition`. La table de contingence peut alors nous aider à interpréter ces clusters :
+
+```{r}
+table(phonetique_df$Opposition, clust_2g_res)
+```
+
+## Classification ascendante hiérarchique
+
+### Théorie
+
+Contrairement au k-means qui force à fixer $k$ dès le départ, la **Classification ascendante hiérarchique (CAH)** propose une approche différente, qui se base sur une **matrice de dissimilarité** entre individus calculée en amont :
+
+1.  Au départ, chaque individu est considéré comme son propre groupe (ici, 50 groupes).
+
+2.  L'algorithme cherche les deux individus les plus proches (dissimilarité minimale) et les fusionne.
+
+3.  Les distances sont recalculées entre le nouveau groupe formé et les autres individus restants, en fonction d'un critère de liaison (p.ex. : saut minimal, saut maximal, méthode de Ward).
+
+4.  L'algorithme boucle sur l'étape 2 et 3 jusqu'à ce que tous les individus soient agglomérés dans un seul groupe.
+
+Le résultat final illustre toutes les étapes de cet algorithme sous la forme d'un arbre de classification hiérarchique : le **dendrogramme**, que l'on peut a posteriori couper à la hauteur désirée pour obtenir nos groupes.
+
+### Création du jeu de données sur les locuteurs
+
+Pour illustrer la classification ascendante hiérarchique, nous allons nous intéresser aux locuteur du jeu de données. Nous allons donc modifier notre jeu de données pour avoir sur chaque ligne un locuteur, et les variables seront constituées du Premier formant et de la Durée sur chaque voyelle (On garde également la variable `Region`, pour pouvoir comparer avec nos résultats) :
+
+```{r}
+locuteur_df = phonetique_df %>%
+  group_by(Voyelle, Locuteur) %>%
+  summarise(F1=mean(F1), Dur_V=mean(Dur_V), Region=max(Region)) %>%
+  pivot_wider(names_from=Voyelle, values_from=c(F1, Dur_V))
+locuteur_df
+```
+
+On construit également le tableau des variables numériques standardisées :
+
+```{r}
+locuteur_num_df = locuteur_df %>%
+  select(-c(Locuteur, Region)) %>%
+  scale() %>%
+  as_tibble()
+```
+
+Et on sauvegarde le nombre de locuteurs, qui va nous servir par la suite :
+
+```{r}
+n = dim(locuteur_df)[1]
+```
+
+### Classification ascendante hiérarchique
+
+Pour effectuer une **classification ascendante hiérarchique (CAH)**, on doit au préalable construire une **matrice de dissimilarités**. On peut en obtenir plusieurs grâce à la fonction **dist()**, qui construit des dissimilarités différentes selon l'argument entré dans `method` (ici, la distance euclidienne) :
+
+```{r}
+dist_mat = dist(locuteur_num_df, method = "euclidean")
+```
+
+La CAH s'effectue avec la fonction `hclust()`, où l'on doit préciser la méthode d'aggrégation dans `method` :
+
+```{r}
+hclust_res = hclust(dist_mat, method="ward.D2")
+```
+
+Pour construire le **dendrogramme** à partir du résultat, on utilise `as.dendrogram()` :
+
+```{r}
+dendrogram = as.dendrogram(hclust_res)
+```
+
+Qui s'affiche ensuite avec la fonction `plot()` :
+
+```{r}
+plot(dendrogram)
+```
+
+Ce dendrogramme illustre tout le processus agglomératif. Pour obtenir une partition en particulier, on va procéder à une **coupe**.
+
+### Coupe du dendrogramme
+
+Pour commencer, posons le nombre de groupes que nous désirons obtenir. Ici, un nombre de groupes identique au nombre de régions :
+
+```{r}
+k = 5
+```
+
+L'assignation des locuteurs dans les groupes, relativement à notre dendrogramme et à notre nombre de groupes, s'obtient avec `cutree()` :
+
+```{r}
+groups = cutree(dendrogram, k=k)
+groups
+```
+
+Avec la librairie `dendextend`, il nous est possible de personnaliser l'apparence du dendrogramme grâce à la fonction `set()`. Cette fonction permet de modifier de nombreux éléments de dendrogramme (voir l'aide ou http://www.sthda.com/english/wiki/beautiful-dendrogram-visualizations-in-r-5-must-known-methods-unsupervised-machine-learning). Ici, nous allons uniquement colorer les 5 branches principales du dendrogramme (c'est-à-dire notre coupe) :
+
+```{r}
+dendrogram %>%
+  set("branches_k_color", k=k) %>%
+  plot()
+```
+
+La hauteur à laquelle la coupe à été effectuée s'obtient grâce à un calcul effectué à l'aide du vecteur `hclust_res$height` :
+
+```{r}
+cutline_height = (hclust_res$height[n-k] + hclust_res$height[n-k+1]) / 2
+```
+
+On peut ensuite l'ajouter à notre dendrogramme avec `abline()` :
+
+```{r}
+dendrogram %>%
+  set("branches_k_color", k=k) %>%
+  plot()
+abline(h=cutline_height, lty=2)
+```
+
+### Comparaison avec les régions
+
+Nous allons comparer notre partition obtenue avec les régions, que nous sauvons dans un nouveau vecteur par commodité :
+
+```{r}
+region = locuteur_df$Region
+```
+
+On voit que l'information partagée est non-négligeable, mais loin d'être parfaite :
+
+```{r}
+contingency_table = table(region, groups)
+contingency_table
+chisq.test(contingency_table)
+AMI(as.factor(region), groups)
+```
+
+Nous allons maintenant illustrer ces deux partitions avec une ACP. On ajoute à notre jeu de données numérique nos variables de groupes :
+
+```{r}
+pca_hclust_res = PCA(cbind(region, groups, locuteur_num_df), graph=F, 
+                     quali.sup=c(1, 2))
+```
+
+On peut maintenant afficher ces deux partitions simultanément :
+
+```{r}
+fviz_pca_ind(pca_hclust_res, labels=F, habillage=c(1, 2))
+```

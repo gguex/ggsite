@@ -1,0 +1,554 @@
+---
+title: "I. Introduction à R et RStudio"
+author: "Guillaume Guex"
+number-sections: true
+lang: fr
+---
+
+## Présentation de R et RStudio
+
+### R : qu'est-ce ?
+
+R est un **logiciel d'analyses statistiques** libre multiplateforme, distribué via le :
+
+-   Comprehensive R Archive Network, <http://cran.r-project.org/>
+
+Ce dernier s'appuie sur un **langage de programmation**, qui porte le même nom. Il possède de nombreux avantages :
+
+-   Gratuit et open-source.
+-   Multiplateforme.
+-   Nombreuses fonctions pour le traitement de données, les statistiques et la visualisation.
+-   Extensible et flexible.
+-   Très utilisé dans la communauté scientifique et l'administration publique.
+
+### RStudio et Posit
+
+RStudio est un **environnement de développement intégré** (IDE) pour R, développé par **Posit** (entreprise privée très active dans le développement de R, et aussi Python récemment) qui facilite son utilisation. Il est aussi gratuit et multiplateforme, et peut être téléchargé sur : <https://posit.co/download/rstudio-desktop/>. Il permet d'écrire des scripts R, de visualiser les résultats de manière plus agréable, et d'avoir accès à de nombreuses fonctionnalités supplémentaires.
+
+Nous allons faire le tour de son interface un peu plus loin.
+
+### Les notebooks et Quarto
+
+Ce fichier contient le même code que dans le fichier `Introduction_a_R.R`, mais dans un format plus agréable à lire (mais peut-être plus abstrait): il s'agit d'un **Notebook**, écrit avec **Quarto**.
+
+Un Notebook intègre du texte formaté, mais aussi des bouts de code R, avec le résultat de la console R juste en dessous. Par exemple :
+
+```{r}
+# Ceci est un commentaire. Ci dessous, on va afficher le résultat du calcul
+4 + 3
+```
+
+Ces notebooks permettent de sauvegarder le code sous format PDF, HTML ou Word, avec les résultats de l'exécution du code. Ils sont idéaux pour l'analyse exploratoire et les rapports, bien que les scripts classiques restent préférables pour le développement de logiciels ou de fonctions complexes.
+
+Libre à vous d'utiliser votre format de fichier préféré pour travailler.
+
+## Interface RStudio
+
+Pour commencer, nous allons faire un rapide tour de l'interface de RStudio (les éléments que nous utiliserons seront notés comme importants, les autres comme secondaires).
+
+-   Dans le coin en haut à gauche, on trouve les **Sources**. C'est ici que sont ouverts les différents scripts (comme ce dernier), qui sont sauvegardés dans un format texte avec l'extension ".r" ou ".R" (ou .Rmd / .qmd pour un Notebook). Les codes se trouvant ici sont généralement copiés et exécutés dans la **Console** (voir section @sec-methode-travail). On peut aussi y afficher certains jeux de données en mémoire. Si aucun fichier n'est ouvert, ce panneau est caché et la Console occupe toute la partie gauche.
+
+-   Dans le coin en bas à gauche, se trouvent les onglets **Console**, **Terminal** et **Background Jobs** :
+
+    -   IMPORTANT
+        -   **Console** : permet d'entrer les commandes et de voir la plupart des résultats de l'exécution d'un code.
+    -   SECONDAIRE
+        -   **Terminal** : permet d'accéder au système de commandes (terminal) du système d'exploitation.
+        -   **Background Jobs** : permet d'effectuer des tâches en arrière plan.
+
+-   Dans le coin en haut à droite, se trouvent les onglets **Environment**, **History**, **Connections** et **Tutorial** :
+
+    -   IMPORTANT
+        -   **Environment** : permet de voir les variables qui sont en ce moment en mémoire.
+    -   SECONDAIRE
+        -   **History** : permet de voir l'historique des commandes entrées.
+        -   **Connections** : permet d'effectuer des connections avec des bases de données distantes.
+        -   **Tutorial** : offre des tutoriels sur certains sujets de R.
+
+-   Finalement, dans le coin en bas à droite, on trouve divers onglets :
+
+    -   IMPORTANT
+        -   **Files** : un navigateur de fichiers intégré.
+        -   **Plots** : permet d'afficher les graphiques crées par R.
+        -   **Help** : permet de trouver de la documentation pour les diverses packages ou fonctions de R.
+    -   SECONDAIRE
+        -   **Packages** : permet de gérer les rapidement les packages de R.
+        -   **Viewer** : permet de visualiser du contenu local en pdf, html ou autre.
+        -   **Presentation** : permet de visualiser des "présentations" html R.
+
+## Méthode de travail {#sec-methode-travail}
+
+Généralement, on va travailler sur un fichier **script R** (.r ou .R) que l'on éditera au fur et à mesure de l'avancée du travail. Ce fichier contiendra une séquence de manipulations, d'analyses et de production de résultats. Ce script devrait pouvoir être utilisé de manière indépendante, sans avoir recours à des manipulations préalables. (sauf peut-être l'adaptation des chemins d'accès aux données).
+
+Pour exécuter tout le script R, on le sélectionne intégralement (commande-A ou ctrl-A) puis on envoie cette sélection dans la **console** (commande-retour ou ctrl-retour). Il est aussi possible d'exécuter uniquement des sous-parties du script en sélectionnant uniquement ces dernières, ou d'exécuter la ligne en cours. Il est également possible d'écrire directement dans la console pour exécuter des commandes (souvent pour faire des tests).
+
+Une **session R** commence à l'ouverture de RStudio, et s'arrête lorsque l'on quitte R ou que l'on crée une nouvelle session via "Session $\to$ Restart R". Lors d'une session R, toutes les variables et objets créés par un code exécuté dans la console (peu importe la manière) vont être sauvés dans l'environnement d'exécution. On peut alors réutiliser ces variables et objets dans des commandes ultérieures.
+
+Pour être sûr que votre script R crée par lui-même toutes les variables et objets nécessaires à son fonctionnement, **n'oubliez pas de vérifier son exécution en partant d'une session vierge**.
+
+Il est également important de bien **commenter** son script R, c'est-à-dire d'ajouter des lignes de texte explicatives qui ne sont pas exécutées par R. En R, les commentaires commencent par le symbole `#`, ce qui indique à l'interpréteur d'ignorer le reste de la ligne.
+
+```{r}
+# Ceci est un commentaire avant du code
+3 + 4
+```
+
+```{r}
+2 - 2 # Ceci est un commentaire à côté d'une ligne de code
+```
+
+Vous pouvez trouver un exemple de mini travail statistique dans le script `Mini_analyse.R`.
+
+## Les opérateurs
+
+### Les opérateurs de calcul
+
+Comme Python ou Julia, R est un langage interprété muni d'une *invite de commande*. On peut aussi bien exécuter des scripts (la source) que faire des calculs lignes par lignes. On peut par exemple l'utiliser comme une calculatrice :
+
+```{r}
+3 + 8 - 2 # addition, soustraction
+63 / 3 * 2 # division, multiplication
+63 / (3 * 2) # parenthèses
+3^3 # puissance
+81^(1/2) # racine
+23 %/% 3 # division entière
+23 %% 3 # modulo
+```
+
+### Les opérateurs logiques
+
+Il est également possible d'effectuer des tests logiques :
+
+```{r}
+4 < 4 # plus petit que
+3 >= 3 # plus grand ou égal
+4 == 5 # égal
+4 != 5 # différent de
+(4 < 2) | (2 < 3) # opérateur "ou"
+(4 < 2) & (2 < 3) # opérateur "et"
+!(4 < 2) # négation
+```
+
+Les éléments `<`, `+`, `-`, etc. s'appellent des **opérateurs**.
+
+## Les variables et les fonctions
+
+### Les variables
+
+Mais R est aussi un langage de programmation, c'est-à-dire qu'il dispose de plusieurs fonctionnalités permettant de construire des scripts complexes. L'élément de base d'un langage de programmation sont les **variables**. Une variable est un réceptacle, portant un nom, qui permet de stocker des données.
+
+On affecte des données dans une variable avec l'opérateur `=` ou `<-` (il y a des nuances subtiles entre les deux) :
+
+```{r}
+a = -4
+ma_variable <- 13.2
+```
+
+::: callout-warning
+En R, l'opérateur historique d'assignation est `<-` et reste le plus utilisé dans la communauté. Cependant, dans ce cours, nous allons utiliser l'opérateur `=` car c'est le standard dans les autres langages.
+:::
+
+On peut ensuite utiliser le nom de la variable dans une opération ultérieure. La valeur stockée sera alors utilisée à la place de la variable :
+
+```{r}
+a - 10
+11 > ma_variable
+ma_variable + a
+```
+
+### Les fonctions
+
+Les autres éléments fondamentaux d'un langage de programmation sont les **fonctions**. Elles fonctionnent comme une "boîte noire", qui prend une ou plusieurs valeurs en entrée, appelés **arguments**, effectue une suite d'opérations, et rend (presque toujours) un résultat. Leur structure suit toujours le schéma :
+
+``` r
+<nom_de_la_fonction>(<arg1>, <arg2>, ...)
+```
+
+```{r}
+sqrt(81) # racine carrée de 81
+b = abs(-4) + 2 # valeur absolue de -4, plus 2, que l'on sauve dans b
+print(b) # affichage de la valeur de b dans la console
+log(256, 2) # logarithme de base 2 de 256
+```
+
+Certains arguments ne sont pas obligatoires, ils prennent alors une valeur par défaut :
+
+```{r}
+log(256) # en base "e"
+```
+
+On peut aussi nommer explicitement les arguments, et ainsi les mettre dans l'ordre désiré :
+
+```{r}
+log(base=2, x=256) # équivalent à log(256, 2) 
+runif(1, max=100) # min, qui vient avant max, prend sa valeur par défaut.
+```
+
+On peut voir l'aide sur les différentes fonctions avec l'opérateur `?` (ou chercher sur internet) :
+
+```{r}
+#| eval: false
+?log
+?runif
+```
+
+## Les types et structures de données
+
+### Les types de données
+
+R n'utilise pas que des nombres comme **type de données**, on trouve aussi :
+
+```{r}
+chaine_de_car = "Bonjour Monde" # Les chaînes de caractères
+booleen = TRUE # Les booléens (VRAI ou FAUX).
+booleen_2 = F # booléen aussi (FALSE en abrégé)
+T == 1 # VRAI. R convertit (coerce) le booléen en nombre pour le calcul
+F == 0 # VRAI.
+```
+
+Pour voir quel type de données il s'agit, on utilise la fonction `typeof()` :
+
+```{r}
+typeof(chaine_de_car)
+typeof(booleen)
+```
+
+Il existe également quatre "données" très particulières, qui nécessitent généralement un traitement particulier :
+
+```{r}
+NULL # Rien, ensemble vide
+1/0 # Infini (-Inf existe aussi)
+0/0 # "Not a number" (indéfini)
+NA # Valeur manquante (dans des jeux de données, valeurs souvent omises)
+```
+
+### Les structures de données
+
+De plus, dans R, les données sont souvent **structurées** de manière particulière.
+
+Les **vecteurs** sont des collections unidimensionnelles d'éléments du même type appelés **composantes**. En mathématique, on les note de la façon suivante :
+
+$$
+\begin{align*}
+&\text{un vecteur colonne avec 3 éléments :} 
+\qquad \begin{pmatrix} 4\\5\\6\end{pmatrix} \\
+&\text{un vecteur ligne avec 4 éléments :} 
+\qquad \begin{pmatrix} 2 & 7.3 & -2 & 0 \end{pmatrix}
+\end{align*}
+$$
+
+En R, on les crée avec la fonction c() (pour "combine"). Bien qu'ils s'affichent horizontalement, R les adapte automatiquement (comme colonne ou ligne) selon les besoins du calcul matriciel :
+
+```{r}
+vecteur_de_nombres = c(4, 5, 6) 
+vecteur_de_nombres
+vecteur_de_car = c("oui", "non", "peut-etre")
+vecteur_de_car
+sequence = 13:40 # une séquence de 13 à 40 avec incrément de 1 
+sequence 
+```
+
+Les **listes** qui, contrairement aux vecteurs, peuvent contenir des types de données différentes :
+
+```{r}
+liste_variee = list("a", 4, TRUE)
+liste_variee
+```
+
+Les **dataframes**, formés à partir de plusieurs vecteurs de types différents, sont utiles pour stocker un jeu de données :
+
+```{r}
+numero = seq(25, 45, 5) # séquence de 25 à 45 de 5 en 5.
+reponse = c(rep("oui", 2), rep("non", 3)) # deux "oui", suivis de trois "non".
+mes_donnees = data.frame(numero, reponse)
+mes_donnees
+```
+
+Afin de voir quelle est la structure de données d'une variable, on utilise la fonction `class()` :
+
+```{r}
+class(vecteur_de_nombres)
+class(vecteur_de_car)
+class(liste_variee)
+class(mes_donnees)
+```
+
+La longueur et les dimensions des structures peuvent s'obtenir avec :
+
+```{r}
+length(vecteur_de_car)
+dim(mes_donnees)
+```
+
+### Opérations sur les structures de données
+
+Les opérateurs que nous avons vu au préalable peuvent aussi s'utiliser avec les vecteurs. Dans ce cas, l'opération se fera composante par composante. Si les vecteurs n'ont pas la même longueur, le plus petit sera "dupliqué" en boucle pour atteindre la taille du plus grand : c'est ce qu'on appelle le **recyclage**.
+
+```{r}
+c(5, 6, 2) - c(1, 2, 3)
+c(3, 2, 4) + 2
+c(2, 4, 8, 16) / c(1, 2)
+2^c(1, 2, 3)
+c(1, 2, 3, 4, 5, 6) %% 2 == 0 # T pour les valeurs paires
+```
+
+Pour accéder à un élément d'une structure de données, on utilise les crochets :
+
+```{r}
+vecteur_de_nombres[1] # premier élément du vecteur de nombres
+vecteur_de_car[c(1, 3)] # éléments 1 et 3 du vecteur de caractères
+vecteur_de_car[c(T, F, T)] # éléments 1 et 3 du vecteur de caractères
+sequence[sequence %% 2 == 0] # Les nombres pairs de la séquence
+```
+
+Dans une liste, il y a une différence fondamentale entre le simple et le double crochet :
+
+-   `[]` renvoie une sous-liste (le contenant).
+-   `[[]]` renvoie le contenu de l'élément (les données elles-mêmes).
+
+```{r}
+liste_variee[2]
+liste_variee[[2]]
+```
+
+Dans un dataframe, deux indices sont nécessaires. Les indices avant la virgule portent sur le lignes, celle après la virgule sur les colonnes :
+
+```{r}
+mes_donnees[c(1, 2), 1]
+```
+
+En omettant un indice avant ou après la virgule, on sélectionne tous les éléments correspondants :
+
+```{r}
+mes_donnees[, 2] # le vecteur qui constitue la deuxième colonne
+```
+
+On utilise généralement une condition logique pour sélectionner les lignes (ou colonnes) voulues. Par exemple, pour n'avoir que les individus qui ont répondu "oui", on fait:
+
+```{r}
+mes_donnees[mes_donnees[, 2] == "oui", ]
+```
+
+Bien entendu, toutes ces accès peuvent aussi servir pour modifier nos structures de données. P.ex, modification de la première valeur avec 101 :
+
+```{r}
+vecteur_de_nombres
+vecteur_de_nombres[1] = 101
+vecteur_de_nombres
+```
+
+Remplacement du premier élément par "POSITIF" et du troisième par "INCONNU" :
+
+```{r}
+vecteur_de_car
+vecteur_de_car[c(1, 3)] = c("POSITIF", "INCONNU") 
+vecteur_de_car
+```
+
+Mise à zéro des termes paires :
+
+```{r}
+sequence
+sequence[sequence %% 2 == 0] = 0 
+sequence
+```
+
+### L'accès par nom
+
+Dans un dataframe les colonnes (les variables) portent des noms, qui sont donnés avec la fonction `names()` :
+
+```{r}
+names(mes_donnees)
+```
+
+L'**opérateur `$`** peut être utilisé pour accéder à l'une des variables :
+
+```{r}
+mes_donnees$numero # la variable "numéro".
+mes_donnees$reponse # la variable "réponse".
+```
+
+On peut aussi modifier ces noms avec la fonction `names()` :
+
+```{r}
+names(mes_donnees) = c("id", "answer")
+mes_donnees
+```
+
+Ceci est aussi valable pour les listes :
+
+```{r}
+liste_variee
+names(liste_variee) = c("caractere", "chiffre", "booleen")
+liste_variee
+```
+
+On peut alors y accéder avec l'opérateur `$` :
+
+```{r}
+liste_variee$chiffre
+```
+
+Dans une liste et un dataframe, il est également possible d'attribuer des noms dès sa création :
+
+```{r}
+liste_avec_noms = list(vecteur=c(2, 3, 4), caractere="oui", booleen=F)
+liste_avec_noms
+dataframe_avec_noms = data.frame(age=c(15, 63, 42), sexe=c("F", "H", "F"))
+dataframe_avec_noms
+```
+
+L'énorme avantage de l'opérateur `$` dans RStudio, au delà d'être plus explicite, est qu'il active l'autocomplétion. Dès que vous tapez le `$`, une liste déroulante vous propose les colonnes disponibles.
+
+## Chargement et sauvegarde de données
+
+Pour charger des données, le format de prédilection dans R est le format CSV (comma-separated values) ou TSV (tab-separated values), c'est-à-dire un fichier texte où les données sont séparées par des virgules ou des tabulations. Par abus de langage, on parle de format CSV pour tout fichier dont les valeurs sont séparées par un caractère particulier. Le CSV "français" utilise d'ailleurs le `;` comme séparateur (on peut alors utiliser `read.csv2()`) :
+
+```{r}
+df = read.csv("data/notes.csv")
+df
+```
+
+Notez que le chemin utilisé est un **chemin relatif**, depuis le **répertoire de travail**. On peut changer ce dernier dans les options "More" sous l'onglet "Files". On peut également utiliser un **chemin absolu**. Pour en savoir plus sur les chemins d'accès : <https://en.wikipedia.org/wiki/Path_(computing)>.
+
+On peut ensuite travailler sur le jeu de données, puis le sauvegarder à nouveau. P.ex., on modifie une "erreur", qui était l'entrée "Non" pour la variable "inscription" de la troisième ligne.
+
+```{r}
+df$inscription[3] = "Oui" # ou df[3, 3] = "Oui" ou df[3, "inscription"] = "Oui"
+df
+```
+
+Et on sauve notre fichier dans le dossier `data` (avec les options sans noms des lignes)
+
+```{r}
+write.csv(df, "data/notes_modifiees.csv", row.names=F)
+```
+
+## Les packages
+
+R est extensible grâce à l'installation de **packages**. Pour l'installation, on peut passer par l'interface RStudio ("Tools $\to$ Install Packages..."), ou utiliser la commande suivante :
+
+```{r}
+# install.packages("readxl") # DÉCOMMENTEZ POUR INSTALLER
+```
+
+Un package ne doit être installé qu'une seule fois dans R. Cependant, on utilise rarement tous les packages installés dans le même script. Pour charger un package, et rendre ainsi disponible ses fonctions et données, on utilise la commande suivante :
+
+```{r}
+library(readxl)
+```
+
+On peut alors utiliser les nouvelles fonctions ou données disponibles dans le package, par exemple le chargement de fichiers excel :
+
+```{r}
+df2 = read_excel("data/notes.xlsx")
+df2 
+```
+
+Notez que c'est un nouveau format : un **tibble**. Ce format est une sorte de dataframe mais fait partie du **Tidyverse**, un ensemble de packages créé par RStudio, dont nous verrons l'utilisation la semaine prochaine :
+
+```{r}
+class(df2)
+```
+
+Généralement, dans un script R, on place toutes commandes de chargement des packages nécessaires au début du script, afin qu'un utilisateur externe sache quel(s) package(s) il doit installer pour le faire tourner.
+
+## Éléments de programmation
+
+### Les conditions
+
+Comme tout langage de programmation, R permet d'utiliser des **conditions**. Si la condition `if` n'est pas vérifiée, R va vérifier les conditions `else if` les unes après les autres. Si aucune n'est vérifiée, le code sous `else` s'exécute :
+
+```{r}
+a = 150 # A changer
+
+if (a < 100) {
+  print("la variable a est petite")
+} else if(a < 1000) {
+  print("la variable a est moyennement grande")
+} else if(a < 10000){
+  print("la variable a est très grande")
+} else {
+  print("la variable a est gigantesque")
+}
+```
+
+### Les boucles
+
+R utilise également des **boucles**, comme la boucle `for`. A chaque itération, la variable `i` va prendre une des valeurs dans le vecteur donné (ici, c(3, 4, 5, 6, 7, 8, 9)). La boucle s'arrête lorsque toutes les valeurs ont été passées en revue :
+
+```{r}
+for(i in 3:9){
+  i_carre = i^2
+  print(i_carre)
+}
+```
+
+La boucle `while`. Elle ne s'arrête pas tant que la condition donnée est valide. Attention aux boucles infinies !
+
+```{r}
+compte_a_rebours = 10
+while(compte_a_rebours != 0){
+  print(compte_a_rebours)
+  compte_a_rebours = compte_a_rebours - 1
+}
+```
+
+Ou la boucle `repeat`, qui ne s'arrête jamais, sauf avec le mot clé `break` (ce mot clé peut s'utiliser dans les autres boucles) :
+
+```{r}
+a = 1
+vec = 1
+repeat{
+  a = a + 1
+  vec = c(vec, a)
+  if(length(vec) >= 50) break
+}
+vec
+```
+
+::: callout-warning
+Bien que cette boucle fonctionne, en R professionnel, on évite généralement de "faire grandir" un vecteur `vec = c(vec, a)`. On préfère utiliser la vectorisation, qui permet de faire le calcul sur tous les éléments d'un coup sans écrire de boucle for.
+:::
+
+### Création de fonctions
+
+Finalement, il est aussi possible de **créer ses propres fonctions**, afin d'isoler et de réutiliser des bouts de code. Voici un exemple de syntaxe :
+
+```{r}
+trouver_les_diviseurs = function(nombre, liste_de_diviseur){
+  diviseurs_du_nombre = c()
+  for (i in liste_de_diviseur){
+    if(nombre %% i == 0) diviseurs_du_nombre = c(diviseurs_du_nombre, i)
+  }
+  return(diviseurs_du_nombre)
+}
+```
+
+Une fois la fonction déclarée et en mémoire, on peut l'utiliser à n'importe quel moment dans notre code :
+
+```{r}
+trouver_les_diviseurs(49, 3)
+trouver_les_diviseurs(50, c(3,5,10,11))
+trouver_les_diviseurs(36, 1:12)
+```
+
+On peut aussi spécifier le nom des arguments, pour, p.ex. changer l'ordre dans lequel on entre les arguments :
+
+```{r}
+trouver_les_diviseurs(liste_de_diviseur=1:47, nombre=47) 
+```
+
+On peut définir des arguments facultatifs en spécifiant une valeur par défaut dans la définition de la fonction :
+
+```{r}
+trouver_les_diviseurs_2 = function(nombre, liste_de_diviseur = 1:nombre){
+  diviseurs_du_nombre = c()
+  for (i in liste_de_diviseur){
+    if(nombre %% i == 0) diviseurs_du_nombre = c(diviseurs_du_nombre, i)
+  }
+  return(diviseurs_du_nombre)
+}
+trouver_les_diviseurs_2(321) # Utilise la liste 1:321 par défaut
+trouver_les_diviseurs_2(321, 1:3) # On force une liste plus courte
+```

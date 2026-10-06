@@ -1,0 +1,226 @@
+---
+title: "IX. Analyse factorielle des correspondances"
+author: "Guillaume Guex"
+number-sections: true
+lang: fr
+---
+
+Dans ce TP, nous allons effectuer une **Analyse factorielle des correspondances (AFC)** dans un cadre d'analyse des données textuelles, c'est-à-dire en utilisant la **matrice documents-termes**.
+
+L'AFC est très utilisée dans ce cadre, en particulier dans le monde francophone grâce à l'impulsion de Jean-Paul Benzécri. Elle permet de produire une visualisation pertinente des proximités entre les différents documents d'un corpus (vis-à-vis de leur utilisation du vocabulaire) et permet l'affichage simultané des documents et des mots, ce qui aide dans l'interprétation des positions des documents.
+
+Nous allons utiliser ici la librairie **`FactoMineR`** (http://factominer.free.fr/index_fr.html), qui possède de nombreuses méthodes d'analyses factorielles. La librairie **`factoextra`** possède plusieurs fonctions utiles dans l'affichage des résultats de `FactoMineR`.
+
+```{r}
+library(tidyverse)
+library(readtext)
+library(quanteda)
+library(FactoMineR)
+library(factoextra)
+library(plotly)
+```
+
+## Pré-traitements
+
+### Chargement et création de l'objet tokens
+
+Encore une fois, nous allons charger notre corpus avec `readtext()` :
+
+```{r}
+texts_df = readtext("data/manifesto/*.txt")
+```
+
+Nous allons créer l'objet `tokens` (à partir de l'objet `corpus`) quanteda en enlevant la ponctuation, les symboles, etc. :
+
+```{r}
+corpus_obj = corpus(texts_df)
+tokens_obj = tokens(corpus_obj, remove_punct=T, remove_symbols=T, 
+                    remove_numbers=T, remove_url=T, 
+                    remove_separators=T)
+```
+
+On sépare les tokens par apostrophes :
+
+```{r}
+tokens_obj = tokens_obj %>%
+  tokens_split("'") %>%
+  tokens_split("’")
+```
+
+Et on enlève les stopwords :
+
+```{r}
+stopwords = readLines("data/stopwords/frenchST.txt")
+tokens_obj = tokens_obj %>%
+  tokens_remove(stopwords)
+```
+
+### Création de la matrice document-terme
+
+L'objet de type `document-feature` (document-terme) se crée avec la fonction `dfm()` :
+
+```{r}
+dfm_obj = dfm(tokens_obj)
+```
+
+On convertit cet objet en dataframe R :
+
+```{r}
+dfm_df = convert(dfm_obj, to="data.frame")
+```
+
+La première colonne contient les noms des documents, on l'utilise pour créer les noms des lignes (et enlever cette colonne) :
+
+```{r}
+dfm_df = dfm_df %>%
+  column_to_rownames("doc_id")
+```
+
+Cette matrice est maintenant purement numérique et peut être utilisée dans les fonctions de `FactoMineR`.
+
+## L'AFC
+
+### La fonction `CA()`
+
+L'analyse factorielle des correspondances s'effectue avec la fonction **`CA()`** ("correspondence analysis") de `FactoMineR`. Par défaut, cette fonction va afficher automatiquement les graphiques résultants. On peut désactiver cette option avec `graph=F` :
+
+```{r}
+ca_res = CA(dfm_df, graph=F)
+```
+
+Le retour de cette fonction possède plusieurs éléments, que l'on peut voir avec `names()`, ou même en affichant la variable du retour :
+
+```{r}
+ca_res
+```
+
+Nous verrons plus loin comment utiliser ces différentes valeurs. Pour le moment voyons comment afficher le biplot à partir de cette sortie.
+
+### Le biplot
+
+Pour tracer le **biplot**, il suffit d'appliquer la fonction `plot()` sur notre objet de sortie :
+
+```{r}
+plot(ca_res)
+```
+
+Le problème est qu'il y a beaucoup trop de mots pour y voir quelque chose. On utilise les paramètres `selectCol="contrib 30"` (sélectionne les 30 mots avec la plus grande contribution aux axes affichés) et `unselect=1` (rend invisibles les points non-sélectionnés) pour afficher un sous-ensemble de points (on désactive également l'auto-positionnement des labels avec `autoLab="no"` et on diminue la taille de la police avec `cex=0.8`) :
+
+```{r}
+plot(ca_res, selectCol="contrib 30", unselect=1, autoLab="no", cex=0.8)
+```
+
+Notez que `plotly` peut être utilisé pour explorer le graphique :
+
+```{r message=FALSE}
+ca_plot = plot(ca_res, selectCol="contrib 30", unselect=1, 
+               autoLab="no", cex=0.8)
+ggplotly(ca_plot) %>%
+  style(marker=list(opacity=0))
+```
+
+On peut aussi utiliser la fonction `fviz_ca_biplot()` de `factoextra` :
+
+```{r}
+fviz_ca_biplot(ca_res, repel=T, select.col=list(contrib=30))
+```
+
+D'autres dimensions peuvent également être affichées :
+
+```{r}
+fviz_ca_biplot(ca_res, axes=c(3, 4), repel=T, select.col=list(contrib=30))
+```
+
+Mais ici, le document du Parti communiste français, par son particularisme, semble absorber toute l'inertie.
+
+### Lignes ou colonnes supplémentaires
+
+Comme le document du Parti communiste français est si particulier, on peut éventuellement refaire une AFC en le mettant comme **ligne supplémentaire**. Attention, on doit ajouter une petite quantité à la matrice pour éviter des colonnes vides :
+
+```{r}
+ca_noPCF_res =  CA(dfm_df + 1e-50, graph=F, row.sup=6)
+```
+
+On peut alors refaire nos graphiques. La ligne correspondant au Parti communiste sera toujours affichée, mais n'a pas été utilisée pour définir les axes :
+
+```{r}
+fviz_ca_biplot(ca_noPCF_res, repel=T, select.col=list(contrib=30))
+```
+
+Dimensions 3-4 :
+
+```{r}
+fviz_ca_biplot(ca_noPCF_res, axes=c(3, 4), repel=T, select.col=list(contrib=30))
+```
+
+### Extraction des mesures
+
+Plusieurs mesures peuvent être obtenues à partir de la sortie de CA. Par exemple, le **pourcentage de variance expliquée par chaque axe** :
+
+```{r}
+ca_noPCF_res$eig
+```
+
+Le même résultat avec `fviz_eig()` :
+
+```{r}
+fviz_eig(ca_noPCF_res)
+```
+
+La **qualité de la représentation** des lignes ou colonnes sur chaque axe s'exprime avec les **cosinus carrés** :
+
+```{r}
+round(ca_noPCF_res$row$cos2, 2)
+```
+
+On peut les afficher avec `fviz_cos2()` :
+
+```{r}
+fviz_cos2(ca_noPCF_res, choice="row", axes=c(1, 2)) 
+```
+
+Les **contributions** des lignes ou des colonnes pour chaque axes s'obtiennent avec :
+
+```{r}
+head(round(ca_noPCF_res$col$contrib, 4), 20)
+```
+
+Ou graphiquement avec `fviz_contrib()` :
+
+```{r}
+fviz_contrib(ca_noPCF_res, choice="col", top=20, axes=1:3)
+```
+
+D'ailleurs, utilisons ces dernières pour extraire les 50 mots avec la contribution la plus grande sur les trois premiers axes :
+
+```{r}
+top50_words = ca_noPCF_res$col$contrib %>%
+  as_tibble(rownames=NA) %>%
+  rownames_to_column() %>%
+  mutate(contrib123=`Dim 1` + `Dim 2` + `Dim 3`) %>%
+  top_n(50, contrib123) %>%
+  .$rowname
+top50_words
+```
+
+Il nous est aussi possible d'extraire les coordonnées, afin de construire notre graphique manuellement :
+
+```{r}
+doc_coord = rbind(ca_noPCF_res$row$coord, 
+                  ca_noPCF_res$row.sup$coord) # Les coordonnées supplémentaires
+word_coord = ca_noPCF_res$col$coord
+top50_coord = word_coord[rownames(word_coord) %in% top50_words, ]
+```
+
+Ici, nous allons faire un graphique en 3D avec `plotly` :
+
+```{r}
+plt_3d = plot_ly(type = "scatter3d",  mode = "markers") %>%
+  add_trace(x=doc_coord[, 1], y=doc_coord[, 2], z=doc_coord[, 3],
+            mode="text", text=rownames(doc_coord), 
+            textfont=list(color="blue", size=15)) %>%
+  add_trace(x=top50_coord[, 1], y=top50_coord[, 2], z=top50_coord[, 3],
+            mode="text", text=rownames(top50_coord), 
+            textfont=list(color="red"))
+plt_3d
+```

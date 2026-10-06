@@ -14,3 +14,7 @@ _site/
 
 # Raw UCDP GED dataset (250 MB, exceeds GitHub limit); a slimmed .csv.gz is tracked instead
 frontend/data/ucdp/GEDEvent_v25_1.csv
+
+# udpipe language models (24 MB, downloadable with udpipe_download_model()) and notebook outputs
+*.udpipe
+frontend/teaching/adshs/session7/data/manifesto_annotated.tsv

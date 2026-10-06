@@ -1,0 +1,192 @@
+---
+title: "V. Les tests statistiques"
+author: "Guillaume Guex"
+number-sections: true
+lang: fr
+---
+
+## Données et pré-traitements
+
+Dans ce TP, nous allons voir comment utiliser différents **tests statistiques** avec R.
+
+Les librairies nécessaires sont :
+
+```{r}
+library(tidyverse)
+library(readxl)
+```
+
+Ici, nous allons principalement utiliser le jeu de `phonétique.xlsx`. Chargeons-le :
+
+```{r}
+phonetique_df = read_excel("data/phonétique.xlsx")
+```
+
+Pour un test du chi2 entre deux variables catégorielles, nous allons plutôt utiliser le jeu de données de sociolinguistique pré-traité (`sociolinguistique_v2.csv`). Nous allons le charger et effectuer quelques pré-traitements :
+
+```{r}
+# On charge le jeu de données et on transforme les caractères en facteurs (ordinales pas nécessaire ici)
+socioling_df = read_csv("data/sociolinguistique_v2.csv") %>%
+  mutate(across(where(is.character), factor))
+# On recode les années en génération, et on spécifie que c'est une variable ordinale
+socioling_df = socioling_df %>%
+  mutate(generation=case_when(annee %in% 0:1983 ~ "X",
+                              annee %in% 1984:1995 ~ "Y",
+                              annee %in% 1995:3000 ~ "Z")) %>%
+  mutate(generation=factor(generation, order=T, levels=c("X", "Y", "Z")))
+```
+
+## Tests uni-variés
+
+Les tests **uni-variés** concernent une seule variable, que l'on peut éventuellement mesurer sur deux groupes de personnes différents. Nous allons voir ici deux types de tests :
+
+-   Test de la moyenne pour deux groupes non-appariés.
+-   Test de la moyenne pour deux groupes appariés.
+
+### Test de la moyenne pour deux groupes non-appariés
+
+Ce test consiste à vérifier si la **moyenne d'une variable numérique est significativement différente dans deux groupes constitués de personnes différentes**.
+
+Ici, nous allons tester si la durée de prononciation des mots est significativement différente entre les femmes et les hommes.
+
+Pour cela on peut extraire deux vecteurs de notre jeu de données. Le vecteurs de durée pour les femmes :
+
+```{r}
+duree_f = phonetique_df %>%
+  filter(Sexe=="F") %>%
+  .$Dur_M # Le pipe envoie le résultat à la place du "."
+head(duree_f, 100)
+```
+
+Et pour les hommes
+
+```{r}
+duree_m = phonetique_df %>%
+  filter(Sexe=="M") %>%
+  .$Dur_M
+head(duree_m, 100)
+```
+
+Le test statistique adéquat est le **test de Student** ou **t-test**. Il s'effectue avec la fonction **`t.test()`** :
+
+```{r}
+t_test_res = t.test(duree_f, duree_m)
+t_test_res
+```
+
+Prenez l'habitude de sauver le résultat d'un test dans une variable, car il est possible d'extraire plusieurs informations de ce résultat :
+
+```{r}
+names(t_test_res) # Liste de ce que l'on peut extraire
+t_test_res$estimate # Les moyennes
+t_test_res$statistic # La statistique du test
+t_test_res$p.value # La p-valeur
+```
+
+### Test de la moyenne pour deux groupes appariés
+
+Ce test consiste à vérifier si **la moyenne d'une variable numérique est significativement différente dans deux groupes constitués de personnes identiques**. Ce test consiste en fait à calculer la différence entre les valeurs de cette variable pour chaque personne, puis à vérifier si la moyenne de cette différence est significativement différente de 0.
+
+Nous allons tester ici s'il existe une différence significative de durée entre la prononciation de \[e\] et \[e:\]. Pour obtenir la tableau des durées de ces deux voyelles par locuteur, on fait les opérations suivantes :
+
+-   On filtre les observations sur l'opposition désirée.
+-   On groupe par locuteur·trice et par voyelle.
+-   On fait la moyenne de la durée pour chaque locuteur·trice et chaque voyelle.
+-   On pivote le jeu de données pour avoir la durée de chaque voyelle sur deux colonnes différentes.
+
+```{r}
+duree_e = phonetique_df %>%
+  filter(Opposition=="e(:)") %>%
+  group_by(Locuteur, Voyelle) %>%
+  summarise(duree=mean(Dur_V)) %>%
+  pivot_wider(names_from=Voyelle, values_from=duree)
+duree_e
+```
+
+On va maintenant créer la différence de durée moyenne pour chaque locuteur·trice :
+
+```{r}
+duree_e = duree_e %>%
+  mutate(diff_duree=`e:` - e)
+duree_e
+```
+
+La fonction `t.test()` nous permet également de tester un seul vecteur. Par défaut, cette fonction teste si la moyenne du vecteur est significativement différente de 0 (mais on peut aussi tester par rapport à un autre référentiel) :
+
+```{r}
+t_test_res = t.test(duree_e$diff_duree)
+t_test_res
+```
+
+On aurait aussi pu tester directement avec les deux vecteurs, en précisant que les groupes sont appariés avec l'option `paired=T` :
+
+```{r}
+t_test_res2 = t.test(duree_e$`e:`, duree_e$e, paired=T)
+t_test_res2
+```
+
+## Tests bi-variés
+
+Pour tester les liens entre deux variables, on effectue des **tests bi-variés**. Le test à utiliser dépend des types de variables que nous voulons tester :
+
+-   Numérique-numérique : test de la corrélation
+-   Numérique-catégorielle : test du F-Ratio
+-   Catégorielle-catégorielle : test du Chi2
+
+### Test de la corrélation
+
+Le **lien entre deux variables numériques** se mesure avec la **corrélation**. Un test de corrélation va déterminer si cette corrélation est significativement différente de 0.
+
+Ici, nous allons tester s'il existe un lien entre la durée de la voyelle et sa valeur du premier formant F1. On effectue ce test avec **`cor.test()`**, en fournissant les deux vecteurs de variables numériques :
+
+```{r}
+cor_test_res = cor.test(phonetique_df$Dur_V, phonetique_df$F1)
+cor_test_res
+```
+
+### Test du F-Ratio
+
+Le **lien entre une variable numérique et catégorielle** se mesure avec le **F-ratio**. Un test du F-ratio va définir si ce ratio est significativement différent de 0. Si le F-ratio = 0, il n'y a pas de lien entre les deux variables et les groupes définis par la variables catégorielles ont des moyennes (de la variable numérique) identiques.
+
+Nous testons ici si la variable région a une influence sur la durée de prononciation des mots.
+
+Un F-test se fait de manière un peu particulière dans R. On doit d'abord faire appel à un **modèle d'analyse de variance**, grâce à la fonction **`aov()`** qui utilise une **formule**. Ici, pour tester si `Dur_M` dépend de `Region`, le modèle à créer est le suivant :
+
+```{r}
+f_test_model = aov(Dur_M ~ Region, phonetique_df)
+```
+
+On peut voir le résultat du test en passant notre modèle dans la fonction **`summary()`** :
+
+```{r}
+summary(f_test_model)
+```
+
+Notez que ce test nous dit uniquement s'il y a une différence significative de la durée parmi les régions, mais on ne peut pas savoir, uniquement avec ce résultat, quelles régions ont une tendance à la hausse ou à la baisse. On peut étudier ce lien plus en profondeur à l'aide d'un graphique :
+```{r}  
+ggplot(phonetique_df, aes(x=Region, y=Dur_M)) +
+  geom_boxplot() +
+  theme_minimal()
+```
+
+### Test du chi2
+
+Finalement, pour tester le **lien entre deux variables catégorielles**, on utilise un **test du chi2** sur une **table de contingence**. Ce test regarde si le **chi2** (qui mesure l'écart entre notre table et la table que l'on devrait avoir en cas d'indépendance des variables catégorielles) est significativement différent de 0.
+
+Nous allons plutôt utiliser le jeu de données sociolinguistique, car il permet des analyses plus pertinentes pour deux variables catégorielles.
+
+Avant de faire un test du chi2, il nous faut créer une **table de contingence**. On peut utiliser pour cela la fonction **`table()`**, en ne gardant au préalable que 2 colonnes de variables catégorielles. Ici, on crée la table entre la variable `generation` et `evite` ("Dans la mesure du possible essayez-vous d’éviter les anglicismes ?", avec modalités "Oui", "Non" et "Je n'y prête pas attention") :
+
+```{r}
+gen_evite_table = socioling_df %>%
+  select(generation, evite) %>%
+  table()
+gen_evite_table
+```
+
+On peut alors directement utiliser `chisq.test()` sur cette table pour faire un test du chi2 entre les deux variables catégorielles :
+
+```{r}
+chisq_test_res = chisq.test(gen_evite_table)
+chisq_test_res
+```

@@ -1,0 +1,188 @@
+---
+title: "Analyse de données en SHS"
+lang: fr
+description: "Travaux pratiques d'introduction à l'analyse de données en sciences humaines et sociales, appliquée à la linguistique de corpus : R et tidyverse, tests, traitement et annotation de textes, méthodes factorielles, régression, clustering et réseaux."
+date: 2026-02-18
+image: image.png
+categories: [R, Tidyverse, Text Analysis, Corpus Linguistics, Data Analysis]
+toc: true
+---
+
+::: {.callout-note appearance="default"}
+**Ces travaux pratiques appliquent les méthodes quantitatives à la linguistique de corpus.** Chaque séance est accompagnée d'un notebook Quarto, consultable en ligne ou téléchargeable avec ses sources et ses données, et d'une série d'exercices avec son corrigé.
+:::
+
+## Séance 1 : Introduction à R et RStudio
+📅 **Date:** Feb 18, 2026
+
+Prise en main de R et de RStudio : types de données, vecteurs, data frames, importation de fichiers CSV et Excel, et premières fonctions.
+
+[{{< fa brands r-project >}} I. Introduction à R et RStudio : notebook](session1/Introduction_a_R.qmd){.btn .btn-outline-success .btn-sm}
+
+[{{< fa file-zipper >}} Sources et données du notebook](session1/Introduction_a_R_sources.zip){.btn .btn-outline-secondary .btn-sm}
+
+[{{< fa file-pdf >}} Exercices 1](session1/Ex1.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Exercices 1 : données et corrigé](session1/ex1_donnees_corrige.zip){.btn .btn-outline-secondary .btn-sm}
+
+## Séance 2 : Le Tidyverse I
+📅 **Date:** Feb 25, 2026
+
+Introduction au tidyverse : le pipe, la manipulation de tableaux avec `dplyr` et leur restructuration avec `tidyr`, appliquées à un jeu de données sociolinguistiques. Cette séance s'étend sur deux semaines.
+
+[{{< fa brands r-project >}} II. Le Tidyverse I : notebook](session2/Tidyverse_I.qmd){.btn .btn-outline-success .btn-sm}
+
+[{{< fa file-zipper >}} Sources et données du notebook](session2/Tidyverse_I_sources.zip){.btn .btn-outline-secondary .btn-sm}
+
+[{{< fa file-pdf >}} Exercices 2](session2/Ex2.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Exercices 2 : données et corrigé](session2/ex2_donnees_corrige.zip){.btn .btn-outline-secondary .btn-sm}
+
+## Séance 3 : Le Tidyverse II et les statistiques uni- et bi-variées
+📅 **Date:** Mar 11, 2026
+
+Suite du tidyverse (jointures, regroupements, résumés), puis statistiques descriptives uni- et bi-variées sur un jeu de données de marqueurs pragmatiques.
+
+[{{< fa brands r-project >}} III. Le Tidyverse II et les statistiques : notebook](session3/Tidyverse_II.qmd){.btn .btn-outline-success .btn-sm}
+
+[{{< fa file-zipper >}} Sources et données du notebook](session3/Tidyverse_II_sources.zip){.btn .btn-outline-secondary .btn-sm}
+
+[{{< fa file-pdf >}} Exercices 3](session3/Ex3.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Exercices 3 : données et corrigé](session3/ex3_donnees_corrige.zip){.btn .btn-outline-secondary .btn-sm}
+
+## Séance 4 : Les graphiques en R
+📅 **Date:** Mar 18, 2026
+
+La grammaire des graphiques avec `ggplot2` : histogrammes, boîtes à moustaches, nuages de points, facettes et personnalisation, avec une ouverture sur les graphiques interactifs.
+
+[{{< fa brands r-project >}} IV. Les graphiques en R : notebook](session4/Graphiques_en_R.qmd){.btn .btn-outline-success .btn-sm}
+
+[{{< fa file-zipper >}} Sources et données du notebook](session4/Graphiques_en_R_sources.zip){.btn .btn-outline-secondary .btn-sm}
+
+[{{< fa file-pdf >}} Exercices 4](session4/Ex4.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Exercices 4 : données et corrigé](session4/ex4_donnees_corrige.zip){.btn .btn-outline-secondary .btn-sm}
+
+## Séance 5 : Les tests statistiques
+📅 **Date:** Mar 25, 2026
+
+Rappel théorique sur les tests d'hypothèses, puis mise en pratique en R des tests classiques (moyennes, proportions, chi-carré, corrélation) sur des données phonétiques et sociolinguistiques.
+
+[{{< fa file-pdf >}} V. Rappel sur les tests statistiques (slides)](session5/rappel_tests.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa brands r-project >}} V. Les tests statistiques : notebook](session5/Tests_statistiques.qmd){.btn .btn-outline-success .btn-sm}
+
+[{{< fa file-zipper >}} Sources et données du notebook](session5/Tests_statistiques_sources.zip){.btn .btn-outline-secondary .btn-sm}
+
+[{{< fa file-pdf >}} Exercices 5](session5/Ex5.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Exercices 5 : données et corrigé](session5/ex5_donnees_corrige.zip){.btn .btn-outline-secondary .btn-sm}
+
+## Séance 6 : Traitement des données textuelles
+📅 **Date:** Apr 1, 2026
+
+Constituer un corpus en R : lecture de fichiers texte, nettoyage, tokenisation, mots vides et premières statistiques lexicales avec `quanteda`, sur des articles de presse, des romans de Jules Verne et des programmes politiques.
+
+[{{< fa brands r-project >}} VI. Traitement des données textuelles : notebook](session6/Traitement_donnees_textuelles.qmd){.btn .btn-outline-success .btn-sm}
+
+[{{< fa file-zipper >}} Sources et données du notebook](session6/Traitement_donnees_textuelles_sources.zip){.btn .btn-outline-secondary .btn-sm}
+
+[{{< fa file-pdf >}} Exercices 6](session6/Ex6.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Exercices 6 : données et corrigé](session6/ex6_donnees_corrige.zip){.btn .btn-outline-secondary .btn-sm}
+
+## Séance 7 : Annotations
+📅 **Date:** Apr 15, 2026
+
+Lemmatisation et annotation morphosyntaxique automatiques avec `udpipe`, lecture de corpus au format XML-TEI et passage des annotations vers `quanteda`. Le modèle de langue français s'obtient avec la commande `udpipe_download_model()` indiquée dans le notebook.
+
+[{{< fa brands r-project >}} VII. Annotations : notebook](session7/Annotations.qmd){.btn .btn-outline-success .btn-sm}
+
+[{{< fa file-zipper >}} Sources et données du notebook](session7/Annotations_sources.zip){.btn .btn-outline-secondary .btn-sm}
+
+[{{< fa file-pdf >}} Exercices 7](session7/Ex7.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Exercices 7 : données et corrigé](session7/ex7_donnees_corrige.zip){.btn .btn-outline-secondary .btn-sm}
+
+## Séance 8 : Analyses de données textuelles
+📅 **Date:** Apr 22, 2026
+
+Analyses lexicométriques : fréquences et spécificités, cooccurrences, lisibilité et nuages de mots, sur les programmes des partis à l'élection présidentielle française de 2017.
+
+[{{< fa brands r-project >}} VIII. Analyses de données textuelles : notebook](session8/Analyses_textuelles.qmd){.btn .btn-outline-success .btn-sm}
+
+[{{< fa file-zipper >}} Sources et données du notebook](session8/Analyses_textuelles_sources.zip){.btn .btn-outline-secondary .btn-sm}
+
+[{{< fa file-pdf >}} Exercices 8](session8/Ex8.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Exercices 8 : données et corrigé](session8/ex8_donnees_corrige.zip){.btn .btn-outline-secondary .btn-sm}
+
+## Séance 9 : Analyse factorielle des correspondances
+📅 **Date:** Apr 29, 2026
+
+Introduction théorique à l'AFC, puis son application à une table lexicale textes × mots avec `FactoMineR`, pour cartographier les programmes politiques et leur vocabulaire.
+
+[{{< fa file-pdf >}} IX. Introduction à l'AFC (slides)](session9/introduction_AFC.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa brands r-project >}} IX. Analyse factorielle des correspondances : notebook](session9/AFC.qmd){.btn .btn-outline-success .btn-sm}
+
+[{{< fa file-zipper >}} Sources et données du notebook](session9/AFC_sources.zip){.btn .btn-outline-secondary .btn-sm}
+
+[{{< fa file-pdf >}} Exercices 9](session9/Ex9.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Exercices 9 : données et corrigé](session9/ex9_donnees_corrige.zip){.btn .btn-outline-secondary .btn-sm}
+
+## Séance 10 : Régression linéaire
+📅 **Date:** May 6, 2026
+
+Introduction théorique à la régression, puis régression linéaire simple et multiple en R : variables indicatrices, sélection de modèle et interprétation des coefficients.
+
+[{{< fa file-pdf >}} X. Introduction à la régression (slides)](session10/introduction_regression.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa brands r-project >}} X. Régression linéaire : notebook](session10/Regression_lineaire.qmd){.btn .btn-outline-success .btn-sm}
+
+[{{< fa file-zipper >}} Sources et données du notebook](session10/Regression_lineaire_sources.zip){.btn .btn-outline-secondary .btn-sm}
+
+[{{< fa file-pdf >}} Exercices 10](session10/Ex10.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Exercices 10 : données et corrigé](session10/ex10_donnees_corrige.zip){.btn .btn-outline-secondary .btn-sm}
+
+## Séance 11 : Analyse des correspondances multiples
+📅 **Date:** May 13, 2026
+
+L'ACM pour explorer un questionnaire à variables catégorielles : construction, interprétation des axes et des modalités, sur le jeu de données de marqueurs pragmatiques.
+
+[{{< fa brands r-project >}} XI. Analyse des correspondances multiples : notebook](session11/ACM.qmd){.btn .btn-outline-success .btn-sm}
+
+[{{< fa file-zipper >}} Sources et données du notebook](session11/ACM_sources.zip){.btn .btn-outline-secondary .btn-sm}
+
+[{{< fa file-pdf >}} Exercices 11](session11/Ex11.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Exercices 11 : données et corrigé](session11/ex11_donnees_corrige.zip){.btn .btn-outline-secondary .btn-sm}
+
+## Séance 12 : Clustering
+📅 **Date:** May 20, 2026
+
+Classification hiérarchique et k-means sur des données phonétiques : choix du nombre de groupes, dendrogrammes et validation des partitions.
+
+[{{< fa brands r-project >}} XII. Clustering : notebook](session12/Clustering.qmd){.btn .btn-outline-success .btn-sm}
+
+[{{< fa file-zipper >}} Sources et données du notebook](session12/Clustering_sources.zip){.btn .btn-outline-secondary .btn-sm}
+
+[{{< fa file-pdf >}} Exercices 12](session12/Ex12.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Exercices 12 : données et corrigé](session12/ex12_donnees_corrige.zip){.btn .btn-outline-secondary .btn-sm}
+
+## Séance 13 : Analyse de réseaux
+📅 **Date:** May 27, 2026
+
+Construire et analyser un réseau avec `igraph` et `ggraph` : mesures de centralité, détection de communautés et visualisation, à partir des données sociolinguistiques.
+
+[{{< fa brands r-project >}} XIII. Analyse de réseaux : notebook](session13/Reseaux.qmd){.btn .btn-outline-success .btn-sm}
+
+[{{< fa file-zipper >}} Sources et données du notebook](session13/Reseaux_sources.zip){.btn .btn-outline-secondary .btn-sm}
+
+[{{< fa file-pdf >}} Exercices 13](session13/Ex13.pdf){.btn .btn-outline-primary .btn-sm}
+
+[{{< fa file-zipper >}} Exercices 13 : données et corrigé](session13/ex13_donnees_corrige.zip){.btn .btn-outline-secondary .btn-sm}

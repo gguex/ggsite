@@ -1,0 +1,410 @@
+---
+title: "VI. Traitement des données textuelles"
+author: "Guillaume Guex"
+number-sections: true
+lang: fr
+---
+
+## Les données textuelles
+
+Dans ce TP, premier du deuxième module, nous allons commencer à voir comment R est capable de traiter des **données textuelles**. De nombreuses librairies aident dans cette tâche. Quelques exemples :
+
+-   `stringr` : librairie permettant la manipulation des chaînes de caractères et faisant partie du tidyverse.
+-   `tidytext` : manipulation et gestion des données textuelles, possède une logique similaire au tidyverse.
+-   `tm` : la plus vieille librairie R pour le **t**ext **m**ining. Permet de faire de nombreuses opérations de base, mais est limité pour les méthodes plus avancées.
+-   `quanteda` : librairie très complète possédant de nombreuses méthodes d'analyse avancées.
+-   `udpipe` : bonne librairie pour l'annotation des données textuelles.
+
+Une des principales difficultés pour analyser des données textuelles (que l'on trouve également avec d'autres langages de programmation, comme Python) est que ces différentes librairies n'offrent pas les mêmes fonctionnalités, et ne suivent pas toujours le même paradigme dans la structuration des données. Savoir passer d'une librairie à l'autre est souvent utile si on varie les analyses, mais nécessite une certaine maîtrise dans la manipulation des données.
+
+Ici nous allons utiliser uniquement :
+
+```{r}
+library(tidyverse) # Contient `stringr` qui permet de manipuler les chaînes de caractères.
+library(readtext) # Pour charger les données textuelles, compagnon de `quanteda`.
+library(quanteda) # Pour une manipulation "de plus haut niveau" des données textuelles.
+library(quanteda.textstats) # Pour des statisiques plus poussées sur des données textuelles.
+```
+
+L'autre difficulté vient du fait que les données textuelles viennent dans toutes sortes de format, ne suivent pas une structure rigoureuse, et sont parfois "sales". Elles nécessitent fréquemment de nombreux pré-traitements.
+
+Ici, nous allons nous concentrer sur les données textuelles en format `.txt`, et nous sauterons l'étape préliminaire qui consiste parfois à transformer un autre type de document (p.ex. CSV ou PDF) dans ce format.
+
+De nombreux sites offrent des données textuelles :
+
+-   <https://www.gutenberg.org/> : site possédant de nombreux romans libres de droit, en plusieurs langues.
+-   <https://manifesto-project.wzb.eu/> : site proposant plusieurs ressources textuelles issues de manifestes politiques, dans différentes langues. Le script `annexe_1_extraction_du_texte_manifesto.r` permet de transformer le format de données annoté de ce site en données textuelles .txt.
+-   <https://joint-research-centre.ec.europa.eu/language-technology-resources/dcep-digital-corpus-european-parliament_en> : corpus du parlement européen, avec de nombreux documents et méta-données.
+-   <https://www.statmt.org/europarl/> : corpus "parallèle" du parlement européen, avec la traduction d'une langue à l'anglais. Utilisé dans le domaine de la traduction.
+-   <https://www.kaggle.com/> : site proposant de nombreux jeux de données, pas seulement textuels. Très utilisé dans le domaine du *Machine Learning*.
+-   <https://www.frantext.fr/> : base de donnée pour l'étude du français, possédant plusieurs documents téléchargeables en format xml.
+-   <https://en.wikipedia.org/wiki/List_of_text_corpora> : page wikipedia listant un certain nombre de corpora.
+
+Il est bien sûr aussi possible de constituer son propre corpus à l'aide des ressources textuelles disponibles sur internet. On peut par exemple utiliser des scripts R pour procéder à du **Web Scraping**, comme donné dans l'exemple `annexe_2_webscraping_example.R`.
+
+## Manipulation des chaînes de caractères
+
+Dans cette partie, nous allons montrer comment utiliser `stringr` pour manipuler les chaînes de caractères. Plusieurs des opérations que nous allons voir sont généralement prises en charge par des librairies de plus haut niveau, mais il peut être utile de savoir le faire "manuellement". Comme la pluparts des packages contenus dans le tidyverse, il existe une feuille de triche pour `stringr` <https://stringr.tidyverse.org/>.
+
+### Chargement d'un fichier texte
+
+Commençons avec un exemple simple : le fichier `Autour de la Lune.txt` du corpus `verne`, composé de 4 textes issus du Projet Gutenberg (<https://www.gutenberg.org/>) quelque peu nettoyés manuellement. On commence par définir le chemin d'accès, puis on charge le fichier avec la fonction `read_file()` (du package du tidyverse `readr`) :
+
+```{r}
+file_path = "data/verne/Autour de la Lune.txt"
+text = read_file(file_path)
+```
+
+On peut afficher les 300 premiers caractères grâce à la fonction `str_sub()` de `stringr` :
+
+```{r}
+text %>% 
+  str_sub(1, 300)
+```
+
+Le résultat est une (grande) chaîne de caractères qui contient tout le fichier texte, avec les retours à la lignes indiqué par le caractère `\n`. Généralement, nous aimerions segmenter ce corpus en différentes unités, selon l'analyse voulue.
+
+### Segmentation
+
+La segmentation d'un texte consiste à le découper en unités plus petites (chapitres, phrases, mots) afin de définir ce qu'on appelle des **contextes** ou **unités d'analyse textuelle** (qui deviendront souvent les lignes de notre futur tableau de données). Le choix de la segmentation définit donc la granularité de l'analyse : souhaite-on se focaliser sur des textes entiers, des chapitres, des phrases, des mots, voire des lettres ?
+
+Nous allons voir rapidement comment effectuer ces segmentations avec `stringr`. Notez que par la suite, nous privilégierons des librairies spécialisées comme `quanteda` pour ces tâches.
+
+La segmentation dans `stringr` s'effectue principalement avec la fonction `str_split()`, qui peut s'utiliser de différentes manières. En premier lieu, elle fonctionne très bien avec la fonction `boundary()`, qui permet un découpage "intelligent" par caractères, mots, lignes ou phrases en gérant automatiquement la ponctuation.
+
+Par exemple pour faire un découpage en mots :
+
+```{r}
+words = str_split(text, boundary("word"))[[1]]
+head(words, 20)
+```
+
+Notez que `str_split()` retourne toujours une liste, même si nous n'avons fourni qu'un seul texte en entrée. C'est pour cela que nous utilisons `[[1]]` : cela permet d'accéder au contenu du premier (et unique) élément de cette liste, qui est notre vecteur de mots.
+
+Pour un découpage en phrases, on prendra soin d'enlever les retours à la ligne au préalable avec `str_replace_all()` :
+
+```{r}
+sentences = text %>%
+  str_replace_all("\n", " ") %>%
+  str_split(boundary("sentence")) %>%
+  unlist() # Permet de transformer une liste en un vecteur, alternative à .[[1]]
+head(sentences)
+```
+
+Finalement, la manière la plus souple et puissante de segmenter est d'utiliser une **expression régulière** (pour une référence rapide sur les expressions régulières, voir <https://cheatography.com/davechild/cheat-sheets/regular-expressions/>).
+
+Cette méthode permet notamment de scinder un corpus contenu dans un seul fichier en plusieurs sous-fichiers distincts. C'est ce que nous allons faire dans la prochaine section avec le document `Autour de la Lune.txt` afin de séparer les chapitres.
+
+### Segmentation et sauvegarde de plusieurs fichiers
+
+Dans, Autour de la Lune.txt, chaque chapitre est délimité par un nombre romain isolé sur une ligne. On va donc définir l'expression régulière qui capture ces lignes (`(?=<expr>)` permet de couper *juste avant* l'expression régulière) :
+
+```{r}
+chapter_split_regex = "(?=(\n(I|V|X)+\n))"
+```
+
+Comme mentionné précédemment, `str_split()` retourne une liste. Nous extrayons directement notre vecteur de chapitres avec `[[1]]` :
+
+```{r}
+chapters = str_split(text, chapter_split_regex)[[1]]
+length(chapters)
+```
+
+Sachant qu'il y a 23 chapitres plus un chapitre préliminaire, notre découpage (24 éléments) a parfaitement fonctionné.
+
+Avant de sauvegarder nos chapitres, nous allons éliminer les retours à la ligne qu'ils contiennent. Comme on peut le voir, il y a de nombreux `\n` :
+
+```{r}
+chapters[1] %>%
+  str_sub(1, 300)
+```
+
+On remplace tous les "espaces" (espaces, retours à la ligne, tabulations) superflus de tous les chapitres :
+
+```{r}
+chapters = str_squish(chapters)
+```
+
+On observe le résultat :
+
+```{r}
+chapters[1] %>%
+  str_sub(1, 300)
+```
+
+On va maintenant construire un vecteur contenant les noms de ces chapitres avec la même expression régulière en utilisant `str_match_all()`. Contrairement à une simple extraction, cette fonction renvoie un tableau séparant plusieurs éléments de la capture (voir l'aide pour plus de détails). L'indexation `[[1]][, 2]` nous permet d'isoler directement la deuxième colonne, qui contient exactement nos chiffres romains :
+
+```{r}
+chapter_names = str_match_all(text, chapter_split_regex)[[1]][, 2]
+chapter_names
+```
+
+La fonction `str_trim()` nous permet d'éliminer les espaces, tabulations et retours à la ligne superflus au début et à la fin des chaînes de caractères :
+
+```{r}
+chapter_names = str_trim(chapter_names)
+chapter_names
+```
+
+Finalement, on ajoute manuellement le nom du chapitre préliminaire (qui n'avait pas de chiffre romain) au début du vecteur :
+
+```{r}
+chapter_names = c("0", chapter_names)
+```
+
+Nous avons désormais tout ce qu'il faut pour sauvegarder nos chapitres dans des fichiers séparés, avec des noms appropriés, à l'aide d'une **boucle** :
+
+```{r}
+# Boucle sur les chapitres
+for (i in 1:length(chapters)){
+  # On écrit le chapitre dans un fichier .txt
+  write_file(chapters[i], 
+             paste0("data/autour_de_la_lune/autour_de_la_lune_", chapter_names[i], ".txt"))
+}
+```
+
+### Chargement d'un corpus à partir d'un dossier avec le tidyverse
+
+Dans la pratique, la plupart des corpus que nous traiterons seront déjà structurés sous la forme de multiples fichiers répartis dans un dossier. Nous allons voir comment charger toutes ces données d'un coup dans un vecteur, format requis par de nombreuses librairies d'analyse. Nous le verrons à la section suivante, mais `readtext`, package compagnon de `quanteda`, propose aussi ses propres méthodes d'importation (préférables lorsque l'on utilise `quanteda`).
+
+Voici le dossier contenant notre corpus fraîchement découpé :
+
+```{r}
+corpus_folder = "data/autour_de_la_lune/"
+```
+
+On liste d'abord tous les fichiers qu'il contient :
+
+```{r}
+corpus_file_names = list.files(corpus_folder)
+corpus_file_names
+```
+
+À partir de cette liste, on crée un vecteur contenant les chemins d'accès complets :
+
+```{r}
+file_paths = paste0(corpus_folder, corpus_file_names)
+file_paths[1:2]
+```
+
+C'est ici qu'intervient une fonctionnalité du Tidyverse. Plutôt que d'écrire une boucle, nous utilisons la fonction `map_chr()` du package `purrr`. Elle applique automatiquement la fonction `read_file()` sur chacun de nos chemins d'accès et nous retourne un vecteur de chaînes de caractères en une seule ligne de code :
+
+```{r}
+texts = map_chr(file_paths, read_file)
+```
+
+On peut vérifier que le chargement groupé a bien fonctionné :
+
+```{r}
+texts[1:3] %>%
+  str_sub(1, 100)
+```
+
+## Quanteda et statistiques simples
+
+L'utilisation d'une librairie de plus haut niveau, telle que `quanteda`, peut fortement simplifier la tâche de segmentation. De plus, les résultats obtenus vont nous servir de base pour de nombreuses analyses futures.
+
+### Chargement du jeu de données
+
+Pour commencer, nous allons charger notre corpus. Nous travaillerons sur le corpus `manifesto`, qui contient les manifestes politiques émis par différents partis lors des élections présidentielles et législatives françaises de 2017.
+
+Plutôt que d'utiliser `read_file()` dans la fonction `map_chr()` comme vu précédemment, nous allons utiliser le package `readtext`. C'est le compagnon officiel de `quanteda`. Il est conçu pour charger un dossier complet de textes en une seule ligne, gère nativement de nombreux formats (.txt, .pdf, .docx, etc.), et permet la gestion des métadonnées. Le résultat de ce chargement est un `data.frame` :
+
+```{r}
+# On charge tous les fichiers .txt du dossier en une seule commande
+texts_df = readtext("data/manifesto/text/*.txt")
+
+# Le résultat est un tableau de données (data.frame) contenant les textes et leurs identifiants
+head(texts_df, 2)
+```
+
+### Les objets de type `corpus`
+
+Les objets de type `corpus` de `quanteda` sont conçus pour structurer et contenir l'entièreté d'un corpus. Ils nous permettront, plus tard, d'effectuer plusieurs analyses.
+
+Un objet corpus se crée très simplement à partir du tableau généré par `readtext` :
+
+```{r}
+my_corpus = corpus(texts_df)
+```
+
+On peut extraire des statistiques simples à partir de cet objet :
+
+```{r}
+summary(my_corpus)
+```
+
+Ou des statistiques plus complètes avec la fonction `textstat_summary()` du package `quanteda.textstats` :
+
+```{r}
+textstat_summary(my_corpus)
+```
+
+Un grand avantage du corpus est la possibilité d'y attacher des **métadonnées** (appelées `docvars`) :
+
+```{r}
+docvars(my_corpus, "Orientation") = c("droite", "gauche", "gauche", "droite", 
+                                      "centre", "gauche", "gauche", "centre", 
+                                      "droite")
+summary(my_corpus)
+```
+
+Ces métadonnées permettent par exemple de faire des graphiques rapides croisant le texte et nos variables :
+
+```{r}
+summary(my_corpus) %>%
+  ggplot() +
+  geom_bar(aes(y=Text, x=Types/Tokens, fill=Orientation), stat="identity")
+```
+
+Ou encore de créer un sous-corpus pour filtrer notre analyse :
+
+```{r}
+sub_corpus = corpus_subset(my_corpus, Orientation == "gauche")
+summary(sub_corpus)
+```
+
+### Les objets de type `tokens` :
+
+Pour des analyses portant sur des éléments plus fins du corpus, nous avons besoin de segmenter le texte en créant des objets de type `tokens`. On applique cette fonction directement sur notre corpus :
+
+```{r}
+my_words = tokens(my_corpus)
+my_words
+```
+
+La segmentation par mots est celle par défaut, mais on peut aussi la faire par phrases :
+
+```{r}
+my_sentences = tokens(my_corpus, what="sentence")
+my_sentences
+```
+
+Ou par caractères :
+
+```{r}
+my_chars = tokens(my_corpus, what="character")
+my_chars
+```
+
+La fonction `tokens()` possède de nombreuses options très utiles pour "nettoyer" le texte dès la segmentation :
+
+```{r}
+my_rstr_words = tokens(my_corpus, 
+                       remove_punct=T, 
+                       remove_symbols=T, 
+                       remove_numbers=T,
+                       remove_url=T,
+                       split_hyphens=T)
+my_rstr_words
+```
+
+Une fois ces *tokens* créés, on peut effectuer des opérations de nettoyage supplémentaires. Par exemple, séparer les mots collés par des apostrophes :
+
+```{r}
+my_rstr_words = my_rstr_words %>%
+  tokens_split("'") %>%
+  tokens_split("’") 
+my_rstr_words
+```
+
+Mettre tous les mots en minuscules pour uniformiser la casse :
+
+```{r}
+my_rstr_words = my_rstr_words %>%
+  tokens_tolower()
+my_rstr_words
+```
+
+Ou enlever les "mots vides" ou **stopwords**, c'est-à-dire les mots grammaticaux très fréquents qui n'apportent pas de sens (le, la, de, et...).
+
+`quanteda` possède des dictionnaires intégrés pour cela, pour plusieurs langues :
+
+```{r}
+# Utilisation du dictionnaire français natif
+my_rstr_words %>%
+  tokens_remove(stopwords("fr"))
+```
+
+Mais on peut aussi utiliser des listes de *stopwords* personnalisées. Par exemple, voici comment faire le fichier `frenchST.txt` (voir http://members.unine.ch/jacques.savoy/clef/frenchST.txt)
+
+```{r}
+# Chargement du fichier
+stopwords = read_lines("data/stopwords/frenchST.txt") 
+# Retrait des stopwords
+my_rstr_words = my_rstr_words %>%
+  tokens_remove(stopwords)
+my_rstr_words
+```
+
+### Les matrices `dfm` (document-features matrix)
+
+C'est ici que s'opère la vraie bascule vers l'analyse quantitative. Un objet DFM (Matrice Documents-Éléments) transforme le texte brut en données tabulaires particulières :
+
+-   Les **lignes** sont les documents (ou plus généralement, un contexte)
+
+-   Les **colonnes** sont les mots (ou plus généralement, des petites chaînes de caractères pouvant être comptabilisées).
+
+-   Les **cellules** contiennent le nombre d'occurrences de chaque mot dans chaque document.
+
+C'est ce qu'on appelle le modèle du **Bag-of-Words** (Sac de mots) : on perd l'ordre des mots pour ne conserver que leurs fréquences absolues qui forment alors les caractéristiques des documents.
+
+On peut créer cette matrice à partir de nos *tokens* affinés précédemment avec la fonction `dfm()` :
+
+```{r}
+my_dfm = dfm(my_rstr_words)
+my_dfm
+```
+
+Cette matrice est le format d'entrée obligatoire pour la plupart des modèles statistiques ou de Machine Learning qui suivront. On peut déjà en extraire quelques statistiques descriptives.
+
+Les mots les plus fréquents dans tout le corpus :
+
+```{r}
+topfeatures(my_dfm, 20)
+```
+
+Les mots les plus fréquents par document :
+
+```{r}
+topfeatures(my_dfm, 20, groups=docnames(my_dfm))
+```
+
+Pour créer des visualisations personnalisées, on peut transformer cette matrice complexe en un tableau standard (`tibble`) lisible par le tidyverse :
+
+```{r}
+my_dfm_tib = my_dfm %>% 
+  convert(to="data.frame") %>%
+  as_tibble()
+```
+
+Ce qui peut nous servir, par exemple, à tracer le graphique rang-fréquence illustrant la **loi de Zipf**.
+
+On commence par faire pivoter les mots pour avoir une ligne par occurrence, puis on calcule les rangs :
+
+```{r}
+word_freq = my_dfm_tib %>%
+  pivot_longer(cols=where(is.numeric), names_to="word", values_to="count") %>%
+  group_by(doc_id) %>%
+  filter(count > 0) %>%
+  mutate(rank=rank(-count))
+word_freq
+```
+
+Ce qui nous permet d'obtenir le graphique rang-fréquence typique :
+
+```{r}
+word_freq %>%
+  ggplot() + 
+  geom_line(aes(x=rank, y=count, color=doc_id))
+```
+
+Cette distribution est beaucoup plus lisible (et forme une droite caractéristique) si l'on passe sur une échelle logarithmique (log-log) :
+
+```{r}
+word_freq %>%
+  ggplot() + 
+  geom_line(aes(x=rank, y=count, color=doc_id)) +
+  scale_x_log10() +
+  scale_y_log10()
+```

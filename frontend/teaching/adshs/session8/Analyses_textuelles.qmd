@@ -1,0 +1,265 @@
+---
+title: "VIII. Analyses de données textuelles"
+author: "Guillaume Guex"
+number-sections: true
+lang: fr
+---
+
+## Introduction
+
+Dans ce TP, nous allons explorer les bases de la **textométrie** ou **lexicométrie**. Cette discipline, à la croisée de la linguistique, de la statistique et de l'informatique, permet d'analyser des corpus de textes de manière quantitative. L'objectif est de complémenter la lecture (l'analyse qualitative) pour identifier des motifs, des récurrences ou des spécificités qui ne sont pas immédiatement visibles à l'oeil nu dans un corpus.
+
+Nous utiliserons encore une fois `quanteda`, ainsi que quelque un des ses packages supplémentaires :
+
+```{r warning=F, message=F}
+library(tidyverse)
+library(readtext)
+library(quanteda)
+library(quanteda.textstats)
+library(quanteda.textplots)
+```
+
+### Chargement et préparation du corpus
+
+On charge notre corpus avec `readtext()`. Pour ce TP, nous travaillons encore une fois sur le corpus des manifestes politiques français :
+
+```{r}
+texts_df = readtext("data/manifesto/*.txt")
+texts_df
+```
+
+On crée les deux objets `quanteda` fondamentaux : - Le `corpus` : contient les textes bruts et leurs métadonnées. - Les `tokens` : le texte segmenté en unités.
+
+```{r}
+corpus_obj = corpus(texts_df)
+tokens_obj = tokens(corpus_obj)
+```
+
+Notez qu'il est possible d'enlever plusieurs types de tokens dans la fonction `tokens()` avec les options `remove_punct`, `remove_symbols`, `remove_numbers`, `remove_url`, et `remove_separators`. On peut également sélectionner ou enlever des tokens choisis de l'objet de type `tokens` après sa création, à l'aide des fonctions `token_select()` ou `token_remove()` (nous le verrons plus tard).
+
+## Statistiques et indices descriptifs
+
+Le package `quanteda.textstats` propose plusieurs fonctions permettant d'obtenir divers statistiques et indices portant sur chaque texte. Cela permet de quantifier le "style" d'écriture de chaque document.
+
+### Statistiques globales
+
+Pour obtenir des **statistiques globales**, on peut utiliser `textstat_summary()` sur l'objet de type `corpus` :
+
+```{r}
+textstat_summary(corpus_obj)
+```
+
+### Diversité lexicale
+
+La **diversité lexicale** mesure la "richesse" du vocabulaire. L'indice le plus simple est le TTR (Type-Token Ratio) : le nombre de mots uniques (types) divisé par le nombre total de mots (tokens). Cet indice présente cependant des défauts : il est très sensible à la longueur du texte (plus un texte est long, plus le TTR baisse).
+
+Il existe de nombreux indices qui essaie de corriger ce problème, et que l'on peut obtenir avec `textstat_lexdiv()` sur l'objet `tokens` :
+
+```{r}
+textstat_lexdiv(tokens_obj, measure="all")
+```
+
+On trouve par exemple, parmi ces derniers : *L'indice R de Guiraud* : version normalisée du TTR, qui divise le nombre de types par la racine carrée du nombre de tokens. Le *MATTR* : *Moving-Average Type-Token Ratio*, qui calcule le TTR sur des fenêtres mobiles de taille fixe, puis fait la moyenne de ces TTR. Regardez l'aide de la fonction (`?textstat_lexdiv`) pour comprendre les nombreux autres indices présentés.
+
+### Indices de lisibilité
+
+Ces indices estiment la facilité de lecture d'un texte en se basant sur des critères formels. Ces indices s'obtiennent avec `textstat_readability()` sur l'objet de type `corpus` :
+
+```{r}
+textstat_readability(corpus_obj, measure="all")
+```
+
+La quasi-totalité de ces indices reposent sur deux variables mathématiques simples : la **longueur des mots** (en lettres ou en syllabes) et la **longueur des phrases** (en mots).
+
+Pour prendre un exemple, on y trouve par exemple l'indice *Flesch*, un des plus célèbres, qui se lit sur une échelle de 0 à 100. Plus le score est élevé, plus le texte est facile à lire (80-100 : livre pour enfant, 50-80 : texte standard), alors qu'un score en dessous de 50 indique un texte très complexe (académique ou juridique). Malheureusement, la plupart de ces indices sont calibrés pour l'anglais et leur interprétation pour le français s'en trouve souvent faussée.
+
+Nous n'allons pas aller plus loin ici. Une étude approfondie de l'aide de cette de fonction et de ses sources est donc nécessaire pour utiliser judicieusement ces différents indices.
+
+## Collocations et Concordance
+
+### Collocations
+
+Les **collocations** sont des suites de mots qui apparaissent ensemble plus souvent que le simple hasard ne le prédirait (p.ex.: "services publics" ou "développement durable"). Pour les extraire, on utilise `textstat_collocations()` sur l'objet `corpus`. L'argument `size` permet de définir le nombre de termes constituant ces collocations (bigrammes, trigrammes, etc.) :
+
+```{r}
+colloc_df = textstat_collocations(corpus_obj, size=2)
+as_tibble(colloc_df)
+```
+
+Par défaut, ces collocations sont classées selon le **score z** de l'indice **lambda**. Deux choses sont évaluées ici :
+
+-   *La force de l'association (le lambda)* : Cet indice compare la fréquence de co-occurrence de deux mots par rapport à ce que prédirait le simple hasard. Par exemple, des termes comme "services" et "publics" s'attirent fortement, contrairement à des mots ultra-fréquents qui se croisent par hasard (comme "dans" et "le").
+
+-   *La fiabilité du résultat (le score z)* : Il mesure la *significativité statistique* de cette attraction. Il nous garantit que l'association observée est solide et ne relève pas d'un simple hasard lié à un échantillon de texte trop petit.
+
+On peut également s'intéresser aux collocations de plus grand ordre :
+
+```{r}
+colloc_df = textstat_collocations(corpus_obj, size=3)
+as_tibble(colloc_df)
+```
+
+### Concordances
+
+Les **concordances** permettent d'observer les mots en contexte, c'est-à-dire de voir les mots qui apparaissent avant et après un mot de requête donné. Pour obtenir un concordancier, on utilise la fonction `kwic()` (*Key Word In Context*) sur notre objet `tokens` avec un mot de requête (ici `"france"`). Le résultat de cette fonction peut ensuite être transformé en tibble pour un affiche plus élégant :
+
+```{r}
+requete = "france"
+kwic_obj = kwic(tokens_obj, requete)
+as_tibble(kwic_obj)
+```
+
+On peut aussi utiliser des expressions régulières comme requêtes :
+
+```{r}
+requete = "fran"
+kwic_obj = kwic(tokens_obj, requete, valuetype="regex")
+as_tibble(kwic_obj)
+```
+
+Ou une "phrase" (voir l'aide `?phrase` pour savoir comment les construire) :
+
+```{r}
+requete = phrase("* social*")
+kwic_obj =  kwic(tokens_obj, requete)
+as_tibble(kwic_obj)
+```
+
+On peut afficher comment notre requête se répartit dans les textes avec la fonction `textplot_xray()` du package `quanteda.textplots` :
+
+```{r}
+textplot_xray(kwic_obj)
+```
+
+## Matrice documents-termes et spécificités
+
+### Matrice documents-termes
+
+Nous l'avons déjà vu : pour obtenir la **matrice documents-termes**, on utilise la fonction `dfm()` de `quanteda` (*document-features matrix*, les "features" étant généralement les termes) :
+
+```{r}
+dfm_obj = dfm(tokens_obj)
+dfm_obj
+```
+
+Afin d'obtenir une matrice plus compacte et plus pertinente (pour les analyses ultérieurs) il peut être utile de nettoyer notre objet `tokens` au préalable.
+
+On commence donc par recréer un objet de type `tokens` en supprimant la ponctuation, les nombres, etc. :
+
+```{r}
+tokens_filtered_obj = tokens(corpus_obj, remove_punct=T, remove_symbols=T, 
+                             remove_numbers=T, remove_url=T, 
+                             remove_separators=T)
+```
+
+Nous allons également séparer les `tokens` par apostrophe (deux caractères présents dans le corpus):
+
+```{r}
+tokens_filtered_obj = tokens_filtered_obj %>%
+  tokens_split("'") %>%
+  tokens_split("’")
+```
+
+Finalement, on supprime les *stopwords* avec le fichier "frenchST.txt" que nous avons téléchargé précédemment (voir la section "Préparation du corpus" du TP 1) :
+
+```{r}
+stopwords = readLines("data/stopwords/frenchST.txt")
+tokens_filtered_obj = tokens_filtered_obj %>%
+  tokens_remove(stopwords)
+```
+
+On obtient alors :
+
+```{r}
+dfm_obj = dfm(tokens_filtered_obj)
+dfm_obj
+```
+
+Cette matrice peut être utilisée plus tard pour des analyses avancées, par exemple pour faire une **Analyse Factorielle des Correspondances (AFC)**. Elle est à la racine de toutes les méthodes de type **Bag-of-Words** (l'ordre des mots n'est pas pris en compte).
+
+### Spécificités
+
+Les **spécificités** (en anglais: **keyness**) sont obtenues en comparant la fréquence des mots d'un document "cible" par rapport au reste du corpus. Elles permettent de répondre à la questions : "Quels mots caractérisent le mieux ce texte par rapport aux autres ?". Elles s'obtiennent avec la fonction `textplot_keyness()` (de `quanteda.textstats`) appliquée à un objet de type `dfm`. On doit préciser dans l'argument `target` quel document observer en contraste avec le reste du corpus. On peut désigner ce document avec un indice :
+
+```{r}
+keyness_obj = textstat_keyness(dfm_obj, target=3) # n°3 -> "france_insoumise_2017.txt"
+as_tibble(keyness_obj)
+```
+
+Ou avec son nom :
+
+```{r}
+keyness_obj = textstat_keyness(dfm_obj, target="front_national_2017.txt")
+as_tibble(keyness_obj)
+```
+
+Notez que l'on peut afficher ce résultat sous la forme d'un graphique, ce qui montre aussi les mots les "moins caractéristiques" du corpus (les mots sous-représentés par rapport à la référence, i.e. le bas des tableaux précédents) :
+
+```{r}
+textplot_keyness(keyness_obj)
+```
+
+### Nuage de mots
+
+Pour terminer, on peut faire un **nuage de mots** à partir de notre objet de type "dfm" avec la fonction `textplot_wordcloud()` du package `quanteda.textplots`. Ce n'est pas le graphique le plus adapté à une analyse rigoureuse, mais il possède un certain intérêt esthétique :
+
+```{r}
+textplot_wordcloud(dfm_obj, max_words=100)
+```
+
+On peut utiliser `dfm_subset()` pour selectionner un sous-ensemble de document (selon plusieurs conditions logiques) :
+
+```{r}
+# On affiche le nuage de mots de "en_marche_2017.txt"
+textplot_wordcloud(dfm_subset(dfm_obj, docname_=="en_marche_2017.txt"), max_words=100)
+```
+
+## Co-occurrences
+
+La table des **co-occurrences** permet de voir quels mots apparaissent le plus fréquemment ensembles dans un **contexte donné**. Elle se construit à partir d'un objet de type `tokens`, avec la fonction `fcm()` (*feature co-occurrence matrix*). Notez que, de base, `fcm()` distingue la casse, c'est pourquoi nous passons notre objet `tokens` dans `tokens_tolower()`, afin d'enlever toutes les lettres majuscules :
+
+```{r}
+tokens_low_obj = tokens_tolower(tokens_filtered_obj)
+fcm_obj = fcm(tokens_low_obj)
+fcm_obj
+```
+
+Par défaut, `fcm()` compte le nombre de paires de tokens (distinctes) selon le contexte "document". Si l'on désire compter le nombre de contextes possédant une ou plusieurs co-occurrences, on doit faire :
+
+```{r}
+fcm_obj = fcm(tokens_low_obj, count="boolean")
+fcm_obj
+```
+
+Ce qui veut dire, qu'avec 9 documents, les composantes ne peuvent dépasser 9.
+
+On peut également une **fenêtre d'un certain nombre de mots** comme contexte :
+
+```{r}
+fcm_obj = fcm(tokens_low_obj, context="window", window=5)
+fcm_obj
+```
+
+Il nous est ensuite possible d'afficher ces co-occurrences avec un **graphe**, grâce à la fonction `textplot_network()`.
+
+Cette fonction affiche au maximum 1000 noeuds, et même avec ce nombre, le graphe n'est pas très lisible. Nous allons donc d'abord sélectionner les 100 tokens les plus fréquents :
+
+```{r}
+tokens_names = tokens_low_obj %>%
+  dfm() %>%
+  topfeatures(n=100) %>%
+  names()
+tokens_names
+```
+
+On crée un nouvel objet `fcm` qui ne contient que ces tokens :
+
+```{r}
+fcm_filtered_obj = fcm_select(fcm_obj, tokens_names)
+```
+
+Et on fait un graphe, avec les liens qui s'affichent seulement si le compte est de minimum 9 (seuil trouvé après tâtonnements) :
+
+```{r}
+textplot_network(fcm_filtered_obj, min_freq=9)
+```

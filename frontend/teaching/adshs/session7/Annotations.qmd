@@ -1,0 +1,285 @@
+---
+title: "VII. Annotations"
+author: "Guillaume Guex"
+number-sections: true
+lang: fr
+---
+
+## Introduction
+
+Dans ce TP, nous allons voir comment tokeniser, lemmatiser et annoter automatiquement un corpus grâce à la librairie **`udpipe`** (<https://bnosac.github.io/udpipe/en/index.html>). Cette dernière utilise des **modèles de langage**, construits dans le cadre du projet **Universal Dependencies** (<https://universaldependencies.org/>), afin d'effectuer automatiquement toutes ces opérations. Nous allons également voir succinctement comment gérer le **format XML** avec R.
+
+Il est important de préciser que les "modèles de langage" utilisés par `udpipe` diffèrent fondamentalement des grands modèles actuels basés sur l'architecture Transformer (comme GPT, Claude ou Qwen). `udpipe` repose sur des algorithmes d'apprentissage automatique plus légers et traditionnels. Si cette approche peut sembler datée face à l'état de l'art actuel en intelligence artificielle, elle n'en demeure pas moins un standard incontournable pour l'analyse syntaxique. Elle présente en effet des avantages majeurs pour ce type de traitement : une grande rapidité d'exécution, la possibilité de fonctionner localement sur une machine standard sans équipement spécifique (GPU), et une excellente transparence dans les règles grammaticales appliquées.
+
+Nous aurons besoin des librairies suivantes :
+
+```{r}
+library(tidyverse)
+library(readtext)
+library(quanteda)
+library(udpipe)
+library(xml2)
+library(xmlconvert)
+```
+
+### Le corpus
+
+Le chargement du corpus dans R est fait, comme la fois précédente, à l'aide de la fonction `readtext()` du package `readtext` :
+
+```{r}
+texts_df = readtext("data/manifesto/*.txt")
+```
+
+On vérifie que le chargement s'est bien déroulé :
+
+```{r}
+texts_df
+```
+
+Pour rappel, ce format de chargement (en dataframe) nous permet de créer les objets `corpus` et `tokens` de `quanteda`. Ici, nous les utiliserons d'une autre manière avec `udpipe`.
+
+## Annotation du corpus et statistiques
+
+### Annotation
+
+Pour utiliser `udpipe`, on doit d'abord télécharger un **modèle de langage pré-entraîné** spécifique à la langue que l'on étudie. Ces modèles ont été entraînés sur les corpus du projet Universal Dependencies (dont la liste complète est consultable ici : <https://universaldependencies.org/>). Dans R, le téléchargement du modèle se fait directement via une fonction dédiée du package, `udpipe_download_model()` (commande à décommenter pour télécharger le modèle lors de la première utilisation) :
+
+```{r}
+# udpipe_download_model(language="french-gsd", model_dir="data/models")
+```
+
+Une fois téléchargé, on peut charger le modèle dans une variable via la fonction `udpipe_load_model()`:
+
+```{r}
+udpipe_model = udpipe_load_model("data/models/french-gsd-ud-2.5-191206.udpipe")
+```
+
+Pour effectuer la tokenisation, la lemmatisation et l'annotation du corpus, on utilise la fonction `udpipe_annotate()`. On doit donner les textes à annoter dans l'argument `x` de la fonction, et les noms des textes dans l'argument `doc_id` (l'option `trace=T` permet d'afficher une barre de progression) :
+
+```{r}
+udpipe_res = udpipe_annotate(udpipe_model, x=texts_df$text, doc_id=texts_df$doc_id, trace=T)
+```
+
+::: callout-note
+Cette fonction peut parfois prendre beaucoup de temps. Pour en gagner, il est possible de désactiver le *parsing*, avec l'option `parser="none"`.
+:::
+
+On peut obtenir le résultat sous la forme de tibble avec `as_tibble()` et `as.data.frame()` :
+
+```{r}
+corpus_token_df = as_tibble(as.data.frame(udpipe_res))
+corpus_token_df
+```
+
+Que l'on peut alors sauvegarder (on retire les colonnes vides) :
+
+```{r}
+corpus_token_df %>%
+  select(-c(sentence, xpos, deps)) %>%
+  write_tsv("data/manifesto_annotated.tsv")
+```
+
+### Comprendre le tableau d'annotation
+
+Si vous observez `corpus_token_df`, vous verrez que chaque ligne correspond désormais à un seul mot (ou ponctuation). Les colonnes les plus importantes pour nos futures analyses sont :
+
+-   `token` : Le mot exact tel qu'il apparaît dans le texte original (ex: "chevaux", "allons").
+
+-   `lemma` : Le mot ramené à sa forme canonique. "chevaux" devient "cheval", "allons" devient "aller". C'est indispensable pour compter la fréquence réelle d'un concept et cela nous sera très utile pour faire des analyses de type *bag-of-words*.
+
+-   `upos` (Universal Part of Speech) : La classe grammaticale universelle du mot. Par exemple : NOUN (Nom), ADJ (Adjectif), VERB (Verbe), PUNCT (Ponctuation).
+
+### Nombre d'annotations, de tokens, de types et de lemmes
+
+Ce jeu de données peut être utilisé pour extraire des statistiques, par exemple, le nombre et la proportion des annotations morpho-syntaxiques par document :
+
+```{r}
+corpus_token_df %>%
+  group_by(doc_id) %>%
+  count(upos) %>%
+  mutate(prop = n/sum(n)*100)
+```
+
+Même résultat avec un graphique :
+
+```{r}
+ggplot(corpus_token_df) +
+  geom_bar(aes(x=doc_id, fill=upos), position = "fill") +
+  coord_flip()
+```
+
+On peut obtenir les statistiques sur le nombre de tokens, types et lemmes à partir de cette table.
+
+Tokens par document :
+
+```{r}
+corpus_token_df %>%
+  group_by(doc_id) %>%
+  summarise(n_tokens=n())
+```
+
+Tokens pour le corpus :
+
+```{r}
+corpus_token_df %>%
+  summarise(n_tokens=n())
+```
+
+Types par document :
+
+```{r}
+corpus_token_df %>%
+  group_by(doc_id) %>%
+  count(str_to_lower(token)) %>%
+  summarise(n_types=n())
+```
+
+Types pour le corpus :
+
+```{r}
+corpus_token_df %>%
+  count(str_to_lower(token)) %>%
+  summarise(n_types=n())
+```
+
+Lemmes par document :
+
+```{r}
+corpus_token_df %>%
+  group_by(doc_id) %>%
+  count(lemma) %>%
+  summarise(n_lemmes=n())
+```
+
+Lemmes pour le corpus :
+
+```{r}
+corpus_token_df %>%
+  count(lemma) %>%
+  summarise(n_lemmes=n())
+```
+
+### De `udpipe` à `quanteda`
+
+Pour obtenir des résultats similaires (sans le nombre de types), on peut aussi recréer un vecteur de documents lemmatisés pour ensuite utiliser `quanteda`.
+
+On recolle les lemmes par document, puis on extrait la colonne dans un vecteur :
+
+```{r}
+lemmatized_texts = corpus_token_df %>%
+  mutate(lemma=ifelse(is.na(lemma), token, lemma)) %>%
+  group_by(doc_id) %>%
+  summarise(text=str_c(lemma, collapse=" ")) %>%
+  .$text
+```
+
+On nomme le vecteur :
+
+```{r}
+names(lemmatized_texts) = texts_df$doc_id
+```
+
+Création du corpus :
+
+```{r}
+my_corpus = corpus(lemmatized_texts)
+summary(my_corpus)
+```
+
+## XML
+
+### Chargement
+
+Le format **XML** (https://fr.wikipedia.org/wiki/Extensible_Markup_Language) est très utilisé pour sauvegarder des documents annotés. Avec certaines librairies R, en particulier `xml2` et `xmlconvert`, il est possible d'extraire des informations d'un document XML, ou alors de sauvegarder un tableau de données en XML. Cette tâche n'est cependant pas facile à automatiser, car chaque document XML possède sa propre hiérarchie et ses balises personnalisées.
+
+Pour charger un document XML en R, on utilise la fonction `xml_to_df()` du package `xmlconvert` (voir l'aide pour toutes les options). Ici, nous chargeons un document trouvé sur https://www.frantext.fr/ (cette logique devrait donc fonctionner pour tous les documents trouvés sur ce site) :
+
+```{r}
+frantext_df = xml_to_df("data/xml/C432.xml", 
+                          records.tags="x:wf", 
+                          fields="attributes")
+as_tibble(frantext_df)
+```
+
+Il est possible de capturer une plus grande part de la structure de ce document (récupérer les chapitres, paragraphes, phrases, etc.) mais cette procédure peut être complexe et nous ne la verrons pas ici.
+
+Si nécessaire, le texte brut peut être récupéré avec :
+
+```{r}
+# La fonction suivante va malheurseuement ajouter des espaces avant la ponctuation
+frantext_texte = str_c(frantext_df$word, collapse=" ")
+str_sub(frantext_texte, 1, 100)
+```
+
+et peut ensuite être tokenisé, lemmatisé, annoté avec, p.ex., `udpipe`.
+
+### Sauvegarde
+
+Le processus de sauvegarde est également assez spécifique au jeu de données que nous possédons et de la structure que nous désirons créer dans le document XML. Il s'agira de créer un arbre hiérarchique, avec comme "feuilles" les lignes de notre jeu de données. La création de cette hiérarchie est faite avec les fonctions disponibles dans les packages `xml2` et `xmlconvert` :
+
+-   `xml_new_root()`: permet de créer un noeud vide.
+-   `xml_add_child()`: permet de coller un noeud enfant à un noeud parent.
+-   `df_to_xml()`: permet de convertir un jeu de données et sous-arbre XML\
+    (chaque ligne est un noeud, qui possède autant d'enfants que de variables).
+
+Nous allons ici sauvegarder le document "parti_socialiste_2017.txt", annoté en format XML, en gardant la hiérarchie des phrases.
+
+On crée le noeud `<document>` pour notre document :
+
+```{r}
+doc_xml = xml_new_root("document")
+```
+
+On ajoute le nom du document dans un noeud `<nom>`, que l'on met comme enfant de `<document>` :
+
+```{r}
+doc_xml %>% 
+  xml_add_child("nom", "parti_socialiste_2017.txt")
+```
+
+On restreint notre jeu de données au document `parti_socialiste_2017.txt` :
+
+```{r}
+doc_df = corpus_token_df %>% 
+  filter(doc_id=="parti_socialiste_2017.txt") 
+```
+
+On extrait les identifiants des phrases du document :
+
+```{r}
+sent_ids = unique(doc_df$sentence_id)
+```
+
+On boucle sur les identifiants des phrases :
+
+```{r}
+for(sent_id in sent_ids){
+  
+  # On restreint le jeu de données à la phrase, on sélectionne les colonnes
+  # pertinentes, puis on transforme ce sous-tableau en arbre XML :
+  sent_xml = doc_df %>%
+    filter(sentence_id==sent_id) %>%
+    select(token, lemma, upos) %>%
+    df_to_xml(root.node="sentence", record.tag="word")
+  
+  # On supprime l'attribut "encoding" du noeud `<sentence>` (automatique avec
+  # `df_to_xml()`)
+  xml_set_attr(sent_xml, "encoding", NULL)
+  
+  # On ajoute le sous-arbre `<sentence>` au noeud <document>
+  doc_xml %>% xml_add_child(sent_xml)
+  
+}
+```
+
+Observons le résultat :
+
+```{r}
+doc_xml
+```
+
+On sauvegarde l'arbre XML dans un fichier `.xml` :
+
+```{r}
+write_xml(doc_xml, "data/parti_socialiste_2017.xml")
+```

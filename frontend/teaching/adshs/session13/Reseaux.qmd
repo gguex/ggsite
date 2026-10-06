@@ -1,0 +1,496 @@
+---
+title: "XIII. Analyse de réseaux"
+author: "Guillaume Guex"
+number-sections: true
+lang: fr
+---
+
+## Introduction
+
+Jusqu'à présent, dans les jeux de données sur lesquels nous avons travaillé, nos individus (nos lignes) ont été caractérisés par leurs **variables**. Nous avons vu comment construire des distances entre ces individus et même les représenter en tant que points dans l'espace. Cependant, il nous manque un outil mathématique pour représenter des **liens formels** (ou leur absence) entre les individus.
+
+L'**analyse de réseaux** propose de remédier à cela : ce qui nous intéresse dans ce cadre, ce sont **les relations qui unissent (ou non) les individus**. Ce paradigme permet de représenter de nombreux phénomènes : les réseaux sociaux, le trafic aérien, les relations entre les personnages d'un roman ou même les interactions entre les protéines de notre corps. L'analyse de réseaux se base sur une branche des mathématiques particulière : la **théorie des graphes**.
+
+### Définition d'un graphe
+
+Un **graphe**, que l'on distingue d'un **réseau** par son côté abstrait (bien que cette distinction se perde), est une structure mathématique formelle composée de deux éléments fondamentaux :
+
+- **Les nœuds** (*nodes* ou *certices* en anglais) : ce sont les entités de notre réseau (des personnes, des villes, des ordinateurs, des mots, etc.).
+- **Les arêtes** (*edges* en anglais) : ce sont les connexions qui relient ces nœuds (une amitié, une route, un câble, une co-occurrence, etc.).
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| fig-align: center
+#| fig-height: 6
+
+library(tidygraph)
+library(ggraph)
+library(ggplot2)
+
+set.seed(1)
+nodes_ex1 = data.frame(
+  name = c("A", "B", "C", "D"),
+  x = c(0, 1, 1, 0), 
+  y = c(1, 1, 0, 0)
+)
+edges_ex1 = data.frame(
+  from = c(1, 1, 1, 2, 3), 
+  to = c(2, 3, 4, 3, 4)
+)
+graph_ex1 = tbl_graph(nodes = nodes_ex1, edges = edges_ex1, directed = FALSE)
+
+ggraph(graph_ex1, layout="manual", x=x, y=y) +
+  geom_edge_link(width = 1, color = "gray60") +
+  geom_node_point(size = 14, color = "steelblue") +
+  geom_node_text(aes(label = name), color = "white", size = 5) +
+  theme_graph() +
+  labs(title = "Exemple de graphe :")
+```
+
+Il existe deux standards pour représenter un graphe de manière formelle :
+
+1.  La **matrice d'adjacence** : c'est un tableau carré où les lignes et les colonnes représentent les nœuds. Si deux nœuds sont connectés, on place un 1 à leur intersection. S'ils ne le sont pas, on place un 0 :
+
+$$\begin{array}{c|cccc}
+  & A & B & C & D \\
+\hline
+A & 0 & 1 & 1 & 1 \\
+B & 1 & 0 & 1 & 0 \\
+C & 1 & 1 & 0 & 1 \\
+D & 1 & 0 & 1 & 0 \\
+\end{array}$$
+
+2.  **La liste d'arêtes** : c'est le format le plus courant en informatique (et celui préféré par le Tidyverse). Il s'agit d'un tableau à deux colonnes (source et cible) où chaque ligne représente un lien qui existe. Cette représentation prend moins de place en mémoire :
+
+$$\begin{array}{cc}
+\textbf{Source (from)} & \textbf{Cible (to)} \\
+\hline
+A & B \\
+A & C \\
+A & D \\
+B & C \\
+C & D \\
+\end{array}$$
+
+### Graphes orientés et pondérés
+
+Afin de modéliser certains phénomènes plus complexes, les arêtes d'un graphe peuvent posséder certaines caractéristiques :
+
+1.  Les arêtes peuvent être **orientées** : la relation est alors asymétrique. Par exemple, sur Instagram, A peut suivre B sans que B ne suive A. Les liens sont alors représentés par des flèches.
+
+2.  Les arêtes peuvent être **pondérées** : tous les liens n'ont pas la même importance. On peut attribuer un poids à chaque arête. Ce poids peut représenter une *proximité* (le nombre d'e-mails échangés entre deux collègues) ou une *distance* (le nombre de kilomètres entre deux villes).
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| fig-align: center
+#| fig-height: 6.5
+
+edges_ex2 = data.frame(from = c(1, 1, 1, 2, 3), to = c(2, 3, 4, 3, 4), weight=c(2, 3, 1, 3, 5))
+graph_ex2 = tbl_graph(nodes = nodes_ex1, edges = edges_ex2, directed = TRUE)
+
+ggraph(graph_ex2, layout="manual", x=x, y=y) +
+  geom_edge_link(aes(edge_width=weight, label=weight),  
+                 angle_calc = "along",
+                 label_dodge = unit(4, "mm"),
+                 label_size = unit(6, "mm"),
+                 arrow = arrow(length = unit(4, "mm")),
+                 end_cap = circle(7, "mm"), 
+                 color = "gray50") +
+  geom_node_point(size = 14, color = "steelblue") +
+  geom_node_text(aes(label=name), color = "white", size = 5) +
+  scale_edge_width(range = c(0.5, 2.5)) +
+  theme_graph() +
+  theme(legend.position = "none") +
+  labs(title = "Exemple de graphe orienté et pondéré :")
+```
+
+Représenter mathématiquement les graphes orientés ne nécessite aucun changement dans la matrice d'adjacence ou la liste d'arêtes. En revanche, pour un graphe pondéré, la matrice d'adjacence va contenir les poids, et on doit ajouter une colonne "weight" à la liste d'arêtes.
+
+## Modélisation de graphes dans R
+
+### Présentation des bibliothèques
+
+Historiquement, l'analyse de réseaux en R se faisait principalement avec le package `igraph`. C'est un moteur mathématique très puissant capable de gérer des réseaux de millions de nœuds. Cependant, sa syntaxe est particulière et s'éloigne de la logique du Tidyverse.
+
+Pour pallier cela, nous utiliserons les packages suivants :
+
+- **`igraph`** : La bibliothèque logique sous-jacente. Nous ferons rarement appel à elle directement, mais elle peut parfois s'avérer utile.
+- **`tidygraph`** : Une surcouche qui permet d'utiliser la logique du Tidyverse sur des objets `igraph`. Cela nous permettra d'utiliser les fonctions qui nous sont familières (`mutate()`, `filter()`) directement sur les nœuds et les arêtes.
+- **`ggraph`** : L'équivalent de `ggplot2` dédié exclusivement au dessin de graphes. Encore une fois, c'est une surcouche sur `igraph` (qui permet aussi de dessiner des graphes).
+
+```{r warning=FALSE, message=FALSE}
+library(tidyverse)
+library(igraph)
+library(tidygraph)
+library(ggraph)
+```
+
+### Création d'un graphe à partir de données
+
+Pour importer un réseau dans R avec `tidygraph`, il existe trois approches principales. Le choix de la méthode dépend directement de la manière dont vos données sont structurées.
+
+Chacune de ces méthodes nous donne un **objet de type `tbl_graph` et `igraph`**, qui peut ensuite être utilisé dans plusieurs fonctions.
+
+#### Approche A : À partir d'une liste d'arêtes
+
+C'est le format le plus fréquent en informatique. On le retrouve typiquement lorsque l'on extrait des *journaux de logs* (qui a envoyé un mail à qui, qui a cliqué sur quel lien) ou des *données de transactions*.
+
+Pour créer le graphe, on utilise la fonction `as_tbl_graph()` de `tidygraph`.
+
+- **Graphe orienté et non-orienté :** Par défaut, le graphe est considéré comme orienté. Pour avoir un graphe non-orienté, on ajoute `directed = FALSE`.
+- **Ajouter du poids :** Il suffit de rajouter une troisième colonne numérique. `tidygraph` va automatiquement détecter qu'il s'agit du poids de la relation.
+
+```{r}
+# Création de la liste des arêtes pour un graphe pondéré. On ajoute une colonne "weight" (ex: nombre de messages échangés)
+edges_df = data.frame(
+  from = c("Alice", "Alice", "Bob"),
+  to   = c("Bob", "Charlie", "Charlie"),
+  weight = c(12, 2, 5)
+)
+
+# Création de l'objet de type graphe non-orienté et pondéré
+graph_from_edges = as_tbl_graph(edges_df, directed = FALSE)
+graph_from_edges
+```
+
+#### Approche B : À partir d'une matrice d'adjacence
+
+La **matrice d'adjacence** provient fréquemment de calculs statistiques intermédiaires. On peut la dériver à partir d'une **matrice de dissimilarités** (pour un graphe entre individus) ou à partir d'une **matrice de corrélation** (pour un graphe entre variables). C'est un format plus lourd que la liste d'arêtes, et il ne peut être utilisé que pour des graphes de petite à moyenne taille.
+
+La fonction à utiliser est également `as_tbl_graph()`. Si le tableau d'entrée est strictement carré et possède des noms de lignes/colonnes identiques, la fonction comprend qu'il s'agit d'une matrice d'adjacence.
+
+Notons que :
+
+- Si la matrice est symétrique, le graphe sera non-orienté.
+- Les valeurs à l'intérieur des cases (autres que 0 et 1) deviennent automatiquement le poids (`weight`) des liens.
+
+```{r}
+# Création d'une matrice carrée de corrélation fictive entre 3 variables
+adjacency_matrix = matrix(
+  c(0, 0.8, 0.1,
+    0.8, 0, 0.4,
+    0.1, 0.4, 0),
+  nrow = 3, 
+  dimnames = list(c("Var_A", "Var_B", "Var_C"), c("Var_A", "Var_B", "Var_C"))
+)
+
+# Opération fréquente de "cutoff"
+adjacency_matrix[adjacency_matrix < 0.2] = 0
+
+# Création de l'objet de type graphe non-orienté et pondéré
+graph_from_adjacency = as_tbl_graph(adjacency_matrix, directed = FALSE)
+graph_from_adjacency
+```
+
+#### Approche C : La construction explicite (Nœuds + Liens)
+
+Cette méthode est utilisée lorsque vos données sont stockées dans une **base de données relationnelle** avec deux tables distinctes : une table décrivant les individus (leurs attributs) et une table décrivant les relations.
+
+Ici, on n'utilise plus `as_tbl_graph()` mais la fonction constructrice `tbl_graph()`, à laquelle on passe explicitement les deux tableaux. Dans la liste des arêtes, les colonnes `from` et `to` doivent contenir une clé d'identification unique des nœuds (ici `name`), que nous préciserons dans l'attribut `node_key` de `tbl_graph()` :
+
+```{r}
+# Le tableau des nœuds avec des attributs (ex: le genre)
+nodes_df = data.frame(
+  name = c("Alice", "Bob", "Charlie"),
+  genre = c("F", "M", "M")
+)
+
+# Le tableau des liens 
+edges_df = data.frame(
+  from = c("Alice", "Alice", "Bob"),
+  to   = c("Bob", "Charlie", "Charlie")
+)
+
+# Création de l'objet de type graphe orienté et non-pondéré
+graph_from_db = tbl_graph(nodes = nodes_df, edges = edges_df, node_key="name", directed = TRUE)
+graph_from_db
+```
+
+## Création du graphe entre les anglicismes
+
+### Jeu de données
+
+Nous allons utiliser ici le jeu de données de sociolinguistique pour construire un graphe entre les anglicismes présents. On commence par charger le jeu de données :
+
+```{r}
+socioling_df = read_csv("data/sociolinguistique_v2.csv") 
+```
+
+On garde uniquement les colonnes de `Hashtag` à `Craft`, que l'on met en ligne car il s'agit maintenant de nos individus
+
+```{r}
+socioling_df = socioling_df %>% 
+  select(Hashtag:Craft)
+```
+
+### Création du graphe via une matrice d'adjacence
+
+Nous allons utiliser ici l'approche B pour construire notre graphe, c'est-à-dire à partir d'une **matrice d'adjacence**. Comme nous l'avons vu, il est possible de créer ces matrices d'adjacence à partir de **matrices de similarité ou dissimilarité**, en fixant un seuil à partir duquel les objets sont reliés ou non.
+
+Ici, nous allons construire la matrice de similarité entre les anglicismes de la manière suivante : si une personne connait deux anglicismes, on ajoute alors 1 au lien qui les unis, si une personne ignore deux anglicismes, on ajoute également 1. Cela s'appelle la **similarité d'appariement simple**, que l'on peut construire avec un calcul matriciel simple :
+
+```{r}
+socioling_mat = as.matrix(socioling_df)
+similarity_mat = 
+  t(socioling_mat) %*% socioling_mat + 
+  t(1-socioling_mat) %*% (1-socioling_mat)
+```
+
+On observe les 10 premières lignes et colonnes :
+
+```{r}
+similarity_mat[1:5, 1:5]
+```
+
+Il s'agit maintenant d'éliminer certaine arêtes, pour ne garder que les liens les plus significatifs. On va définir notre limite comme étant le quantile 75% des valeurs trouvées dans la table :
+
+```{r}
+q75 = quantile(similarity_mat)[4]
+q75
+```
+
+On construit maintenant notre **matrice d'adjacence pondérée** :
+
+```{r}
+adjacency_mat = similarity_mat
+diag(adjacency_mat) = 0 # Pas de boucles sur les nœuds
+adjacency_mat[adjacency_mat < q75] = 0 # Élimination des arêtes trop "faibles"
+```
+
+Et notre graphe et ainsi le suivant :
+
+```{r}
+anglicism_graph = as_tbl_graph(adjacency_mat, directed = FALSE)
+anglicism_graph
+```
+
+::: callout-note
+Si l'on avait obtenu des nœuds isolés, on aurait pu les éliminer de la manière suivante :
+
+```{r}
+anglicism_graph = anglicism_graph %>%
+  activate(nodes) %>% # On "active" les nœuds 
+  filter(!node_is_isolated()) # On enlève les nœuds isolés
+```
+:::
+
+## Visualisations avec `ggraph`
+
+La première chose que nous pouvons faire avec les graphes, c'est de les représenter. Pour cela, le package `ggraph` (<https://ggraph.data-imaginist.com/>) est très utile : il permet d'utiliser la même grammaire que `ggplot2` (les `geom_`, les `aes()`, les `theme()`), mais s'applique sur des objets de type graphe. Il suffit d'apprendre le nom des nouvelles géométries dédiées aux graphes, mais la logique reste identique.
+
+### Introduction aux Layouts
+
+Un problème majeur lorsque l'on affiche un graphe, c'est qu'il faut arriver à placer les points. En effet, les nœuds d'un réseau n'ont **pas de coordonnées naturelles**, il s'agit ainsi de les définir.
+
+C'est ici qu'intervient le **layout** : ce dernier consiste en un algorithme qui calcule des coordonnées pour chaque nœud en fonction de la structure du graphe, afin de rendre le dessin lisible.
+
+Il existe des dizaines de layouts possibles, voici les plus fréquents :
+
+- **`layout = "circle"`** : place tous les nœuds en cercle. Parfait pour les petits graphes avec peu de liens.
+- **`layout = "fr"`** (Fruchterman-Reingold) : ce layout simule des ressorts entre les nœuds liés (qui s'attirent) et une force magnétique entre tous les nœuds (qui se repoussent).
+- **`layout = "kk"`** (Kamada-Kawai) : Un autre algorithme "physique", très bon pour équilibrer les distances, souvent plus symétrique que le `"fr"` sur les graphes de taille moyenne.
+- **`layout = "manual"`** : permet de placer manuellement les points en donnant les coordonnées `x` et `y` des nœuds (ces coordonnées doivent être dans les attributs des nœuds).
+
+Attention cependant, les algorithmes "physiques" commencent par des positions aléatoires des nœuds avant de faire agir les forces. Pour fixer le hasard et avoir un document reproductible, vous devez utiliser `set.seed()` avant de dessiner un graphe.
+
+Commençons par un visuel simple sur notre graphe des anglicismes :
+
+```{r}
+# On fixe la seed
+set.seed(2026)
+# On initialise le graphique (similaire à ggplot())
+ggraph(anglicism_graph, layout = "fr") +
+  # On ajoute la géométrie des arêtes (les lignes)
+  geom_edge_link() +
+  # On ajoute la géométrie des nœuds (les points)
+  geom_node_point()
+```
+
+### Personnalisation
+
+Ce premier jet est difficilement lisible. Nous allons utiliser ici une grammaire similaire à `ggplot2` (par exemple `aes()`) pour améliorer l'apparence visuelle de notre graphe.
+
+Plus spécifiquement, nous allons :
+
+- Donner une épaisseur aux arêtes (avec `edge_width`) à partir de la colonne `weight` (le nombre personnes avec le même rapport - connu ou inconnu - à cette paire d'anglicimes).
+- Ajouter de la transparence (`alpha`) aux lignes pour ne pas écraser les points.
+- Ajouter le nom des anglicismes avec `geom_node_text()`. L'option `repel = TRUE` est nécessaire pour éviter que les labels se chevauchent.
+
+```{r}
+#| warning: false
+ggraph(anglicism_graph, layout = "fr") +
+  geom_edge_link(aes(edge_width = weight), alpha=0.3, color="gray50") +
+  geom_node_point(size=5, color="steelblue") +
+  # Ajout du texte sur les nœuds
+  geom_node_text(aes(label = name), repel = TRUE, size = 3) +
+  # Taille maximale et minimale des arêtes
+  scale_edge_width(range = c(0.5, 3)) +
+  # Titre
+  labs(title = "Réseau des anglicismes") +
+  # Thème général
+  theme_graph()
+```
+
+## Les mesures de centralité
+
+L'affichage d'un réseau peut être intéressant lorsque celui-ci est de taille raisonnable, mais cette approche reste limitée pour en comprendre la structure. Afin de l'analyser, il existe plusieurs **mesures** ou **indices** que l'on peut calculer pour comprendre comment notre réseau est constitué.
+
+Pour cela, il existe deux principaux types d'indicateurs :
+
+1.  **Les indices globaux** : ils décrivent le réseau dans son ensemble. On peut s'intéresser à la *densité* du réseau (le nombre de liens existants), son *diamètre* (le plus long plus court chemin), ou le *nombre moyen de voisins*. Ces mesures servent principalement à comparer des réseaux entre eux, ce que nous n'allons pas faire ici.
+2.  **Les indices locaux (sur les nœuds ou les arêtes)** : ils attribuent un score à chaque nœud ou chaque arête selon sa position structurelle. Les principaux indices ici sont ceux qu'on appelle les **mesures de centralité**.
+
+La "centralité" d'un nœud ou d'une arête n'est pas un concept formellement unique et il existe plusieurs manières de la concevoir. En réalité, il existe plusieurs mesures de centralité qui permettent de capturer différents aspects de la "centralité" de ces objets. On peut en obtenir une liste exhaustive avec `?centrality`, mais nous allons nous concentrer ici sur les principales mesures de centralité sur les nœuds :
+
+- **La centralité de degré (*degree*)** : C'est la mesure la plus simple. On compte le nombre de voisins directs d'un nœud. Dans notre cas, c'est la popularité immédiate (combien de personnes connaissent ou ne connaissent pas l'anglicisme ?).
+- **La centralité d'intermédiarité (*betweenness*)** : Elle mesure à quel point un nœud se trouve sur les **chemins les plus courts** qui relient tous les autres couples de nœuds du réseau. Elle met en valeur les "nœuds ponts", qui permettent de relier plusieurs parties du réseau entre elles.
+- **La centralité de proximité (*closeness*)** : Elle calcule l'inverse de la somme des distances de ce nœud à tous les autres. Un nœud avec une forte proximité est structurellement "proche" de tout le monde et peut diffuser une information très rapidement dans le réseau.
+
+::: callout-warning
+Attention, car certaines de ces mesures nécessitent que le graphe soit constitué d'**une seule composante connexe** (qu'il n'y ait pas de groupes de nœuds complètement séparés). Si ce n'est pas le cas, il est possible d'extraire la composante principale avec le code suivant :
+
+```{r}
+main_graph = anglicism_graph %>%
+  mutate(componant = group_components()) %>%
+  filter(componant == 1)
+```
+:::
+
+### Application
+
+#### Calculs des centralités
+
+La librairie `tidygraph` permet de calculer aisément ces indicateurs à l'aide de `mutate()`, en combinant les fonctions natives du moteur mathématique. Ces mesures sont stockées directement dans un objet de type graphe, dans la partie concernant les nœuds du graphe :
+
+```{r}
+anglicism_graph = anglicism_graph %>%
+  activate(nodes) %>%
+  mutate(
+    degree = centrality_degree(),
+    betweenness = centrality_betweenness(),
+    closeness = centrality_closeness()
+  )
+anglicism_graph
+```
+
+On peut ensuite extraire un classement des nœuds selon la mesure choisie :
+
+```{r}
+# On extrait le tibble des nœuds
+centralities_df = anglicism_graph %>% 
+  activate(nodes) %>%
+  as_tibble()
+
+# On affiche le classement selon la centralité d'intermédiarité 
+degree_ranking = centralities_df %>%
+  select(name, degree) %>%
+  arrange(desc(degree))
+degree_ranking
+```
+
+::: callout-note
+Si vous regardez l'aide sur les centralités, on peut voir que la plupart de ces mesures possèdent un argument `weights`, pour prendre en compte les **poids des arêtes**. Cependant, attention, ces poids peuvent représenter deux quantités opposées : des **proximités** ou des **distances**.
+
+Dans notre réseau d'anglicismes, il s'agit de proximités (le nombre de personnes ayant le même rapport à cette paire d'anglicismes), et l'on peut construire un poids de type distance en prenant (par exemple) l'inverse de cette quantité :
+
+```{r}
+anglicism_graph = anglicism_graph %>%
+  activate(edges) %>%
+  mutate(inv_weight = 1/weight)
+anglicism_graph
+```
+
+Certains indices attendent des poids de type proximité (degré, pagerank) et d'autres attendent des poids de type distance (intermédiarité, proximité). Avant d'utiliser une mesure, il faut bien regarder dans l'aide quel type de poids est attendu.
+
+Ainsi, si nous avions voulu nos centralités en version pondérée, il aurait fallu faire :
+
+```{r}
+anglicism_w_graph = anglicism_graph %>%
+  activate(nodes) %>%
+  mutate(
+    degree = centrality_degree(weights=weight),
+    betweenness = centrality_betweenness(weights=inv_weight),
+    closeness = centrality_closeness(weights=inv_weight),
+  )
+anglicism_w_graph
+```
+
+Que l'on aurait pu explorer en créant le tibble correspondant :
+
+```{r}
+w_centralities_df = anglicism_w_graph %>% 
+  activate(nodes) %>%
+  as_tibble()
+```
+:::
+
+#### Représentation graphique
+
+Utilisons maintenant les **degrés** (non-pondérés) pour modifier l'esthétique de notre réseau. La taille et la couleur des nœuds refléteront directement ce score d'influence globale :
+
+```{r}
+#| warning: false
+ggraph(anglicism_graph, layout = "fr") +
+  geom_edge_link(aes(edge_width = weight), alpha=0.3, color="gray50") +
+  # La taille et la couleur des nœuds dépendent des degrés
+  geom_node_point(aes(size = degree, color = degree)) +
+  geom_node_text(aes(label = name), repel = TRUE, size = 3) +
+  # Personnalisation des couleurs des nœuds
+  scale_color_gradient(low = "lightblue", high = "red3") +
+  # Taille maximale et minimale des nœuds
+  scale_size(range = c(3, 11)) +
+  scale_edge_width(range = c(0.5, 3)) +
+  labs(title = "Réseau des anglicismes") +
+  theme_graph() +
+  # Suppression de la légende 
+  theme(legend.position = "none")
+```
+
+## Détection de communautés
+
+Un des autres aspects de l'étude de la structure du graphe est de voir s'il existe des **groupes** naturels parmi les différents nœuds. En théorie des graphes, on appelle ces groupes des **communautés**. De manière similaire à la variance intra-classe et inter-classes, l'objectif est de regrouper les nœuds de telle sorte qu'il y ait beaucoup de liens *à l'intérieur* d'un groupe, et très peu de liens *entre* les groupes.
+
+### La Modularité et la méthode de Louvain
+
+Pour trouver la meilleure partition possible, il faut une fonction objectif à optimiser. Dans les réseaux, ce score s'appelle la **Modularité** (souvent notée $Q$).
+
+Cette dernière compare **le nombre de liens à l'intérieur d'un groupe avec le nombre de liens entre les communautés**. La modularité prend des valeurs entre -1/2 et 1 :
+
+- Si $Q$ est proche de -1/2 : Il y a de nombreux liens entre les communautés et peu à l'intérieur de ces dernières.
+- Si $Q$ est proche de 0 : Il y a autant de liens entre les communautés qu'à l'intérieur.
+- Si $Q$ s'approche de 1 : Il y a de nombreux liens dans les communautés et peu entre ces dernières.
+
+Les algorithmes de détection de communautés, comme la **méthode de Louvain** que nous appliquerons dans la section suivante, vont tester des milliers de combinaisons en déplaçant les nœuds d'un groupe à l'autre, et s'arrêteront lorsqu'ils auront trouvé le score de modularité $Q$ maximum. Notons que cette méthode, contrairement à la plupart des méthodes de clustering que nous avons vues, ne nécessite pas d'indiquer un nombre de groupes en amont : elle va trouver un nombre optimal de communautés elle-même.
+
+### Application
+
+Appliquons cela au réseau des anglicismes. Le package `tidygraph` nous offre plusieurs algorithmes via les fonctions `group_*()`, comme par exemple `group_louvain()` pour utiliser la méthode de Louvain. Cette fonction peut s'utiliser comme une mesure de centralité, à l'intérieur de `mutate()` :
+
+```{r}
+anglicism_graph = anglicism_graph %>%
+  activate(nodes) %>%
+  mutate(community = as.factor(group_louvain(weights=weight))) # On utilise les poids (attractions) des arêtes
+anglicism_graph
+```
+
+L'algorithme a séparé notre graphe en 4 communautés. On peut les visualiser sur le graphe que nous avons construit précédemment :
+
+```{r}
+#| warning: false
+ggraph(anglicism_graph, layout = "fr") +
+  geom_edge_link(aes(edge_width = weight), alpha=0.3, color="gray50") +
+  # La taille dépend de pagerank, la couleur par rapport à la communauté
+  geom_node_point(aes(size = degree, color = community)) +
+  geom_node_text(aes(label = name), repel = TRUE, size = 3) +
+  scale_size(range = c(3, 11)) +
+  scale_edge_width(range = c(0.5, 3)) +
+  labs(title = "Réseau des anglicismes") +
+  theme_graph() +
+  theme(legend.position = "none")
+```
+
+Comme la détection de communautés s'apparente fortement à une méthode de clustering sur les nœuds d'un graphe, nous pouvons utiliser les méthodes de comparaison vues dans ce chapitre pour étudier les liens entre ces communautés et des variables initialement présentes dans le jeu de données (tests du chi2 et F-ratio, coefficient AMI, etc.).

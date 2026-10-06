@@ -1,0 +1,384 @@
+---
+title: "III. Le Tidyverse II et les statistiques uni- et bi-variées"
+author: "Guillaume Guex"
+number-sections: true
+lang: fr
+---
+
+## Préparation du jeu de données
+
+Pour ce TP nous allons avoir besoin des librairies suivantes :
+
+```{r}
+library(tidyverse)
+library(readxl)
+library(janitor)
+library(DescTools)
+```
+
+### Chargement et aperçu des données
+
+Dans ce TP, nous allons utiliser le jeu de données `data/pragmatique.xlsx`, qui porte sur une sélection de marqueurs de doute, prononcés dans différents contextes. Une description de ce jeu de données se trouve dans le fichier `data/pragmatique_info.docx`.
+
+Commençons par charger le jeu de données :
+
+```{r}
+pragmatique_df = read_excel("data/pragmatique.xlsx")
+pragmatique_df
+```
+
+Le jeu semble relativement propre, on peut voir un résumé rapide de ses variables avec :
+
+```{r}
+pragmatique_df %>%
+  str()
+```
+
+Cependant **ATTENTION**, le nom de la plupart des variables ne respecte pas une syntaxe propre à R (en l'occurrence, il y a des espaces dans les noms) :
+
+```{r}
+names(pragmatique_df)
+```
+
+Ce qui veut dire que, pour les utiliser, on les entourera de \`\` (accents graves). Par exemple pour sortir le vecteur `Timing début` :
+
+```{r}
+head(pragmatique_df$`Timing début`, 20)
+```
+
+### Pré-traitements
+
+La dernière fois, nous avons vu comment utiliser le package `janitor` pour nettoyer les lignes et colonnes vides. Nous pouvons aussi l'utiliser pour **renommer automatiquement les noms de variables** de manière "adéquate" pour R.
+
+```{r}
+pragmatique_df = pragmatique_df %>%
+  clean_names()
+```
+
+```{r}
+names(pragmatique_df)
+```
+
+Nous allons créer une nouvelle variable, qui correspond à la **durée du Lemme** :
+
+```{r}
+pragmatique_df = pragmatique_df %>% 
+  mutate(duree=timing_fin - timing_debut)
+pragmatique_df %>% select(duree)
+```
+
+Il est possible de recoder une variable numérique (p.ex. `duree`) en **variable catégorielle** avec `case_when()` :
+
+```{r}
+pragmatique_df = pragmatique_df %>%
+  mutate(duree_cat=case_when(
+    duree <= 385 ~ "court",
+    (duree > 385) & (duree <= 563) ~ "moyen",
+    duree > 563 ~ "long"
+  ))
+pragmatique_df %>%
+  select(duree, duree_cat) %>%
+  head(10)
+```
+
+Finalement, pour les graphiques est certaines fonctions statistiques, il est utile de **transformer les variables de type "character" en type "factor"** (véritables variables catégorielles dans R). On peut le faire avec `as.factor()` :
+
+```{r}
+pragmatique_df = pragmatique_df %>%
+  mutate(lemme=as.factor(lemme))
+head(pragmatique_df$lemme)
+```
+
+On peut appliquer cette logique à l'ensemble des variables de type "character" du jeu de données avec l'aide de la fonction `accross()` (on s'assure au préalable que les modalités ne possède pas d'espaces en trop) :
+
+```{r}
+pragmatique_df = pragmatique_df %>%
+  mutate(across(where(is.character), str_squish)) %>%
+  mutate(across(where(is.character), as.factor))
+pragmatique_df
+```
+
+## Statistiques uni- et bi-variées
+
+Pour commencer, nous allons faire des statistiques uni-variées sur des vecteurs. Nous verrons comment utiliser ses fonctions dans le cadre du `tidyverse` dans @sec-tidyverse.
+
+### Statistiques uni-variées sur une variable numérique
+
+Les statistiques uni-variées classiques sur des variables numériques sont les suivantes :
+
+-   La **moyenne**, indicateur de tendance centrale.
+-   La **médiane**, indicateur de tendance centrale moins sensible aux valeurs extrêmes.
+-   La **variance** et l'**écart-type**, indicateurs de dispersion.
+-   Le **minimum** et **maximum**, autres indicateurs de dispersion.
+-   Les **quantiles**, coupant la distribution en plusieurs groupes de proportions pré-définies.
+
+Pour faire la **moyenne**, la fonction à utiliser est `mean()` :
+
+```{r}
+mean(pragmatique_df$duree)
+```
+
+La **médiane** s'obtient avec `median()` :
+
+```{r}
+median(pragmatique_df$duree)
+```
+
+La **variance** avec `var()` :
+
+```{r}
+var(pragmatique_df$duree)
+```
+
+L'unité de la variance est l'unité de la variable au carré. Pour obtenir une valeur dans la même unité que notre variable, on calcule l'**écart-type**, qui correspond à la racine carrée de la variance :
+
+```{r}
+sd(pragmatique_df$duree)
+sqrt(var(pragmatique_df$duree))
+```
+
+Si notre variable se distribue selon une loi normale, on sait qu'à-peu-près 95% des valeurs sont comprises entre +/- deux fois l'écart-type (1.96 pour être plus précis) :
+
+```{r}
+mean(pragmatique_df$duree) - 1.96*sd(pragmatique_df$duree)
+mean(pragmatique_df$duree) + 1.96*sd(pragmatique_df$duree)
+```
+
+Les **valeurs minimale et maximale** s'obtiennent respectivement avec `min()` et `max()` :
+
+```{r}
+min(pragmatique_df$duree)
+max(pragmatique_df$duree)
+```
+
+Il existe une infinité de **quantiles** différents. Ils sont définis par rapport à un pourcentage. Par exemple, on parle du quantile-0.25 la valeur telle que 25% des observations de la variable lui sont inférieures. On les obtient avec `quantile()`, avec le deuxième argument qui doit être un vecteur contenant les pourcentages désirés :
+
+```{r}
+quantile(pragmatique_df$duree, c(0.25, 0.33, 0.5, 0.66, 0.75))
+```
+
+Notons que le quantile 50% correspond à la médiane.
+
+Finalement, on peut également obtenir **plusieurs statistiques** d'un coup en utilisant la fonction `summary()` :
+
+```{r}
+summary(pragmatique_df$duree)
+```
+
+Cette dernière peut même être appliquée à un tableau entier, auquel cas elle retournera un résumé pour chaque variable :
+
+```{r}
+summary(pragmatique_df)
+```
+
+On anticipe un peu (les graphiques viendront par la suite), mais voici la distribution de la variable `duree`:
+
+```{r}
+ggplot(pragmatique_df, aes(x=duree)) +
+  geom_histogram()
+```
+
+### Statistiques uni-variées sur une variable catégorielle
+
+Il existe nettement moins d'indicateurs usuels pour une variable catégorielle. Les principaux sont :
+
+-   Les **fréquences** (absolues ou relatives) des différentes modalités.
+-   Le **mode**, qui correspond à la modalité la plus fréquente.
+
+Les **modalités** d'une variable catégorielle s'obtiennent avec `unique()` ou `levels()`:
+
+```{r}
+unique(pragmatique_df$lemme)
+levels(pragmatique_df$lemme)
+```
+
+Pour obtenir les **fréquences absolues** d'une variable catégorielle, on utilise `table()`:
+
+```{r}
+table(pragmatique_df$lemme)
+```
+
+Pour les **fréquences relatives**, on doit faire un calcul :
+
+```{r}
+table(pragmatique_df$lemme) / sum(table(pragmatique_df$lemme))
+```
+
+Le **mode** s'obtient avec la fonction `Mode()` (de `DescTools`) :
+
+```{r}
+Mode(pragmatique_df$lemme)
+```
+
+### Statistiques bi-variées
+
+Les statistiques bi-variées que nous allons voir sont peu nombreuses.
+
+Entre deux variables numériques, on peut utiliser la **covariance** ou la **corrélation**, avec `cov()` et `cor()` :
+
+```{r}
+cov(pragmatique_df$timing_debut, pragmatique_df$duree)
+cor(pragmatique_df$timing_debut, pragmatique_df$duree)
+```
+
+Il y a un faible lien positif entre le timing du début de la durée.
+
+Entre deux variables catégorielles, on peut afficher le **tableau croisé** avec `table()` :
+
+```{r}
+table(pragmatique_df$lemme, pragmatique_df$genre)
+```
+
+### Gestion des valeurs manquantes
+
+Il est important de noter que les fonctions de statistiques uni- et bi-variées ne gèrent pas les **valeurs manquantes**. Par défaut, elles retournent `NA`. Pour les faire fonctionner, il faut ajouter l'argument `na.rm=TRUE` :
+
+```{r}
+test = c(4, 5, NA, 8)
+mean(test)
+```
+
+```{r}
+mean(test, na.rm=TRUE)
+```
+
+## Utilisation dans le tidyverse {#sec-tidyverse}
+
+### Calcule d'indices avec `mutate()`
+
+Le calcul d'indice statistiques dans le tidyverse peut intervenir dans des contextes différents.
+
+Si l'on utilise aucune *agrégation* ou *groupes* (voir @sec-sac) et que l'on utilise directement `mutate()`, les fonctions de statistiques vont calculer l'indice sur l'ensemble du jeu de données, et retourner la même valeur pour chaque observation :
+
+```{r}
+pragmatique_df = pragmatique_df %>%
+  mutate(m_duree=mean(duree))
+```
+
+```{r}
+pragmatique_df %>%
+  select(id_marqueur, lemme, duree, m_duree)
+```
+
+::: callout-tip
+### Une application : la normalisation des variables
+
+Calculer des indices constants sur une colonne peut parfois être utile : on peut s'en servir par exemple pour *normaliser* nos variables (en construisant deux colonnes auxiliaires pour la moyenne et l'écart-type) :
+
+```{r}
+pragmatique_df = pragmatique_df %>%
+  mutate(m_duree=mean(duree), sd_duree=sd(duree), duree_norm=(duree - m_duree) / sd_duree)
+pragmatique_df %>%
+  select(id_marqueur, lemme, duree, m_duree, sd_duree, duree_norm)
+```
+
+Il existe cependant un raccourci pour cela, avec `scale()`, qui fait exactement la même chose :
+
+```{r}
+pragmatique_df = pragmatique_df %>%
+  mutate(duree_norm2=scale(duree))
+pragmatique_df %>%
+  select(id_marqueur, lemme, duree, m_duree, sd_duree, duree_norm, duree_norm2)
+```
+
+On peut s'assurer que les deux variables sont bien normalisées avec :
+
+```{r}
+mean(pragmatique_df$duree_norm)
+sd(pragmatique_df$duree_norm)
+mean(pragmatique_df$duree_norm2)
+sd(pragmatique_df$duree_norm2)
+```
+:::
+
+### Utilisation de `summarize()` et `reframe()`
+
+Si la fonction ne retourne qu'un résultat, il est souvent plus judicieux d'utiliser la fonction `summarize()` (ou `summarise()`), qui **applique l'indice et combine toutes les observations** en une seule :
+
+```{r}
+pragmatique_df %>%
+  summarize(m_duree=mean(duree))
+```
+
+On peut également l'utiliser pour créer **plusieurs indices** (la fonction `n()` compte le nombre d'observations) :
+
+```{r}
+pragmatique_df %>%
+  summarize(n_observations = n(), m_duree=mean(duree), med_duree=median(duree), sd_duree=sd(duree))
+```
+
+Si l'on veut utiliser une fonction qui retourne **plusieurs résultats**, on utilisera plutôt `reframe()` :
+
+```{r}
+pragmatique_df %>% 
+  reframe(quantiles = c("P25", "P50", "P75"),
+          q_duree=quantile(duree, c(0.25, 0.5, 0.75)))
+```
+
+### Définir des groupes et la logique du "Split-Apply-Combine" {#sec-sac}
+
+La puissance de `summarize()` devient plus évidente lorsque l'on souhaite faire des statistiques par **groupe**. La logique devient alors celle du "Split-Apply-Combine", qui effectue les opérations suivantes :
+
+1.  **Split** : le jeu de données est divisé en groupes selon une ou plusieurs variables.
+2.  **Apply** : une fonction est appliquée à chaque groupe pour calculer des statistiques ou effectuer des transformations.
+3.  **Combine** : les résultats de chaque groupe sont combinés pour former un nouveau jeu de données
+
+L'opération de *split*, c'est-à-dire celle de **définir les groupes**, se fait en amont des deux autres grâce à la fonction `group_by()` :
+
+```{r}
+pragmatique_df %>%
+  group_by(lemme)
+```
+
+On peut même utiliser **plusieurs variables categorielles** pour définir des groupes plus fins :
+
+```{r}
+pragmatique_df %>%
+  group_by(lemme, genre)
+```
+
+Une fois des groupes formés, on peut utiliser `mutate()` pour passer à l'étape **apply**. Les indices sont ainsi calculés indépendamment sur chaque groupe :
+
+```{r}
+pragmatique_df %>%
+  group_by(lemme, genre) %>%
+  mutate(m_duree=mean(duree), sd_duree=sd(duree)) %>%
+  select(genre, lemme, m_duree, sd_duree)
+```
+
+C'est avec `summarize()` (ou `reframe()`) que l'**apply est suivi d'un combine** : le calcul est effectué sur chaque groupe et le résultat est combiné par groupe (d'ailleurs, la dernière granularité du groupe disparait) :
+
+```{r}
+pragmatique_df %>%
+  group_by(lemme, genre) %>%
+  summarize(n_obs = n(), m_duree=mean(duree), sd_duree=sd(duree))
+```
+
+Si les groupes ont été définis avec plusieurs variables, un **enchaînement** de `summarize()` va donner des statistiques de plus en plus grossières :
+
+```{r}
+gr_1 = pragmatique_df %>%
+  group_by(lemme, genre) %>%
+  summarize(n_obs=n(), m_duree=mean(duree)) 
+gr_2 = gr_1 %>%
+  summarize(n_obs=sum(n_obs), m_duree=mean(m_duree)) 
+gr_1
+gr_2
+```
+
+Le besoin de compter les effectifs par groupe (`group_by(...) %>% summarize(n = n())`) est tellement fréquent en statistiques qu'il existe une fonction raccourci dédiée : `count()`. C'est l'équivalent Tidyverse de la fonction `table()` que nous avons vue plus tôt, mais elle retourne un tibble prêt à l'emploi (et permet de classer les observations) :
+
+```{r}
+pragmatique_df %>%
+  count(lemme, sort=TRUE) %>%
+  mutate(freq_rel = n / sum(n))
+```
+
+Finalement, la fonction `reframe()` nous permet d'obtenir **plusieurs valeurs par groupe**, et duplique donc le nombre de lignes par le nombre de résultats :
+
+```{r}
+pragmatique_df %>%
+  group_by(lemme) %>%
+  reframe(quantiles = c("P25", "P50", "P75"),
+          q_duree=quantile(duree, c(0.25, 0.5, 0.75)))
+```

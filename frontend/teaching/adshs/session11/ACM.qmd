@@ -1,0 +1,255 @@
+---
+title: "XI. Analyse des correspondances multiples"
+author: "Guillaume Guex"
+number-sections: true
+lang: fr
+---
+
+## Introduction
+
+Dans ce TP, nous allons voir comment effectuer une **Analyse des 
+correspondances multiples (ACM)** avec `FactoMineR` et `factoextra`. Cette 
+méthode généralise l'analyse factorielle des correspondances en permettant de 
+représenter **plusieurs variables catégorielles** en même temps.
+
+La première étape (faite de manière sous-jacente, pas besoin de le faire explicitement) consiste à transformer ce jeu de données en **tableau disjonctif complet**, en recodant les variables catégorielles avec des *dummies* :
+
+```{r}
+#| layout-ncol: 2
+#| echo: false
+#| message: false
+library(knitr)
+library(FactoMineR)
+library(factoextra)
+
+# Construction des données
+donnees = data.frame(
+  Individu = c("P1", "P2", "P3"),
+  Genre = c("Homme", "Femme", "Homme"),
+  Transport = c("Vélo", "Voiture", "Bus")
+)
+
+# Affichage des données
+kable(donnees, caption="Données")
+
+# Transformation en tableau disjonctif complet
+tdc = tab.disjonctif(donnees[, 2:3]) 
+tdc_complet = cbind(Individu=donnees$Individu, as.data.frame(tdc))
+
+# Affichage de ce tableau
+kable(tdc_complet, caption="Tableau disjonctif complet")
+```
+
+L'ACM n'est ensuite rien d'autre qu'une AFC appliquée sur ce tableau disjonctif complet. Ce tableau est donc considéré comme une **table de contingence individus** $\times$ **modalités**. Cette approche a plusieurs conséquences :
+
+- **Biplot individus-modalités** : Contrairement à l'AFC qui croise deux variables, l'ACM permet de projeter les individus avec les modalités. On peut ainsi voir les attractions entre individus et modalités.
+- **Calculs sur les variables** : On peut calculer des quantités sur un groupe de modalités faisant partie d'une même variable, permettant ainsi de comprendre l'effet global d'une variable.
+- **Poids des variables** : Les variables possédant plus de modalités ont une inertie plus forte. Il est donc parfois nécessaire de regrouper les modalités avant l'analyse, pour avoir des variables avec un nombre de modalités équivalent.
+
+Nous allons voir tous ces concepts plus en détail avec la pratique.
+
+Les librairies nécessaires sont les suivantes :
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(readxl)
+library(FactoMineR)
+library(factoextra)
+```
+
+## L'analyse des correspondances multiples
+
+### Chargement et pré-traitements
+
+Commençons par charger le jeu de données de pragmatique :
+```{r}
+pragmatique_df = read_excel("data/pragmatique.xlsx")
+```
+
+Pour illustrer l'ACM, nous allons voir les relations qui existent entre 
+les variables `Type morpho-syntaxique`, `Position du marqueur dans l'UCT` et
+`Direction`. Certaines de ces variables nécessitent un léger pré-traitement.
+
+La variable `Position du marqueur dans l'UCT`, possède les modalités 
+`"début*"` et `"fin*"`, qui indiquent que le marqueur est "presque" dans cette 
+position, mais qu'il y a un petit élément de langage (p.ex. "heu", "ben") qui
+précède ou succède au marqueur. Dans ce TP, pour simplifier l'analyse, nous 
+allons considérer ces modalités comme étant identiques à leur équivalent sans 
+étoile. 
+
+La variable `Direction`, quant à elle, possède une modalité `"à l’intérieur"`, 
+qui diffère de `"à l'intérieur"` de par son apostrophe. Nous allons corriger 
+cette erreur.
+
+Ces recodages s'effectuent avec la fonction `recode()`, et nous en profitons 
+pour nommer les variables recodées avec un nom plus facile d'utilisation : 
+```{r}
+pragmatique_df = pragmatique_df %>%
+  mutate(Type = `Type morpho-syntaxique`,
+         Position = recode(`Position du marqueur dans l'UCT`,
+                           "début*" = "début",
+                           "fin*" = "fin"),
+         Direction = recode(Direction, "à l’intérieur" = "à l'intérieur"))
+```
+
+On va maintenant créer un jeu de données contenant uniquement nos variables 
+étudiées :
+```{r}
+pragmatique_red_df = pragmatique_df %>%
+  select(Type, Position, Direction)
+```
+
+***
+
+### L'ACM avec FactoMineR
+
+Pour effectuer l'analyse des correspondances multiples, on utilise la fonction
+`MCA()` :
+```{r}
+mca_res = MCA(pragmatique_red_df, graph=F)
+mca_res
+```
+
+Le retour de cette fonction nous donne plusieurs quantités, dont la plupart 
+similaires à l'AFC. Cependant, on trouve d'autres résultats, comme par exemple
+le **tableau disjonctif**, qui a servi de base à l'ACM : 
+```{r}
+head(mca_res$call$Xtot)
+```
+
+Ce tableau illustre bien le principe de **recodage binaire** de variables
+catégorielles. Une variable catégorielle avec $m$ modalités peut être recodée 
+par $m$ colonnes représentant $m$ variables binaires. Si l'individu possède 
+la modalité $i$, alors un 1 sera présent dans la colonne correspondante, et 0
+dans les colonnes des autres modalités.
+
+Le résultat principal de l'ACM est le **biplot**, qui s'obtient avec 
+`fviz_mca_biplot()` de `factoextra` :
+```{r}
+fviz_mca_biplot(mca_res)
+```
+
+Et on peut obtenir la répartition de l'information sur les différents axes 
+avec :
+```{r}
+fviz_eig(mca_res, addlabels=TRUE)
+```
+
+Nous allons maintenant voir comment obtenir des résultats plus détaillés dans
+la prochaine section.
+
+## Exploration des résultats
+
+### Les variables
+
+Lors d'une ACM, on se focalise généralement sur l'interprétation des modalités 
+des différentes variables, dont l'affichage peut être isolé des individus 
+grâce à la fonction `fviz_mca_var()`. Ici, nous allons colorer les différentes
+modalités selon leur appartenance aux variables.
+
+On commence par extraire le nombre de modalités de chaque variable grâce aux 
+dimensions de la table de contingence sur notre jeu de données :
+```{r}
+n_modalities = dim(table(pragmatique_red_df))
+n_modalities
+```
+
+On peut donc construire un vecteur contenant l'appartenance de chaque modalité 
+aux variables :
+```{r}
+modality_type = rep(names(pragmatique_red_df), n_modalities)
+modality_type
+```
+
+On peut alors tracer le graphique des modalités avec la coloration 
+correspondant aux différentes variables (pour rappel, le paramètre `repel=T` 
+empêche la superposition des éléments textuels) :
+```{r}
+fviz_mca_var(mca_res,
+             repel = TRUE, 
+             col.var = modality_type,
+             mean.point = FALSE,
+             legend.title = "Variables")
+```
+
+Les contributions aux axes s'obtiennent avec `fviz_contrib()` :
+```{r}
+fviz_contrib(mca_res, choice="var", axes=c(1, 2))
+```
+
+Et la qualité de la représentation (la corrélation ou cos2) avec 
+`fviz_cos2()` :
+```{r}
+fviz_cos2(mca_res, choice="var", axes=c(1, 2))
+```
+
+Mais on peut également obtenir la corrélation entre l'entièreté d'une 
+variable (i.e. toutes ses modalités) et les axes via `mca_res$var$eta2` :
+```{r}
+mca_res$var$eta2
+```
+
+Ce qui peut être représenté graphiquement par `fviz_mca_var()` avec l'argument `choice="mca.cor"` :
+```{r}
+fviz_mca_var(mca_res, choice="mca.cor")
+```
+
+### Les individus
+
+Comme nous l'avons vu sur le biplot, la représentation des individus 
+est généralement moins informative (surtout si ces derniers sont anonymes)
+que la représentation des variables.  Cependant, on peut utiliser une 
+variable auxiliaire (ou plusieurs) afin de gagner de l'information sur la 
+position des individus. Ici, nous allons cartographier les différents lemmes.
+
+On commence par extraire le vecteur des lemmes :
+```{r}
+lemme = pragmatique_df$Lemme
+```
+
+Et on réutilise `fviz_mca_biplot()` pour afficher nos individus avec nos 
+modalités. Plusieurs options sont utilisées ici :
+
+* `goem.ind="point"` permet de n'afficher que des points, sans label.
+* `col.ind=lemme` donne des couleurs aux individus correspondant aux lemmes.
+* `addEllipses=T` affiche également des ellipses illustrant la répartition 
+                  des différents lemmes.
+* `ellipse.type="confidence"` permet de tracer des ellipses illustrant 
+                                 un intervalle de confiance sur la moyenne.
+
+Avec ces options, le résultat donne :
+```{r}
+fviz_mca_biplot(mca_res, 
+                geom.ind="point", 
+                col.ind=lemme, 
+                col.var=modality_type,
+                addEllipses=T,
+                ellipse.type="confidence", repel=T)
+```
+
+Notez qu'on aurait pu obtenir un résultat similaire (mais pas complètement 
+identique) en définissant `Lemme` comme une **variable supplémentaire**.
+
+On sélectionne `Lemme` en plus de nos trois variables étudiées :
+```{r}
+pragmatique_sup_df = pragmatique_df %>%
+  select(Lemme, Type, Position, Direction)
+```
+
+On effectue l'ACM en précisant que notre première colonne (`quali.sup=1`) est
+une variable supplémentaire :
+```{r}
+mca_sup_res = MCA(pragmatique_sup_df, graph=F, quali.sup=1)
+```
+
+Et on affiche à nouveau le graphique des variables, qui contiendra alors les 
+modalités de la variable supplémentaire :
+```{r}
+fviz_mca_var(mca_sup_res, 
+             col.var=modality_type, 
+             repel=T,
+             mean.point = FALSE,)
+```
+
+Notez que ce résultat diffère légèrement du précédent car cette fois-ci, 
+les Lemmes sont dans l'espace des variables (alors qu'avant 
+ils étaient dans l'espace des individus). Pour comparer les lemmes avec les modalités étudiées, on se basera sur la **distance** lorsque les points sont dans le même espace, alors que précédemment, lorsque les Lemmes sont dans l'espace des individus et les modalités dans l'espace des variables, il faut plutôt considérer le **produit scalaire** (la direction) pour les comparer. 

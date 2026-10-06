@@ -1,0 +1,228 @@
+---
+title: "X. Regression linéaire"
+author: "Guillaume Guex"
+number-sections: true
+lang: fr
+---
+
+## Introduction et données
+
+Dans ce TP, nous allons voir comment faire un modèle de 
+**régression linéaire** en R. La régression linéaire cherche à **prédire une
+variable numérique** d'un individu en fonction d'autres de ses variables. 
+C'est une méthode emblématique en statistiques, et il existe de nombreuses 
+méthodes qui dérivent de cette logique. De part son importance en statistiques, 
+les fonctions permettant la construction de modèles linéaires font partie de 
+la base de R.
+
+Les librairies nécessaires pour ce TP sont les suivantes :
+```{r}
+library(tidyverse)
+library(fastDummies)
+library(leaps)
+```
+
+Nous allons utiliser ici le jeu de données de sociolinguistique pré-traité. On commence par le charger et transformer ses variables de type `character` en `factor` :
+```{r}
+socioling_df = read_csv("data/sociolinguistique_v2.csv") %>%
+  mutate(across(where(is.character), factor))
+  
+```
+
+### Recodage de variables ordinales ou catégorielles 
+
+La régression linéaire classique permet de faire des prédictions sur une 
+variable numérique à partir d'une ou plusieurs autres **variables numériques
+uniquement**. Cependant, il est possible de **recoder** les variables 
+ordinales ou catégorielles comme variables numériques, afin de les utiliser 
+dans un modèle de régression. 
+
+Pour une **variable ordinale**, on va utiliser des nombres pour chaque niveau
+des réponses. Par exemple, ici, on va recoder les différents niveaux d'accord 
+avec la fonction suivante :
+```{r}
+recode_to_numeric = function(var_accord){
+  var_accord_numeric = case_when(var_accord == "En désaccord total" ~ -2,
+                                 var_accord == "Plutôt en désaccord" ~ -1,
+                                 var_accord == "Neutre" ~ 0,
+                                 var_accord == "Plutôt d'accord" ~ 1,
+                                 var_accord == "Tout à fait d'accord" ~ 2)
+  return(var_accord_numeric)
+}
+```
+
+Que l'on peut ensuite appliquer avec **mutate_at()** sur toutes les variables
+d'accord :
+```{r}
+socioling_df = socioling_df %>%
+  mutate_at(vars(acc_mode:acc_menace), recode_to_numeric)
+socioling_df
+```
+
+Pour les **variables catégorielles**, on utilise l'**encodage binaire** : 
+Chaque modalité devient une colonne qui contiendra un 1 si l'individu a cette
+modalité et un 0 sinon. On peut obtenir cet encodage avec la fonction 
+`dummy_cols()` du package `fastDummies` :
+```{r}
+head(dummy_cols(socioling_df$genre))
+```
+
+Cependant, nous le verrons plus tard, cet encodage s'effectue automatiquement 
+lorsque l'on utilise des modèles linéaires avec R. Il n'est donc pas nécessaire
+de l'appliquer explicitement.
+
+Notre jeu de données est prêt, il ne nous reste plus qu'à créer un jeu de 
+données réduit, contenant uniquement les colonnes que nous allons utiliser :
+```{r}
+socioling_red_df = socioling_df %>%
+  select(c(annee, genre, acc_mode, acc_exclu, acc_accept, acc_enrich, acc_suppr, acc_menace,
+           ou, evite))
+```
+
+## La régression linéaire
+
+### La formule de régression  
+
+La **régression linéaire** s'effectue avec la fonction `lm()` de R. Cette 
+dernière demande comme premier argument une **formule** qui a une structure 
+particulière et qui utilise l'opérateur `~`.
+
+La structure usuelle d'une formule est la suivante :
+
+```
+<variable réponse> ~ <variable 1> + <variable 2> + ... + <variable p>
+```
+
+Mais on peut également utilisé d'autres syntaxes :
+
+* En utilisant `<variable réponse> ~ .`, on indique que l'on prédit avec 
+  toutes les variables du jeu de données.
+* En ajoutant `-1` à la formule, la droite de régression passera par 
+   l'origine.
+* `<variable i>^n` permet d'ajouter l'ordre $n$ de la variable 
+* `<variable i>*<variable j>` permet d'ajouter les termes d'interaction.
+* Plusieurs fonctions peuvent être utilisées sur les variables, comme `exp()` 
+  ou `log()`.
+
+### Un modèle simple 
+
+Commençons par faire un modèle linéaire extrêmement simple : on va essayer
+de prédire l'année de naissance de l'individu en fonction de sa réponse à
+la question « Il faudrait supprimer l'anglais dans les publicités, affiches, 
+magazines et médias ». Ce modèle se construit de la manière suivante :
+```{r}
+lm_mini_res = lm(annee ~ acc_suppr, data=socioling_red_df)
+lm_mini_res
+```
+
+En affichant le résultat, on obtient la valeur des **coefficients de 
+régression**. En utilisant `summary()` sur notre résultat, plusieurs autres 
+informations sont disponibles, tel que la **signicativité des coefficients**,
+le **`R^2`** et le **`R^2` ajusté** : 
+```{r}
+summary(lm_mini_res)
+```
+
+On peut également extraire plusieurs informations du résultat de la 
+régression :
+```{r}
+names(lm_mini_res)
+```
+
+Ce qui nous permet, par exemple, de tracer la **droite de régression** :
+```{r}
+ggplot(socioling_red_df) +
+  geom_point(aes(x=acc_suppr, y=annee)) +
+  geom_abline(aes(intercept=lm_mini_res$coefficients[1], 
+                  slope=lm_mini_res$coefficients[2]), color="red")
+```
+
+### Sélection de modèles
+
+Nous allons maintenant voir comment faire le "meilleur modèle" à partir de 
+nos variables pré-sélectionnées. On commence par faire le modèle "complet", 
+c'est-à-dire avec toutes les variables contenues dans notre jeu de données :
+```{r}
+lm_complet = lm(annee ~ ., data=socioling_red_df)
+summary(lm_complet)
+```
+
+On voit que la plupart des coefficients de régression sont loin d'être 
+significatifs. Cependant, ce problème peut être dû au fait que la régression
+possède de nombreux prédicteurs qui sont fortement liés entre eux. 
+
+Le package `leaps` nous permet de sélectionner le "meilleur modèle" selon
+différents critères. Pour cela, on utilise la fonction `regsubsets()`, qui 
+crée une variable contenant l'évaluation de tous les modèles découlant de 
+notre modèle complet : 
+```{r}
+lm_subset_res = regsubsets(annee ~ ., data=socioling_red_df)
+```
+
+Les valeurs des critères R^2 ajusté (à maximiser), CP et BIC (à minimiser), 
+selon les différents modèles testés peuvent alors s'afficher avec :
+```{r}
+plot(lm_subset_res, scale="adjr2")
+plot(lm_subset_res, scale="Cp")
+plot(lm_subset_res, scale="bic")
+```
+
+Si l'on choisit d'optimiser le BIC, on voit que l'on doit garder `acc_accept`, 
+`acc_enrich`, `acc_suppr` et la modalité `Autre` de la variable `ou`. On va donc
+explicitement construire les modalités de cette variable `plus` :
+```{r}
+socioling_red_new_df = socioling_red_df %>%
+  dummy_cols("ou")
+socioling_red_new_df
+```
+
+Et faire la nouvelle régression :
+```{r}
+lm_optimal_res = lm(annee ~ acc_accept + acc_enrich + acc_suppr + ou_Autre, 
+                    data=socioling_red_new_df)
+summary(lm_optimal_res)
+```
+
+Un bon modèle de régression doit, en principe, suivre plusieurs hypothèses
+de travail. En particulier, il ne doit pas avoir de "structure particulière"
+dans ses termes d'erreurs. Cela peut être vérifier en affichant le 
+**diagramme des résidus** :
+```{r}
+ggplot() + 
+  geom_point(aes(x=lm_optimal_res$fitted.values, lm_optimal_res$residuals))
+```
+
+Ici, il n'y a pas une structure trop marquée, ce que semble dire que cette 
+régression est valable.
+
+Une fois un modèle construit, on peut faire des prédictions sur des nouveaux 
+individus. Construisons un tableau contenant deux nouvelles entrées :
+```{r}
+new_indiv = tibble(acc_accept=c(-2, 2),
+                   acc_enrich=c(2, -2),
+                   acc_suppr=c(-2, 2),
+                   ou_Autre=c(0, 1))
+new_indiv
+```
+
+Ici, la première ligne représente une personne qui : 
+
+* N'est pas du tout d'accord avec «On est obligé d'utiliser des anglicismes 
+  pour se faire accepter en société»,
+* Est totalement d'accord avec «Les anglicismes enrichissent la 
+  langue française».
+* N'est pas du tout d'accord avec «Il faudrait supprimer l'anglais dans les 
+  publicités, affiches, magazines et médias»
+* Qui a l'impression d'entendre des anglicismes "Dans les groupes 
+  de jeunes personnes", "Au travail", "Dans la rue" ou "A la maison".
+
+La deuxième ligne représente une personne qui a répondu des réponses 
+diamétralement opposées à le première. 
+
+L'estimation de leurs ages s'obtient alors avec :
+```{r}
+predict(lm_optimal_res, new_indiv)
+```
+
+Ce qui nous donne une estimation d'une personne née en 2002 dans le premier 
+cas et née en 1951 pour le deuxième cas.
