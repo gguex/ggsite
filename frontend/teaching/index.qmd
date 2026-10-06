@@ -1,5 +1,6 @@
 ---
 title: "Teaching"
+lang: en
 description: "My teaching materials from current and past courses."
 listing:
   contents: 

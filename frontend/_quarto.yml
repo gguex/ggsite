@@ -1,11 +1,17 @@
 project:
   type: website
   output-dir: _site
-  resources:       
+  resources:
     - assets/
   preview:
-    port: 4200        
+    port: 4200
     browser: true
+
+# Cache computational outputs (R / Python) in _freeze/ so that rendering and
+# publishing do not re-execute every page. Delete a page's _freeze entry (or
+# edit the page) to force re-execution.
+execute:
+  freeze: auto
 
 lang: en
 

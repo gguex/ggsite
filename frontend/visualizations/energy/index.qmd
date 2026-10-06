@@ -1,15 +1,14 @@
 ---
 title: "Energy Consumption Streamgraph"
-description: ""
-date: today
+description: "Energy consumption by source and region since 1965 (Our World in Data)."
+date: 2026-04-04
+categories: [Energy, OJS, R]
 image: image.png
-format:
-  html:
-    code-fold: false
-    page-layout: full
 execute:
   echo: false
 ---
+
+Each layer is one energy source, stacked from fossil fuels at the bottom to renewables at the top, and its thickness is the primary energy consumed that year, in terawatt-hours (TWh). Choose a region to redraw the chart, and hover a layer to read the exact value for a given year. Data from Our World in Data, from 1965 onwards.
 
 ```{r}
 #| label: data-preparation
@@ -18,7 +17,6 @@ execute:
 library(dplyr)
 library(tidyr)
 library(readr)
-library(quarto)
 
 # 1. Load the raw data from Our World in Data (this might take a few seconds)
 raw_url <- "https://raw.githubusercontent.com/owid/energy-data/master/owid-energy-data.csv"

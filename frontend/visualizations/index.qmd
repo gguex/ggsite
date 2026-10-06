@@ -10,6 +10,9 @@ listing:
   filter-ui: false
   fields: [image, title, description, date, categories]
 title-block-banner: true
+format:
+  html:
+    page-layout: article
 ---
 
 ## Featured Projects

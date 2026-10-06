@@ -1,7 +1,8 @@
 ---
 title: "Conflicts in the world 2000-2025"
-description: ""
-date: today
+description: "Animated map of armed conflict events worldwide since 2000 (UCDP GED data)."
+date: 2026-10-06
+categories: [World, Maps, OJS, R]
 image: image.png
 format:
   html:
@@ -11,6 +12,8 @@ execute:
   echo: false
   warning: false
 ---
+
+Every dot is an armed conflict event recorded by the Uppsala Conflict Data Program (UCDP): red when at least one civilian was killed, yellow when only armed actors died, and larger when the number of deaths is higher. The animation runs month by month from January 2000 and loops at the end. Past events slowly fade out, so the bright areas are the places where violence is ongoing.
 
 ```{r}
 #| message: false

@@ -1,0 +1,11 @@
+# Python packages used by the Quarto site (frontend/).
+# R packages are listed in the README.
+jupyter==1.1.1
+pandas==2.3.3
+numpy==2.3.5
+plotly==6.5.0
+itables==2.7.0
+matplotlib==3.10.8
+PyYAML==6.0.3
+shinylive==0.8.5
+shinywidgets==0.7.0

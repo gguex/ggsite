@@ -1,16 +1,14 @@
 ---
-title: "Swiss Health (OJS Interactive)"
-description: "Interactive map with auto-play animation and rich tooltips."
+title: "Swiss Health Insurance Premiums 2014-2024"
+description: "Choropleth map of the average monthly health insurance premium in each canton, with a year slider and auto-play."
 date: 2024-05-21
-categories: [Switzerland, Maps, OJS]
+categories: [Switzerland, Health, Maps, OJS]
 image: image.png
-format:
-  html:
-    toc: false
-    page-layout: full
 ---
 
 ## Evolution of Premiums
+
+The map colours each canton by the average monthly premium of the mandatory basic health insurance, in Swiss francs. Move the year slider, or switch on Auto-Play, to follow the rise of premiums between 2014 and 2024, and hover a canton to read its value.
 
 ```{ojs}
 //| echo: false

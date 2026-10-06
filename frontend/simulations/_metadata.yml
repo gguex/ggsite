@@ -1,0 +1,5 @@
+# Shared settings for every simulation / algorithm demo page.
+format:
+  html:
+    toc: false
+    page-layout: full

@@ -1,0 +1,52 @@
+---
+title: "Backend demo (FastAPI)"
+description: "A minimal round-trip between a page and the Python backend."
+date: 2026-01-15
+categories: [FastAPI, Demo]
+# Hidden from the published site until the backend is deployed (see backend/README.md)
+draft: true
+---
+
+## Interactive Simulation
+
+Enter two numbers below. The calculation will be performed by your Python backend (FastAPI).
+
+<div>
+  <label>Parameter X: <input type="number" id="valX" value="10"></label><br>
+  <label>Parameter Y: <input type="number" id="valY" value="5"></label><br>
+  <button onclick="runSim()" style="margin-top:10px; padding:5px 10px; cursor:pointer;">Run Simulation</button>
+</div>
+
+<div id="result-box" style="margin-top: 20px; padding: 10px; border: 1px solid #ddd; background: #f9f9f9;">
+  Waiting for input...
+</div>
+
+<script>
+// Address of the FastAPI backend (local for now; change when deployed)
+const API_URL = "http://127.0.0.1:8000";
+
+async function runSim() {
+  const x = document.getElementById('valX').value;
+  const y = document.getElementById('valY').value;
+  const resultBox = document.getElementById('result-box');
+
+  resultBox.innerHTML = "Computing...";
+
+  try {
+    const response = await fetch(`${API_URL}/api/run-simulation`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ x: parseFloat(x), y: parseFloat(y) })
+    });
+
+    const data = await response.json();
+
+    // Affichage du résultat
+    resultBox.innerHTML = `<strong>Result from Python:</strong> ${data.result}`;
+
+  } catch (error) {
+    console.error("Error:", error);
+    resultBox.innerHTML = "<span style='color:red'>Error: Backend is likely offline.</span>";
+  }
+}
+</script>
