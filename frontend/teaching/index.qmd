@@ -3,10 +3,17 @@ title: "Teaching"
 lang: en
 description: "My teaching materials from current and past courses."
 listing:
-  contents: 
-    - "*/index.qmd"    
-  sort: "date desc"
-  type: grid          
+  # explicit order, kept as is thanks to sort: false
+  contents:
+    - mq1/index.qmd
+    - mq2/index.qmd
+    - mq3/index.qmd
+    - mq4/index.qmd
+    - machine_learning/index.qmd
+    - adshs/index.qmd
+    - databases/index.qmd
+  sort: false
+  type: grid
   categories: true
   fields: [image, title, description, categories, date]
   image-placeholder: ../assets/default-img.png

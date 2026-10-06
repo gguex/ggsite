@@ -87,7 +87,7 @@ TP 6: On applique différentes méthodes de réduction de dimensionnalité sur d
 
 [{{< fa file-pdf >}} 6. Réduction de la dimensionnalité (Slides)](session6/6_reduction_de_la_dimensionnalite.pdf){.btn .btn-outline-primary .btn-sm}
 
-[{{< fa brands python >}} TP6. Le clustering (Notebook)](session6/TP06_reduction_de_la_dimensionnalite.ipynb){.btn .btn-outline-success .btn-sm}
+[{{< fa brands python >}} TP6. Réduction de la dimensionnalité (Notebook)](session6/TP06_reduction_de_la_dimensionnalite.ipynb){.btn .btn-outline-success .btn-sm}
 
 [{{< fa file-zipper >}} Données du TP6 (ZIP)](session6/ml_data.zip){.btn .btn-outline-secondary .btn-sm}
 
