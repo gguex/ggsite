@@ -3,7 +3,6 @@ title: "Teaching"
 lang: en
 description: "My teaching materials from current and past courses."
 listing:
-  # explicit order, kept as is thanks to sort: false
   contents:
     - mq1/index.qmd
     - mq2/index.qmd
