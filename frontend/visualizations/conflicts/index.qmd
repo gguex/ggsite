@@ -1,0 +1,174 @@
+---
+title: "Conflicts in the world 2000-2025"
+description: ""
+date: today
+image: image.png
+format:
+  html:
+    code-fold: false
+    page-layout: custom
+execute:
+  echo: false
+  warning: false
+---
+
+```{r}
+#| message: false
+library(dplyr)
+library(readr)
+library(lubridate)
+
+# Load & clean
+events <- read_csv("../../data/ucdp/ged_events_2000_2025.csv.gz", show_col_types = FALSE)
+
+events_clean <- events %>%
+    select(id, latitude, longitude, date_start, type_of_violence, deaths_a, deaths_b, deaths_civilians) %>%
+    filter(!is.na(latitude) & !is.na(longitude) & !is.na(date_start)) %>%
+    mutate(
+        date = as.Date(date_start),
+        year = year(date),
+        month = month(date),
+        intensity = deaths_a + deaths_b + deaths_civilians
+    ) %>%
+    arrange(date) %>%
+    filter(year >= 2000)
+
+# Export to OJS
+ojs_define(conflict_data = events_clean)
+```
+
+
+```{ojs}
+// --- Data & parameters ---
+world = d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json")
+countries = topojson.feature(world, world.objects.countries)
+dataset = transpose(conflict_data)
+
+fade_opacity = 0.03
+play_speed = 0.5
+
+// --- Canvas + SVG dual-layer setup ---
+viewof ctx = {
+  const height = width / 1.8;
+  const container = html`<div style="position:relative; width:${width}px; height:${height}px; background-color:#111; border-radius: 8px; overflow:hidden;"></div>`;
+
+  // SVG layer (static: map, labels, legend)
+  const svg = d3.select(container).append("svg")
+    .attr("width", width)
+    .attr("height", height)
+    .style("position", "absolute")
+    .style("top", "0px")
+    .style("left", "0px");
+
+  const dateLabel = svg.append("text")
+    .attr("x", 20)
+    .attr("y", 60)
+    .attr("fill", "#ffffff")
+    .style("font-family", "monospace")
+    .style("font-size", "48px")
+    .style("font-weight", "bold")
+    .style("opacity", 0.5)
+    .text("2000");
+
+  // Legend (top right)
+  const legend = svg.append("g").attr("transform", `translate(${width - 220}, 20)`);
+  legend.append("circle").attr("cx", 8).attr("cy", 8).attr("r", 6).attr("fill", "#ff4040").attr("opacity", 0.85);
+  legend.append("text").attr("x", 22).attr("y", 13)
+    .attr("fill", "#cccccc").style("font-family", "monospace").style("font-size", "13px")
+    .text("Civilian deaths");
+  legend.append("circle").attr("cx", 8).attr("cy", 34).attr("r", 6).attr("fill", "#d2ff00").attr("opacity", 0.85);
+  legend.append("text").attr("x", 22).attr("y", 39)
+    .attr("fill", "#cccccc").style("font-family", "monospace").style("font-size", "13px")
+    .text("Armed actors deaths");
+
+  // Source credit (bottom left)
+  svg.append("text")
+    .attr("x", 20)
+    .attr("y", height - 16)
+    .attr("fill", "#888888")
+    .style("font-family", "monospace")
+    .style("font-size", "11px")
+    .text("Source: UCDP Georeferenced Event Dataset (GED) v25.1 — Uppsala University");
+
+  // World map
+  const proj = d3.geoNaturalEarth1().fitSize([width, height], countries);
+  const pathGenerator = d3.geoPath(proj);
+  svg.append("path")
+    .datum(countries)
+    .attr("d", pathGenerator)
+    .attr("fill", "#262626")
+    .attr("stroke", "#444444")
+    .attr("stroke-width", 0.5);
+
+  // Canvas layer (dynamic: particles)
+  const canvas = d3.select(container).append("canvas")
+    .attr("width", width)
+    .attr("height", height)
+    .style("position", "absolute")
+    .style("top", "0px")
+    .style("left", "0px")
+    .style("pointer-events", "none")
+    .style("mix-blend-mode", "screen");
+
+  const context2d = canvas.node().getContext("2d");
+  context2d.projection = proj;
+  context2d.dateLabel = dateLabel;
+  container.value = context2d;
+
+  return container;
+}
+```
+
+```{ojs}
+// --- Animation loop ---
+animation = {
+  const w = ctx.canvas.width;
+  const h = ctx.canvas.height;
+  const DAY_MS = 24 * 60 * 60 * 1000;
+
+  const data = dataset.map(d => ({ ...d, time: new Date(d.date).getTime() }));
+  const timeStart = d3.min(data, d => d.time);
+  const timeEnd   = d3.max(data, d => d.time);
+
+  let currentTime = timeStart;
+
+  const t = d3.timer(() => {
+    // Ghost trail: semi-transparent black overlay
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = `rgba(0, 0, 0, ${fade_opacity})`;
+    ctx.fillRect(0, 0, w, h);
+
+    // Draw events in additive (glow) mode
+    ctx.globalCompositeOperation = 'screen';
+    const nextTime = currentTime + DAY_MS * play_speed;
+    const activeEvents = data.filter(d => d.time >= currentTime && d.time < nextTime);
+
+    for (const event of activeEvents) {
+      const coords = ctx.projection([event.longitude, event.latitude]);
+      if (coords) {
+        const radius = Math.max(1, Math.min(Math.pow(event.intensity + 1, 0.35) * 1.5, 14));
+        const color = event.deaths_civilians > 0 ? `rgba(255, 64, 64, 0.85)` : `rgba(210, 255, 0, 0.80)`;
+        ctx.beginPath();
+        ctx.fillStyle = color;
+        ctx.arc(coords[0], coords[1], radius, 0, 2 * Math.PI);
+        ctx.fill();
+      }
+    }
+
+    // Update date label
+    const d = new Date(currentTime);
+    ctx.dateLabel.text(`${d.getFullYear()} - ${String(d.getMonth() + 1).padStart(2, '0')}`);
+
+    // Advance time; reset canvas at loop end
+    currentTime = nextTime;
+    if (currentTime > timeEnd) {
+      currentTime = timeStart;
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, w, h);
+    }
+  });
+
+  return () => t.stop();
+}
+```

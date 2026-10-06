@@ -6,3 +6,5 @@ _site/
 .quarto/
 .DS_Store
 _extensions/
+# Raw UCDP GED dataset (250 MB, exceeds GitHub limit); a slimmed .csv.gz is tracked instead
+frontend/data/ucdp/GEDEvent_v25_1.csv
