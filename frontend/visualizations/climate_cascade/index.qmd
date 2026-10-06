@@ -1,0 +1,169 @@
+---
+title: "Climate Cascade: an Illustration of Global Warming"
+description: "A generative river of particles tracing 140 years of monthly global temperature anomalies (NASA GISTEMP)."
+date: 2026-04-05
+categories: [Climate, OJS, R]
+image: image.png
+format:
+  html:
+    page-layout: custom
+execute:
+  echo: false
+---
+
+This generative visualization illustrates over 140 years of global temperature using data from the [NASA Goddard Institute for Space Studies](https://data.giss.nasa.gov/gistemp/) (GISTEMP). Each falling particle represents the heat signature of a specific month. As the chronological river flows, you can observe how recent decades exhibit increasingly severe warming events compared to the historical baseline.
+
+```{r}
+#| label: setup-data
+#| include: false
+#| message: false
+#| warning: false
+
+library(tidyverse)
+
+# 1. DATA IMPORT & CLEANING
+temps_raw <- read_csv("../../data/gistemp/GLB.Ts+dSST.csv", skip = 1, show_col_types = FALSE, na = c("", "NA", "***")) %>% 
+  select(Year, Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec) %>%
+  pivot_longer(cols = Jan:Dec, names_to = "Month", values_to = "Anomaly") %>%
+  mutate(
+    Region = "Global",
+    Anomaly = as.numeric(Anomaly),
+    MonthNum = match(Month, month.abb)
+  ) %>%
+  filter(!is.na(Anomaly))
+
+temps_clean <- temps_raw %>%
+  arrange(Region, Year, MonthNum) %>%
+  select(Region, Year, Month, Anomaly)
+
+ojs_define(temps_data_ojs = temps_clean)
+```
+
+```{ojs}
+//| label: data-import
+// Reconstruct the array of objects from the R ojs_define format
+data = transpose(temps_data_ojs)
+```
+
+```{ojs}
+//| label: data-prep
+
+// 2. CONFIGURATION & SCALES
+selectedRegion = "Global"
+flowVelocity = 0.5
+turbulenceForce = 3
+
+filteredData = data.filter(d => d.Region === selectedRegion)
+
+colorScale = {
+  return d3.scaleSequential(t => d3.interpolateRdBu(1 - t)).domain([-2, 2.5])
+}
+```
+
+```{ojs}
+//| label: particle-engine
+//| out.width: "100%"
+
+// 3. PARTICLE ENGINE
+chart = {
+  const height = 600;
+  const context = DOM.context2d(width, height);
+  const canvas = context.canvas;
+
+  // Opaque dark background (the site theme is light; the fade-out fill below is translucent)
+  canvas.style.background = "rgb(15, 15, 20)";
+  canvas.style.borderRadius = "8px";
+  context.fillStyle = "rgb(15, 15, 20)";
+  context.fillRect(0, 0, width, height);
+  
+  let particles = [];
+  let currentIndex = 0;
+  let frameCount = 0;
+  const framesPerMonth = 3; 
+  let frame;
+  
+  // Pre-calculate yearly averages
+  let yearlyAverages = new Map();
+  d3.group(filteredData, d => d.Year).forEach((values, year) => {
+    yearlyAverages.set(year, d3.mean(values, d => d.Anomaly));
+  });
+  
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  
+  function tick() {
+    context.fillStyle = "rgba(15, 15, 20, 0.1)"; 
+    context.fillRect(0, 0, width, height);
+
+    if (!filteredData || filteredData.length === 0) {
+      frame = requestAnimationFrame(tick);
+      return;
+    }
+
+    // Time management & Chronology
+    frameCount++;
+    if (frameCount >= framesPerMonth) {
+      frameCount = 0;
+      currentIndex = (currentIndex + 1) % filteredData.length;
+    }
+    let currentData = filteredData[currentIndex];
+    let monthIndex = monthNames.indexOf(currentData.Month);
+
+    // Particle emitter
+    for(let i=0; i < 3; i++) {
+       let finalTemp = currentData.Anomaly - Math.cos(monthIndex / 11 * Math.PI) * 1.5;
+       let agitation = finalTemp > 0 ? (1 + finalTemp * 2) : 0.2; 
+       
+       particles.push({
+          x: Math.random() * width,
+          y: -10,
+          vx: (Math.random() - 0.5) * turbulenceForce * 0.1 * agitation,
+          vy: flowVelocity * (1.5 + Math.random()), 
+          anomaly: currentData.Anomaly,
+          finalTemp: finalTemp,
+          agitation: agitation,
+          color: colorScale(finalTemp)
+       });
+    }
+    
+    // Physics & Updates
+    for (let i = particles.length - 1; i >= 0; i--) {
+      let p = particles[i];
+      p.y += p.vy;
+      p.x += p.vx + Math.sin(p.y * 0.02 + frameCount * 0.05) * turbulenceForce * 0.05 * p.agitation;
+      
+      if (p.x > width) p.x = 0;
+      if (p.x < 0) p.x = width;
+      
+      let radius = Math.max(0.5, 1.5 + p.finalTemp * 0.8);
+      
+      context.beginPath();
+      context.arc(p.x, p.y, radius, 0, 2 * Math.PI);
+      context.fillStyle = p.color;
+      context.fill();
+      
+      if (p.y > height) {
+        particles.splice(i, 1);
+      }
+    }
+    
+    // Data UI Overlay
+    context.fillStyle = "rgba(255, 255, 255, 0.9)";
+    context.font = "bold 48px sans-serif";
+    context.fillText(`${currentData.Year}`, 30, 60);
+    
+    let currentYearlyAnom = yearlyAverages.get(currentData.Year);
+    let sign = currentYearlyAnom > 0 ? "+" : "";
+    context.fillStyle = colorScale(currentYearlyAnom);
+    context.font = "bold 32px sans-serif";
+    context.fillText(`${sign}${currentYearlyAnom.toFixed(2)}°C`, 30, 100);
+    
+    frame = requestAnimationFrame(tick);
+  }
+  
+  tick();
+  
+  invalidation.then(() => cancelAnimationFrame(frame));
+  
+  return canvas;
+}
+```
