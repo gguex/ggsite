@@ -7,4 +7,3 @@
 - `switzerland.geojson`: simplified boundaries of the 26 Swiss cantons (GeoJSON,
   one feature per canton with a `name` property). Used by
   `visualizations/swiss_cantons/` and `visualizations/swiss_health_ojs/`.
-- `us-counties-10m.json`: US counties (TopoJSON), currently unused.
