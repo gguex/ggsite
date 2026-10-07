@@ -1,5 +1,9 @@
 ---
 title: "Simulations & Algorithms"
+# Section kept in reserve: not rendered nor published while draft is true.
+# Preview it with `quarto preview --profile sandbox`; remove this flag and add the
+# navbar entry back in _quarto.yml when the first demo is ready.
+draft: true
 description: "Interactive demos of algorithms and models."
 listing:
   contents: "*/index.qmd"

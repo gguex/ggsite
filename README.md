@@ -16,7 +16,7 @@ frontend/                Quarto website
                          publications from references.bib)
   teaching/              one folder per course, sessions inside
   visualizations/        one folder per visualization
-  simulations/           one folder per demo
+  simulations/           one folder per demo (section in reserve: draft, not published)
   sandbox/               work in progress (draft, not published)
 backend/                 optional FastAPI backend (see backend/README.md)
 ```

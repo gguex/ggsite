@@ -45,8 +45,7 @@ visualizations.
 With this website, I wanted to share some of my production. You will find here: 
 
  * Teaching material.
- * Data visualizations. 
- * Simulations and algorithms.
+ * Data visualizations.
 
 I hope you will enjoy them!
 
