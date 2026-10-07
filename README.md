@@ -22,8 +22,7 @@ JavaScript, and is published as a static site.
 Mostly so that colleagues and students can see how such a site is put together.
 Feel free to borrow the structure, the listing setup or the visualizations as a
 starting point for your own work. If you reuse a visualization, a link back is
-appreciated. The course material is mine unless stated otherwise on the page;
-please ask before redistributing it.
+appreciated. The course material is a different matter, see *Rights and reuse* below.
 
 ## How it is built
 
@@ -96,8 +95,13 @@ me at guillaume.guex@gmail.com. You can also find me on
 [ORCID](https://orcid.org/0000-0003-1001-9525) and
 [LinkedIn](https://linkedin.com/in/guillaume-guex/).
 
-## License
+## Rights and reuse
 
-*To be decided before the repository goes public — see the note in the
-conversation.* A common choice for this kind of repository is the MIT license
-for the code and CC BY 4.0 for the texts and visualizations.
+- **Course material** (slides, notebooks, exercises) is © Guillaume Guex, and
+  several courses build on material by François Bavaud. It is published for
+  students and curious readers: you are welcome to read it and use it for your
+  own study, but please ask before redistributing or adapting it.
+- **The website itself and the visualizations** are my personal work. You are
+  welcome to reuse their code and structure with attribution.
+- **Datasets** keep the license of their source, indicated in the `README.md`
+  of each folder under `frontend/data/`.
