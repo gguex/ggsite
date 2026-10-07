@@ -39,8 +39,8 @@ priceExtent = d3.extent(csvData, d => d.premium)
 
 // --- 3. USER INTERFACE ---
 html`<div class="card p-3 mb-3 bg-light">
-  <div style="display: flex; align-items: center; gap: 20px;">
-    <div style="flex-grow: 1;">
+  <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+    <div style="flex: 1 1 240px; min-width: 0;">
       ${viewof selectedYear}
     </div>
     <div>
@@ -49,7 +49,7 @@ html`<div class="card p-3 mb-3 bg-light">
   </div>
 </div>`
 
-viewof selectedYear = Inputs.range([2014, 2024], {step: 1, value: 2024, label: "Year"})
+viewof selectedYear = Inputs.range([2014, 2024], {step: 1, value: 2024, label: "Year", width: Math.min(360, width - 60)})
 viewof isPlaying = Inputs.toggle({label: " Auto-Play", value: false})
 
 

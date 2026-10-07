@@ -24,6 +24,22 @@ div.csl-entry {
     transition: transform 0.2s; // For the effect 
 }
 
+/* Long DOI links must be allowed to break, otherwise they widen the page on phones */
+div.csl-entry a {
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 768px) {
+    // No hanging indent on phones (Quarto pulls the first line 2em to the left,
+    // which would cross the vertical bar); plain block with a smaller padding.
+    .hanging-indent div.csl-entry,
+    div.csl-entry {
+        margin-left: 0;
+        text-indent: 0;
+        padding-left: 1rem;
+    }
+}
+
 /* Small effect on hover */
 div.csl-entry:hover {
     
@@ -177,6 +193,14 @@ div.csl-entry:hover {
     }
 }
 
+
+/* --- Inline code (file paths, identifiers) must wrap on phones --- */
+
+// Quarto sets white-space: pre on inline code, which forbids any wrapping
+p code:not(.sourceCode), li code:not(.sourceCode) {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
 
 /* --- Full-width pages (page-layout: custom): keep text off the window edge --- */
 // The title banner is a sibling of #quarto-content, hence the :has() selectors.

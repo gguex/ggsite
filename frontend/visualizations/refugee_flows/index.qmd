@@ -53,7 +53,7 @@ viewof selectedYear = {
     <div style="font-size: 38px; font-weight: 300; letter-spacing: 2px; color: #e67e22; text-align: center; margin-bottom: 25px;">
       <output name="out">${maxYear}</output>
     </div>
-    <div style="position: relative; width: 100%; height: 20px; font-size: 13px; margin-bottom: 2px;">
+    <div style="position: relative; margin: 0 16px 2px 16px; height: 20px; font-size: 13px;">
       ${ticks.map(y => html`<span style="position: absolute; left: ${pct(y)}%; transform: translateX(${y === minYear ? "-10%" : y === maxYear ? "-90%" : "-50%"});">${y}</span>`)}
     </div>
     <input type="range" name="range" min="${minYear}" max="${maxYear}" step="1" value="${maxYear}"

@@ -49,6 +49,14 @@ play_speed = 0.5
 // --- Canvas + SVG dual-layer setup ---
 viewof ctx = {
   const height = width / 1.8;
+  // Overlay sizes follow the width so that the map stays readable on phones
+  const narrow = width < 600;
+  const dateSize = Math.round(Math.max(16, Math.min(48, width / 20)));
+  const legendSize = narrow ? 10 : 13;
+  const legendWidth = narrow ? 140 : 220;
+  // Dark halo behind every label, so that they stay readable over the land
+  const halo = sel => sel.attr("stroke", "#111").attr("stroke-width", narrow ? 3 : 4)
+                         .attr("stroke-linejoin", "round").attr("paint-order", "stroke");
   const container = html`<div style="position:relative; width:${width}px; height:${height}px; background-color:#111; border-radius: 8px; overflow:hidden;"></div>`;
 
   // SVG layer (static: map, labels, legend)
@@ -59,37 +67,7 @@ viewof ctx = {
     .style("top", "0px")
     .style("left", "0px");
 
-  const dateLabel = svg.append("text")
-    .attr("x", 20)
-    .attr("y", 60)
-    .attr("fill", "#ffffff")
-    .style("font-family", "monospace")
-    .style("font-size", "48px")
-    .style("font-weight", "bold")
-    .style("opacity", 0.5)
-    .text("2000");
-
-  // Legend (top right)
-  const legend = svg.append("g").attr("transform", `translate(${width - 220}, 20)`);
-  legend.append("circle").attr("cx", 8).attr("cy", 8).attr("r", 6).attr("fill", "#ff4040").attr("opacity", 0.85);
-  legend.append("text").attr("x", 22).attr("y", 13)
-    .attr("fill", "#cccccc").style("font-family", "monospace").style("font-size", "13px")
-    .text("Civilian deaths");
-  legend.append("circle").attr("cx", 8).attr("cy", 34).attr("r", 6).attr("fill", "#d2ff00").attr("opacity", 0.85);
-  legend.append("text").attr("x", 22).attr("y", 39)
-    .attr("fill", "#cccccc").style("font-family", "monospace").style("font-size", "13px")
-    .text("Armed actors deaths");
-
-  // Source credit (bottom left)
-  svg.append("text")
-    .attr("x", 20)
-    .attr("y", height - 16)
-    .attr("fill", "#888888")
-    .style("font-family", "monospace")
-    .style("font-size", "11px")
-    .text("Source: UCDP Georeferenced Event Dataset (GED) v25.1 — Uppsala University");
-
-  // World map
+  // World map (drawn first, so that the labels below stay above the land)
   const proj = d3.geoNaturalEarth1().fitSize([width, height], countries);
   const pathGenerator = d3.geoPath(proj);
   svg.append("path")
@@ -98,6 +76,39 @@ viewof ctx = {
     .attr("fill", "#262626")
     .attr("stroke", "#444444")
     .attr("stroke-width", 0.5);
+
+  const dateLabel = svg.append("text")
+    .attr("x", 20)
+    .attr("y", 20 + dateSize * 0.85)
+    .attr("fill", "#ffffff")
+    .style("font-family", "monospace")
+    .style("font-size", `${dateSize}px`)
+    .style("font-weight", "bold")
+    .style("opacity", narrow ? 0.85 : 0.5)
+    .text("2000")
+    .call(halo);
+
+  // Legend (top right)
+  const legend = svg.append("g").attr("transform", `translate(${width - legendWidth}, 20)`);
+  legend.append("circle").attr("cx", 8).attr("cy", 8).attr("r", 6).attr("fill", "#ff4040").attr("opacity", 0.85);
+  legend.append("text").attr("x", 22).attr("y", 13)
+    .attr("fill", "#cccccc").style("font-family", "monospace").style("font-size", `${legendSize}px`)
+    .text("Civilian deaths").call(halo);
+  legend.append("circle").attr("cx", 8).attr("cy", 34).attr("r", 6).attr("fill", "#d2ff00").attr("opacity", 0.85);
+  legend.append("text").attr("x", 22).attr("y", 39)
+    .attr("fill", "#cccccc").style("font-family", "monospace").style("font-size", `${legendSize}px`)
+    .text("Armed actors deaths").call(halo);
+
+  // Source credit (bottom left)
+  svg.append("text")
+    .attr("x", 20)
+    .attr("y", height - 16)
+    .attr("fill", "#888888")
+    .style("font-family", "monospace")
+    .style("font-size", narrow ? "9px" : "11px")
+    .text(narrow ? "Source: UCDP GED v25.1 — Uppsala University"
+                 : "Source: UCDP Georeferenced Event Dataset (GED) v25.1 — Uppsala University")
+    .call(halo);
 
   // Canvas layer (dynamic: particles)
   const canvas = d3.select(container).append("canvas")
