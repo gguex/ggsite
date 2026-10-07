@@ -31,23 +31,24 @@ nocite: |
 
 :::{#hero-heading}
 
-## Welcome to my portfolio !  
+## Welcome to my portfolio!
 
-#### Who am I ?
+#### Who am I?
 
-I am a academic researcher in Applied Mathematics, Statistics, 
-Machine Learning, AI, Computation Linguistics, Geography and Digital Humanities. I am 
-passionate about mathematics, human and social sciences, computers, and education. I really enjoy designing 
-mathematical models for various phenomena (especially in human and 
-social sciences), implementing numerical simulations, and creating data 
-visualizations.
+I am an academic researcher working at the intersection of applied mathematics,
+statistics, machine learning and artificial intelligence, computational linguistics,
+geography, and the digital humanities. I am passionate about mathematics, the humanities
+and social sciences, computers, and education. What I enjoy most is designing mathematical
+models for all kinds of phenomena, especially in the social sciences, running numerical
+simulations, and building data visualizations.
 
-With this website, I wanted to share some of my production. You will find here: 
+I created this website to share some of my work. Here you will find:
 
- * Teaching material.
- * Data visualizations.
+- My résumé and a list of my publications (below).
+- Teaching materials.
+- Data visualizations.
 
-I hope you will enjoy them!
+I hope you enjoy them!
 
 :::
 
