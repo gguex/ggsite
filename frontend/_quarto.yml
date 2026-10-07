@@ -3,6 +3,7 @@ project:
   output-dir: _site
   resources:
     - assets/
+    - CNAME   # custom domain for GitHub Pages
   preview:
     port: 4200
     browser: true
@@ -17,9 +18,8 @@ lang: en
 
 website:
   title: "Guillaume Guex"
-  # Public address of the site (used for social cards and the sitemap).
-  # Replace it with your own domain once you have one.
-  site-url: https://gguex.github.io/ggsite/
+  # Public address of the site (used for social cards, the sitemap and the 404 page).
+  site-url: https://guillaumeguex.ch/
   favicon: assets/favicon.png
   # Preview card (image + description) shown when a link is shared on
   # LinkedIn, Slack, etc. Pages without an `image` fall back to this one.

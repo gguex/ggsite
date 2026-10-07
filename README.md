@@ -5,7 +5,7 @@ my teaching material and interactive data visualizations. The site is built
 with [Quarto](https://quarto.org), with a bit of R, Python and Observable
 JavaScript, and is published as a static site.
 
-**Live site:** https://gguex.github.io/ggsite/
+**Live site:** https://guillaumeguex.ch/
 
 ## What you will find on the site
 
