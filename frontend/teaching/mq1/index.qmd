@@ -4,7 +4,7 @@ lang: fr
 description: "Cours de Méthodes Quantitatives 1 : probabilités, statistique descriptive, variables aléatoires et premiers pas vers l'inférence statistique."
 date: 2025-09-18
 image: image.png
-categories: [Probability, Descriptive Statistics, Inference]
+categories: [Statistics, Probability, Inference]
 toc: true
 ---
 

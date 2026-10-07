@@ -4,7 +4,7 @@ lang: fr
 description: "Cours de Méthodes Quantitatives 2 : tests statistiques, corrélations, entropie et données pondérées, dans la continuité de Méthodes Quantitatives 1."
 date: 2026-02-19
 image: image.png
-categories: [Hypothesis Testing, Correlation, Entropy]
+categories: [Statistics, Inference]
 toc: true
 ---
 

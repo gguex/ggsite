@@ -9,12 +9,10 @@ listing:
   sort-ui: false
   filter-ui: false
   fields: [image, title, description, date, categories]
+  image-height: 180px
 title-block-banner: true
 format:
   html:
     page-layout: article
 ---
 
-## Featured Projects
-
-Explore my latest visualizations.

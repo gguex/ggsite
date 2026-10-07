@@ -4,7 +4,7 @@ lang: fr
 description: "Cours de Méthodes Quantitatives 4 : mise en pratique en R des méthodes des cours précédents, du tidyverse aux méthodes factorielles, au clustering, à la régression et à l'analyse de réseaux, avec une introduction à LaTeX et au machine learning."
 date: 2026-02-19
 image: image.png
-categories: [R, Tidyverse, Data Analysis, Machine Learning]
+categories: [R, Data Analysis, Machine Learning]
 toc: true
 ---
 

@@ -4,7 +4,7 @@ lang: fr
 description: "Cours de Méthodes Quantitatives 3, qui aborde plusieurs méthodes de d'analyse multivariée de manière théorique."
 date: 2026-01-15
 image: image.png
-categories: [Linear Algebra, Multivariate Analysis, Dissimilarities]
+categories: [Statistics, Multivariate Analysis]
 toc: true
 ---
 

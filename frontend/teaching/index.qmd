@@ -16,11 +16,12 @@ listing:
   categories: true
   fields: [image, title, description, categories, date]
   image-placeholder: ../assets/default-img.png
+  image-height: 180px
 title-block-banner: true
 ---
 
-::: {.callout-warning appearance="default"}
-**All courses are currently in French.**
+::: {.callout-note appearance="simple"}
+All courses are currently in French.
 :::
 
 ## Courses

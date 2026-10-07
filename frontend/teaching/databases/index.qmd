@@ -4,7 +4,7 @@ lang: fr
 description: "Cours de bases de données relationnelles : SQL avec MariaDB et DBeaver, récolte et pré-traitement de données, modélisation logique et physique, normalisation, peuplement, vues et statistiques, avec une ouverture vers Python et le NoSQL."
 date: 2024-09-18
 image: image.png
-categories: [Databases, SQL, MariaDB, Data Modeling]
+categories: [Databases, SQL]
 toc: true
 ---
 

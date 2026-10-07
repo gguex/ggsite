@@ -4,7 +4,7 @@ lang: fr
 description: "Travaux pratiques d'introduction à l'analyse de données en sciences humaines et sociales, appliquée à la linguistique de corpus : R et tidyverse, tests, traitement et annotation de textes, méthodes factorielles, régression, clustering et réseaux."
 date: 2026-02-18
 image: image.png
-categories: [R, Tidyverse, Text Analysis, Corpus Linguistics, Data Analysis]
+categories: [R, Text Analysis, Data Analysis]
 toc: true
 ---
 
