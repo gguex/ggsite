@@ -2,7 +2,7 @@
 title: "Conflicts in the world 2000-2025"
 description: "Animated map of armed conflict events worldwide since 2000 (UCDP GED data)."
 date: 2026-10-06
-categories: [World, Maps, OJS, R]
+categories: [World, Maps, OJS]
 image: image.png
 format:
   html:
@@ -10,34 +10,31 @@ format:
     page-layout: custom
 execute:
   echo: false
-  warning: false
 ---
 
 Every dot is an armed conflict event recorded by the Uppsala Conflict Data Program (UCDP): red when at least one civilian was killed, yellow when only armed actors died, and larger when the number of deaths is higher. The animation runs month by month from January 2000 and loops at the end. Past events slowly fade out, so the bright areas are the places where violence is ongoing.
 
-```{r}
-#| message: false
-library(dplyr)
-library(readr)
-library(lubridate)
-
-# Load & clean
-events <- read_csv("../../data/ucdp/ged_events_2000_2025.csv.gz", show_col_types = FALSE)
-
-events_clean <- events %>%
-    select(id, latitude, longitude, date_start, type_of_violence, deaths_a, deaths_b, deaths_civilians) %>%
-    filter(!is.na(latitude) & !is.na(longitude) & !is.na(date_start)) %>%
-    mutate(
-        date = as.Date(date_start),
-        year = year(date),
-        month = month(date),
-        intensity = deaths_a + deaths_b + deaths_civilians
-    ) %>%
-    arrange(date) %>%
-    filter(year >= 2000)
-
-# Export to OJS
-ojs_define(conflict_data = events_clean)
+```{ojs}
+//| output: false
+// Load the gzipped UCDP extract (3 MB) and decompress it in the browser, so the
+// data are not inlined in the page (which would make it ~20 MB).
+dataset = {
+  const url = await FileAttachment("../../data/ucdp/ged_events_2000_2025.csv.gz").url();
+  const response = await fetch(url);
+  const stream = response.body.pipeThrough(new DecompressionStream("gzip"));
+  const text = await new Response(stream).text();
+  const parseDate = d3.timeParse("%Y-%m-%d");
+  return d3.csvParse(text, d => {
+    const date = parseDate(d.date_start.slice(0, 10));
+    const latitude = +d.latitude, longitude = +d.longitude;
+    if (!date || isNaN(latitude) || isNaN(longitude)) return null;
+    return {
+      latitude, longitude, date,
+      intensity: (+d.deaths_a) + (+d.deaths_b) + (+d.deaths_civilians),
+      deaths_civilians: +d.deaths_civilians
+    };
+  }).sort((a, b) => a.date - b.date);
+}
 ```
 
 
@@ -45,7 +42,6 @@ ojs_define(conflict_data = events_clean)
 // --- Data & parameters ---
 world = d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json")
 countries = topojson.feature(world, world.objects.countries)
-dataset = transpose(conflict_data)
 
 fade_opacity = 0.03
 play_speed = 0.5
@@ -129,7 +125,7 @@ animation = {
   const h = ctx.canvas.height;
   const DAY_MS = 24 * 60 * 60 * 1000;
 
-  const data = dataset.map(d => ({ ...d, time: new Date(d.date).getTime() }));
+  const data = dataset.map(d => ({ ...d, time: d.date.getTime() }));
   const timeStart = d3.min(data, d => d.time);
   const timeEnd   = d3.max(data, d => d.time);
 
