@@ -13,21 +13,21 @@ toc: true
 :::
 
 ## Session 1: Introduction et rappels d’algèbre linéaire
-📅 **Date:** Sept 18, 2025
+**Date :** 18 septembre 2025
 
 Dans cette première session, nous introduisons les concepts fondamentaux pour comprendre l'analyse multivariée abordées dans ce cours, ainsi que les bases mathématiques nécessaires à leur compréhension.
 
 [{{< fa file-pdf >}} 1. Introduction et rappels d’algèbre linéaire](session1/cours_1.pdf){.btn .btn-outline-primary .btn-sm}
 
 ## Session 2: Bases, applications linéaires et décomposition spectrale
-📅 **Date:** Sept 25, 2025
+**Date :** 25 septembre 2025
 
 Ici, nous approfondissons les notions d'applications linéaires et de décomposition spectrale, qui sont au cœur de nombreuses méthodes d'analyse multivariée.
 
 [{{< fa file-pdf >}} 2. Bases, applications linéaires et décomposition spectrale](session2/cours_2.pdf){.btn .btn-outline-primary .btn-sm}
 
 ## Session 3: Statistiques multivariées et géométrie
-📅 **Date:** Oct 02, 2025
+**Date :** 2 octobre 2025
 
 Dans cette session, nous abordons les liens entre les statistiques multivariées et la géométrie, en explorant comment les concepts statistiques telles que la moyenne, la variance et la covariance peuvent être interprétés et visualisés dans un espace géométrique.
 Des illustrations 3D peuvent être visualisé sur [geoservant](https://www.matheretter.de/geoservant/en/) et sont donnée en annexe.
@@ -37,7 +37,7 @@ Des illustrations 3D peuvent être visualisé sur [geoservant](https://www.mathe
 [{{< fa file >}} Figures geoservant](session3/figures_3d_geoservant.txt){.btn .btn-outline-secondary .btn-sm}
 
 ## Session 4: Régression multiple
-📅 **Date:** Oct 09, 2025
+**Date :** 9 octobre 2025
 
 La régression multiple est une méthode d'analyse multivariée qui permet de modéliser la relation entre une variable dépendante et plusieurs variables indépendantes. Dans cette session, nous abordons les concepts fondamentaux de la régression multiple, ainsi que les méthodes d'estimation des coefficients et d'évaluation du modèle.
 
@@ -48,7 +48,7 @@ La régression multiple est une méthode d'analyse multivariée qui permet de mo
 [{{< fa file-zipper >}} Exemple de régression : sources et données](session4/exemple_regression.zip){.btn .btn-outline-secondary .btn-sm}
 
 ## Session 5: Analyse en composantes principales
-📅 **Date:** Oct 16, 2025
+**Date :** 16 octobre 2025
 
 L'analyse en composantes principales (ACP) est une méthode d'analyse multivariée qui permet de réduire la dimensionnalité d'un jeu de données tout en préservant autant que possible la variance des données. Dans cette session, nous abordons les concepts fondamentaux de l'ACP, ainsi que la manière d'interpréter les résultats.
 
@@ -59,7 +59,7 @@ L'analyse en composantes principales (ACP) est une méthode d'analyse multivari�
 [{{< fa file-zipper >}} Exemple d'ACP : sources et données](session5/exemple_acp.zip){.btn .btn-outline-secondary .btn-sm}
 
 ## Session 6: Exemples de régression multiple et d'ACP
-📅 **Date:** Oct 23, 2025
+**Date :** 23 octobre 2025
 
 Cette session est consacrée à des exemples d'application de la régression multiple et de l'ACP, afin d'illustrer les concepts abordés dans les sessions précédentes. Il n'y a pas de slides pour cette session, mais des notebooks R sont disponibles pour mettre en pratique les méthodes vues dans les cours précédents.
 
@@ -72,28 +72,28 @@ Cette session est consacrée à des exemples d'application de la régression mul
 [{{< fa file-zipper >}} ACP sur RealEstate : sources et données](session6/acp_realestate.zip){.btn .btn-outline-secondary .btn-sm}
 
 ## Session 7: Les dissimilarités
-📅 **Date:** Nov 13, 2025
+**Date :** 13 novembre 2025
 
 Nous abordons dans cette session les différentes mesures de dissimilarité utilisées en analyse multivariée, ainsi que leurs propriétés. Nous voyons comment différents objets peuvent être comparés à l'aide de ces mesures, afin de pouvoir les utiliser dans des méthodes d'analyse multivariée telles que le clustering et la classification.
 
 [{{< fa file-pdf >}} 7. Les dissimilarités](session7/cours_7.pdf){.btn .btn-outline-primary .btn-sm}
 
 ## Session 8: Dissimilarités (suite) et dissimilarités euclidiennes
-📅 **Date:** Nov 20, 2025
+**Date :** 20 novembre 2025
 
 Dans cette session, nous poursuivons notre exploration des dissimilarités et leur lien avec les similarités. Les dissimilarités euclidiennes, de part leur propriétés géométriques, sont abordées en détail et permettent de faire le lien avec la méthode du Multidimensional Scaling (MDS). 
 
 [{{< fa file-pdf >}} 8. Dissimilarités (suite) et dissimilarités euclidiennes](session8/cours_8.pdf){.btn .btn-outline-primary .btn-sm}
 
 ## Session 9: Le Multidimensional scaling (MDS)
-📅 **Date:** Nov 27, 2025
+**Date :** 27 novembre 2025
 
 Le Multidimensional Scaling (MDS) est une méthode d'analyse multivariée qui permet de représenter des objets dans un espace de dimension réduite, en préservant autant que possible les distances entre les objets.
 
 [{{< fa file-pdf >}} 9. Le Multidimensional scaling (MDS)](session9/cours_9.pdf){.btn .btn-outline-primary .btn-sm}
 
 ## Session 10: L’analyse des correspondances (AFC)
-📅 **Date:** Dec 04, 2025
+**Date :** 4 décembre 2025
 
 L'analyse des correspondances (AFC) est une méthode d'analyse multivariée qui permet de représenter des données catégorielles dans un espace de dimension réduite, en préservant autant que possible les associations entre les catégories.
 

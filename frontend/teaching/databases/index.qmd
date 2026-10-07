@@ -24,7 +24,7 @@ Le cours utilise deux logiciels libres, à installer avant la première séance 
 Ressources utiles tout au long du semestre : le [MariaDB Tutorial](https://www.mariadbtutorial.com/) et la [documentation de DBeaver](https://dbeaver.com/docs/dbeaver/).
 
 ## Séance 1 : Introduction aux bases de données
-📅 **Date:** Sept 18, 2024
+**Date :** 18 septembre 2024
 
 Pourquoi des bases de données ? Les notions fondamentales du modèle relationnel : tables, relations, clés, types de données, et le rôle d'un système de gestion de bases de données.
 
@@ -33,7 +33,7 @@ Pourquoi des bases de données ? Les notions fondamentales du modèle relationne
 [{{< fa file-pdf >}} TP 1 : Installation](session1/TP1_installation.pdf){.btn .btn-outline-primary .btn-sm}
 
 ## Séance 2 : Prise en main de MariaDB, SQL et DBeaver
-📅 **Date:** Sept 25, 2024
+**Date :** 25 septembre 2024
 
 Premiers pas dans DBeaver et premières requêtes SQL : créer une base, créer des tables, importer des données et interroger une base de pays et de langues.
 
@@ -46,7 +46,7 @@ Premiers pas dans DBeaver et premières requêtes SQL : créer une base, créer 
 [{{< fa file-zipper >}} Fichiers du TP 2 et corrigé](session2/tp2_fichiers.zip){.btn .btn-outline-secondary .btn-sm}
 
 ## Séance 3 : SQL 2
-📅 **Date:** Oct 2, 2024
+**Date :** 2 octobre 2024
 
 Les requêtes `SELECT` en profondeur : filtres, tri, fonctions, et premières jointures sur la base `world`. Le TP travaille sur la base `employees`, à restaurer depuis la sauvegarde fournie.
 
@@ -59,7 +59,7 @@ Les requêtes `SELECT` en profondeur : filtres, tri, fonctions, et premières jo
 [{{< fa file-zipper >}} Fichiers du TP 3 et corrigé (base employees)](session3/tp3_fichiers.zip){.btn .btn-outline-secondary .btn-sm}
 
 ## Séance 4 : SQL 3
-📅 **Date:** Oct 9, 2024
+**Date :** 9 octobre 2024
 
 Jointures multiples, agrégations et sous-requêtes. Le TP introduit la base de jeux vidéo, utilisée à plusieurs reprises dans la suite du cours et décrite dans un document à part.
 
@@ -74,7 +74,7 @@ Jointures multiples, agrégations et sous-requêtes. Le TP introduit la base de 
 [{{< fa file-zipper >}} Fichiers du TP 4 et corrigé (base video_games)](session4/tp4_fichiers.zip){.btn .btn-outline-secondary .btn-sm}
 
 ## Séance 5 : Récolte de données et pré-traitements
-📅 **Date:** Oct 16, 2024
+**Date :** 16 octobre 2024
 
 Les formats de données (CSV, JSON, XML, HTML), les sites de données ouvertes et les API REST. Les scripts Python montrent comment interroger une API et aplatir un JSON en table.
 
@@ -87,7 +87,7 @@ Les formats de données (CSV, JSON, XML, HTML), les sites de données ouvertes e
 [{{< fa file-pdf >}} TP 5](session5/TP5.pdf){.btn .btn-outline-primary .btn-sm}
 
 ## Séance 6 : Conception de bases de données, modélisation logique
-📅 **Date:** Oct 23, 2024
+**Date :** 23 octobre 2024
 
 Du besoin au modèle : entités, associations, cardinalités et diagramme entité-association, à partir d'un jeu de données sur les pays européens.
 
@@ -100,7 +100,7 @@ Du besoin au modèle : entités, associations, cardinalités et diagramme entit�
 [{{< fa file-zipper >}} Fichiers du TP 6 et corrigé (données Airbnb)](session6/tp6_fichiers.zip){.btn .btn-outline-secondary .btn-sm}
 
 ## Séance 7 : Schéma relationnel et normalisation
-📅 **Date:** Oct 30, 2024
+**Date :** 30 octobre 2024
 
 Passage du modèle logique au schéma relationnel, puis les formes normales pour éviter redondances et anomalies. Le TP poursuit la modélisation des données Airbnb, avec un corrigé détaillé.
 
@@ -117,7 +117,7 @@ Passage du modèle logique au schéma relationnel, puis les formes normales pour
 [{{< fa image >}} Schéma du corrigé](session7/tp7_schema.png){.btn .btn-outline-secondary .btn-sm}
 
 ## Séance 8 : SQL 4
-📅 **Date:** Nov 13, 2024
+**Date :** 13 novembre 2024
 
 SQL avancé, première partie : jointures externes, opérateurs ensemblistes et requêtes imbriquées, sur la base `golf` en cours et la base de jeux vidéo en TP.
 
@@ -130,7 +130,7 @@ SQL avancé, première partie : jointures externes, opérateurs ensemblistes et 
 [{{< fa file-zipper >}} Fichiers du TP 8 et corrigé](session8/tp8_fichiers.zip){.btn .btn-outline-secondary .btn-sm}
 
 ## Séance 9 : SQL 5
-📅 **Date:** Nov 20, 2024
+**Date :** 20 novembre 2024
 
 SQL avancé, seconde partie : fonctions, procédures stockées et transformation de tables (unpivot). Le TP porte sur une base de jeux de société.
 
@@ -143,7 +143,7 @@ SQL avancé, seconde partie : fonctions, procédures stockées et transformation
 [{{< fa file-zipper >}} Fichiers du TP 9 et corrigé (base board_game)](session9/tp9_fichiers.zip){.btn .btn-outline-secondary .btn-sm}
 
 ## Séance 10 : Peuplement d'une base de données
-📅 **Date:** Nov 27, 2024
+**Date :** 27 novembre 2024
 
 Comment remplir une base à partir de fichiers bruts : tables temporaires, transformations et insertions, illustrées sur les pays européens et leurs émissions de CO2.
 
@@ -156,7 +156,7 @@ Comment remplir une base à partir de fichiers bruts : tables temporaires, trans
 [{{< fa file-zipper >}} Fichiers du TP 10 et corrigé (données Airbnb)](session10/tp10_fichiers.zip){.btn .btn-outline-secondary .btn-sm}
 
 ## Séance 11 : Vues et statistiques
-📅 **Date:** Dec 4, 2024
+**Date :** 4 décembre 2024
 
 Les vues pour simplifier l'accès aux données, et les requêtes statistiques pour explorer une base : comptages, moyennes, distributions.
 
@@ -169,7 +169,7 @@ Les vues pour simplifier l'accès aux données, et les requêtes statistiques po
 [{{< fa file-zipper >}} Fichiers du TP 11 et corrigé (base airbnb)](session11/tp11_fichiers.zip){.btn .btn-outline-secondary .btn-sm}
 
 ## Séance 12 : Bases de données en backend et NoSQL
-📅 **Date:** Dec 11, 2024
+**Date :** 11 décembre 2024
 
 Ouverture : accéder à une base depuis Python et un backend d'application, puis panorama des systèmes NoSQL (documents, clés-valeurs, graphes) et de leurs usages.
 

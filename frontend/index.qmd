@@ -1,4 +1,5 @@
 ---
+repo-actions: false
 title: "Guillaume Guex"
 image: assets/profile.jpg
 about:

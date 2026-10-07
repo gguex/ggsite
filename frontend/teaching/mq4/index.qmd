@@ -13,7 +13,7 @@ toc: true
 :::
 
 ## Session 1 : Introduction à R et RStudio
-📅 **Date:** Feb 19, 2026
+**Date :** 19 février 2026
 
 Prise en main de R et de RStudio : types de données, vecteurs, data frames, importation de fichiers CSV et Excel, et premières fonctions.
 
@@ -26,7 +26,7 @@ Prise en main de R et de RStudio : types de données, vecteurs, data frames, imp
 [{{< fa file-zipper >}} Exercices 1 : données et corrigé](session1/ex1_donnees_corrige.zip){.btn .btn-outline-secondary .btn-sm}
 
 ## Session 2 : Le Tidyverse I
-📅 **Date:** Feb 26, 2026
+**Date :** 26 février 2026
 
 Introduction au tidyverse : le pipe, la manipulation de tableaux avec `dplyr` et leur restructuration avec `tidyr`, appliquées à un jeu de données sociolinguistiques.
 
@@ -39,7 +39,7 @@ Introduction au tidyverse : le pipe, la manipulation de tableaux avec `dplyr` et
 [{{< fa file-zipper >}} Exercices 2 : données et corrigé](session2/ex2_donnees_corrige.zip){.btn .btn-outline-secondary .btn-sm}
 
 ## Session 3 : Le Tidyverse II et les statistiques uni- et bi-variées
-📅 **Date:** Mar 5, 2026
+**Date :** 5 mars 2026
 
 Suite du tidyverse (jointures, regroupements, résumés), puis calcul des statistiques descriptives uni- et bi-variées sur un jeu de données de marqueurs pragmatiques.
 
@@ -52,7 +52,7 @@ Suite du tidyverse (jointures, regroupements, résumés), puis calcul des statis
 [{{< fa file-zipper >}} Exercices 3 : données et corrigé](session3/ex3_donnees_corrige.zip){.btn .btn-outline-secondary .btn-sm}
 
 ## Session 4 : Les graphiques en R
-📅 **Date:** Mar 12, 2026
+**Date :** 12 mars 2026
 
 La grammaire des graphiques avec `ggplot2` : histogrammes, boîtes à moustaches, nuages de points, facettes et personnalisation, avec une ouverture sur les graphiques interactifs.
 
@@ -65,7 +65,7 @@ La grammaire des graphiques avec `ggplot2` : histogrammes, boîtes à moustaches
 [{{< fa file-zipper >}} Exercices 4 : données et corrigé](session4/ex4_donnees_corrige.zip){.btn .btn-outline-secondary .btn-sm}
 
 ## Session 5 : Introduction à LaTeX
-📅 **Date:** Mar 19, 2026
+**Date :** 19 mars 2026
 
 Rédiger un rapport scientifique avec LaTeX : structure d'un document, formules mathématiques, figures, tableaux et bibliographie.
 
@@ -74,7 +74,7 @@ Rédiger un rapport scientifique avec LaTeX : structure d'un document, formules 
 [{{< fa file-pdf >}} Exercices 5](session5/exercices_latex.pdf){.btn .btn-outline-primary .btn-sm}
 
 ## Session 6 : Le calcul matriciel, l'aléatoire et les tests statistiques
-📅 **Date:** Mar 26, 2026
+**Date :** 26 mars 2026
 
 Le calcul matriciel en R, la génération de nombres aléatoires et la simulation, puis les tests statistiques classiques appliqués à un jeu de données phonétiques.
 
@@ -87,7 +87,7 @@ Le calcul matriciel en R, la génération de nombres aléatoires et la simulatio
 [{{< fa file-zipper >}} Exercices 6 : données et corrigé](session6/ex6_donnees_corrige.zip){.btn .btn-outline-secondary .btn-sm}
 
 ## Session 7 : La régression linéaire et logistique
-📅 **Date:** Apr 2, 2026
+**Date :** 2 avril 2026
 
 Régression linéaire simple et multiple, diagnostic du modèle et sélection de variables, puis régression logistique pour les variables binaires.
 
@@ -100,7 +100,7 @@ Régression linéaire simple et multiple, diagnostic du modèle et sélection de
 [{{< fa file-zipper >}} Exercices 7 : données et corrigé](session7/ex7_donnees_corrige.zip){.btn .btn-outline-secondary .btn-sm}
 
 ## Session 8 : Les méthodes factorielles
-📅 **Date:** Apr 16, 2026
+**Date :** 16 avril 2026
 
 L'analyse en composantes principales et l'analyse des correspondances avec `FactoMineR`, de l'exécution à l'interprétation des graphiques.
 
@@ -113,7 +113,7 @@ L'analyse en composantes principales et l'analyse des correspondances avec `Fact
 [{{< fa file-zipper >}} Exercices 8 : données et corrigé](session8/ex8_donnees_corrige.zip){.btn .btn-outline-secondary .btn-sm}
 
 ## Session 9 : Le clustering
-📅 **Date:** Apr 23, 2026
+**Date :** 23 avril 2026
 
 Classification hiérarchique et k-means, choix du nombre de groupes et validation des partitions, sur les programmes des partis politiques.
 
@@ -126,7 +126,7 @@ Classification hiérarchique et k-means, choix du nombre de groupes et validatio
 [{{< fa file-zipper >}} Exercices 9 : corrigé](session9/ex9_donnees_corrige.zip){.btn .btn-outline-secondary .btn-sm}
 
 ## Session 10 : Méthodes factorielles avancées
-📅 **Date:** Apr 30, 2026
+**Date :** 30 avril 2026
 
 L'analyse des correspondances multiples et l'analyse factorielle de données mixtes, pour des tableaux mêlant variables catégorielles et numériques.
 
@@ -139,7 +139,7 @@ L'analyse des correspondances multiples et l'analyse factorielle de données mix
 [{{< fa file-zipper >}} Exercices 10 : corrigé](session10/ex10_donnees_corrige.zip){.btn .btn-outline-secondary .btn-sm}
 
 ## Session 11 : Introduction au machine learning
-📅 **Date:** May 7, 2026
+**Date :** 7 mai 2026
 
 Les concepts du machine learning (apprentissage supervisé, généralisation, validation croisée), puis la régression logistique régularisée avec `glmnet` sur des données médicales.
 
@@ -154,7 +154,7 @@ Les concepts du machine learning (apprentissage supervisé, généralisation, va
 [{{< fa file-zipper >}} Exercices 11 : script de départ et corrigé](session11/ex11_donnees_corrige.zip){.btn .btn-outline-secondary .btn-sm}
 
 ## Session 12 : Analyse de réseaux
-📅 **Date:** May 21, 2026
+**Date :** 21 mai 2026
 
 Représenter et analyser des réseaux avec `igraph` et `ggraph` : mesures de centralité, détection de communautés et visualisation.
 

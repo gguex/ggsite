@@ -5,3 +5,4 @@
 # them by URL (e.g. /sandbox/leaflet_tuto/). Move a folder to visualizations/
 # or simulations/ and drop the draft flag once it is ready.
 draft: true
+repo-actions: false

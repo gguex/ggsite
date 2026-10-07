@@ -18,6 +18,7 @@ listing:
   image-placeholder: ../assets/default-img.png
   image-height: 180px
 title-block-banner: true
+toc: false
 ---
 
 ::: {.callout-note appearance="simple"}

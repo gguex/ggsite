@@ -1,3 +1,4 @@
 # Shared settings for every page under teaching/ (courses are in French).
 # The listing page teaching/index.qmd overrides lang back to "en".
 lang: fr
+repo-actions: false

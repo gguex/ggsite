@@ -1,4 +1,5 @@
 ---
+repo-actions: false
 title: "Data Visualization Gallery"
 description: "Interactive dashboards and maps exploring Swiss data and beyond."
 listing:
@@ -10,7 +11,9 @@ listing:
   filter-ui: false
   fields: [image, title, description, date, categories]
   image-height: 180px
+  feed: true
 title-block-banner: true
+toc: false
 format:
   html:
     page-layout: article

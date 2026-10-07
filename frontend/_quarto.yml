@@ -26,6 +26,11 @@ website:
   image: assets/profile.jpg
   open-graph: true
   twitter-card: true
+  # "View source" link to the .qmd on GitHub. Enabled here, then switched off
+  # with `repo-actions: false` everywhere except under visualizations/.
+  repo-url: https://github.com/gguex/ggsite
+  repo-subdir: frontend
+  repo-actions: [source]
   navbar:
     left:
       - text: "About Me"
