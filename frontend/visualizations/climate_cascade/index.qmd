@@ -167,3 +167,9 @@ chart = {
   return canvas;
 }
 ```
+
+## Data & method
+
+- **Data.** NASA Goddard Institute for Space Studies, GISTEMP v4, Land-Ocean Temperature Index: monthly global anomalies in °C relative to the 1951–1980 mean (<https://data.giss.nasa.gov/gistemp/>, see `data/gistemp/README.md`).
+- **Processing.** Months are played in chronological order, three frames per month, and each month emits particles whose colour comes from its anomaly. A seasonal offset is added to the anomaly so that each year has a visible rhythm, and warmer particles are larger and more agitated: the piece is a reading of the series rather than a measurement. The yearly mean printed in the corner is computed from the raw data.
+- **Tools.** R (`tidyverse`) for the pre-processing, Observable JavaScript, D3 colour scales and an HTML canvas for the animation.

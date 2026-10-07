@@ -88,7 +88,7 @@ html`<div style="text-align: center; font-family: sans-serif; font-size: 16px; c
 //| label: map-imports
 // --- 6. World map (TopoJSON) ---
 topojson = require("topojson-client@3")
-worldAtlas = d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json")
+worldAtlas = FileAttachment("../../data/geojson/countries-110m.json").json()
 countriesData = topojson.feature(worldAtlas, worldAtlas.objects.countries)
 ```
 
@@ -272,3 +272,9 @@ html`<div style="color: #888; font-family: sans-serif; font-size: 13px; width: $
   Source: UNHCR Refugee Data Finder (refugees and asylum-seekers by country of origin and asylum).
 </div>`
 ```
+
+## Data & method
+
+- **Data.** UNHCR Refugee Data Finder, yearly stocks of refugees and asylum-seekers by country of origin and country of asylum, retrieved with the `refugees` R package (see `data/unhcr/README.md`). Country centroids from the Google DSPL canonical countries table.
+- **Processing.** For each year, only the origin–asylum corridors above 5,000 people are kept. Each corridor is drawn as a curved path between the two centroids, and particles are emitted along it at a rate proportional to the number of people; the colour encodes the continent of origin. Hovering a country sums the people who left it or found asylum there that year.
+- **Tools.** R (`dplyr`) for the pre-processing, Observable JavaScript and D3 for the map and the canvas animation; country boundaries from Natural Earth via the world-atlas package (1:110m).

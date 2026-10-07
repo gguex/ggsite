@@ -144,3 +144,48 @@ div.csl-entry:hover {
     border-radius: 4px;
     padding: 10px;
 }
+
+/* --- Course information box (teaching pages) --- */
+
+.course-info dl {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.35rem 1.5rem;
+    margin: 1rem 0 1.5rem;
+    padding: 1rem 1.25rem;
+    background-color: #f8f9fa;
+    border-left: 3px solid $primary;
+    border-radius: 4px;
+}
+
+.course-info dt {
+    font-weight: 600;
+    color: $primary;
+}
+
+.course-info dd {
+    margin: 0;
+}
+
+@media (max-width: 576px) {
+    .course-info dl {
+        grid-template-columns: 1fr;
+    }
+
+    .course-info dd {
+        margin-bottom: 0.5rem;
+    }
+}
+
+
+/* --- Full-width pages (page-layout: custom): keep text off the window edge --- */
+// The title banner is a sibling of #quarto-content, hence the :has() selectors.
+
+body:has(#quarto-content.page-layout-custom) .quarto-title-banner .quarto-title,
+body:has(#quarto-content.page-layout-custom) #title-block-header .quarto-title-meta,
+.page-layout-custom > p,
+.page-layout-custom > section.level2,
+.page-layout-custom > .toc-actions {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+}

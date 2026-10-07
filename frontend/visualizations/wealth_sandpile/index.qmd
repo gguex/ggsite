@@ -13,7 +13,6 @@ execute:
 
 Each glowing sphere falling from the sky is a grain of the **total net wealth of US households**, and the sand piles up in four bins. The small aligned silhouettes under each bin show the **share of the population** it stands for: 50 red figures for the poorest half, a single blue figure for the top 1%. Move the year slider, or switch on Auto-play, and watch the sand drift towards the lone blue figure.
 
-**Data source:** *World Inequality Database* (WID), share of net personal wealth by percentile group.
 
 ```{r}
 #| label: data-prep
@@ -312,3 +311,9 @@ chart = {
   chart.updateSimulation(currentData);
 }
 ```
+
+## Data & method
+
+- **Data.** World Inequality Database (WID, <https://wid.world/>), indicator `shweal` (share of net personal wealth) for the United States, series `shweal992f` (equal-split adults, all ages), for the bottom 50%, the middle 40%, the top 10% and the top 1%. Raw extract and download command in `data/wid/README.md`.
+- **Processing.** The top 9% is computed as the top 10% minus the top 1%. The Gini index shown for each year is computed on a synthetic population of 100 people in which each group's wealth is split equally among its members; it is therefore a lower bound of the true index. The number of grains per bin is proportional to the share of wealth.
+- **Tools.** R (`dplyr`, `tidyr`) for the pre-processing, Observable JavaScript and D3 (force simulation) for the animation.

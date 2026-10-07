@@ -8,6 +8,27 @@ categories: [Statistics, Probability, Inference]
 toc: true
 ---
 
+::: {.course-info}
+Faculté
+:   Faculté des lettres, Section des sciences du langage et de l'information, Université de Lausanne
+
+Niveau
+:   Bachelor
+
+Semestre
+:   Automne 2025
+
+Langue
+:   Français
+
+Séances
+:   10
+
+Prérequis
+:   Aucun
+
+:::
+
 ::: {.callout-note appearance="default"}
 **Ce cours est basé en grande partie sur le cours de Méthodes Quantitatives 1 donné durant de nombreuses années par François Bavaud à l'Université de Lausanne.**
 :::

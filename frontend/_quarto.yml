@@ -59,4 +59,5 @@ format:
       - flatly
       - assets/styles.scss
     from: markdown+autolink_bare_uris
+    title-block-banner: true
     toc: true

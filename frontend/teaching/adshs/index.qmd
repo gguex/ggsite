@@ -8,6 +8,30 @@ categories: [R, Text Analysis, Data Analysis]
 toc: true
 ---
 
+::: {.course-info}
+Faculté
+:   Faculté des lettres, Section des sciences du langage et de l'information, Université de Lausanne
+
+Niveau
+:   Bachelor
+
+Semestre
+:   Printemps 2026
+
+Langue
+:   Français
+
+Séances
+:   13
+
+Prérequis
+:   Aucun, le cours commence par une introduction à R
+
+Outils
+:   R, RStudio, Quarto, quanteda, udpipe
+
+:::
+
 ::: {.callout-note appearance="default"}
 **Ces travaux pratiques appliquent les méthodes quantitatives à la linguistique de corpus.** Chaque séance est accompagnée d'un notebook Quarto, consultable en ligne ou téléchargeable avec ses sources et ses données, et d'une série d'exercices avec son corrigé.
 :::

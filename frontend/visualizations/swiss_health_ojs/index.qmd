@@ -4,6 +4,8 @@ description: "Choropleth map of the average monthly health insurance premium in 
 date: 2024-05-21
 categories: [Switzerland, Health, Maps, OJS]
 image: image.png
+execute:
+  echo: false
 ---
 
 ## Evolution of Premiums
@@ -14,8 +16,6 @@ The map colours each canton by the average monthly premium of the mandatory basi
 //| echo: false
 
 // --- 1. CONFIGURATION & IMPORTS ---
-import {Inputs} from "@observablehq/inputs"
-import {Legend} from "@d3/color-legend"
 
 // Load Data
 geoData = FileAttachment("../../data/geojson/switzerland.geojson").json()
@@ -52,6 +52,41 @@ html`<div class="card p-3 mb-3 bg-light">
 viewof selectedYear = Inputs.range([2014, 2024], {step: 1, value: 2024, label: "Year"})
 viewof isPlaying = Inputs.toggle({label: " Auto-Play", value: false})
 
+
+// --- 4. COLOR LEGEND ---
+// Local version of the Observable "@d3/color-legend" Legend (sequential scales only),
+// so that nothing is fetched from observablehq.com at run time.
+Legend = (color, {title, width = 320, height = 50, marginTop = 18, marginRight = 0,
+                  marginBottom = 22, marginLeft = 0, ticks = width / 64, tickSize = 6} = {}) => {
+  const svg = d3.create("svg")
+      .attr("width", width).attr("height", height)
+      .attr("viewBox", [0, 0, width, height])
+      .style("overflow", "visible").style("display", "block");
+  const ramp = document.createElement("canvas");
+  ramp.width = 256; ramp.height = 1;
+  const context = ramp.getContext("2d");
+  for (let i = 0; i < 256; ++i) {
+    context.fillStyle = color.interpolator()(i / 255);
+    context.fillRect(i, 0, 1, 1);
+  }
+  svg.append("image")
+      .attr("x", marginLeft).attr("y", marginTop)
+      .attr("width", width - marginLeft - marginRight)
+      .attr("height", height - marginTop - marginBottom)
+      .attr("preserveAspectRatio", "none")
+      .attr("xlink:href", ramp.toDataURL());
+  const x = color.copy().interpolator(d3.interpolateRound(marginLeft, width - marginRight));
+  svg.append("g")
+      .attr("transform", `translate(0,${height - marginBottom})`)
+      .call(d3.axisBottom(x).ticks(ticks).tickSize(tickSize))
+      .call(g => g.selectAll(".tick line").attr("y1", marginTop + marginBottom - height))
+      .call(g => g.select(".domain").remove())
+      .call(g => g.append("text")
+          .attr("x", marginLeft).attr("y", marginTop + marginBottom - height - 6)
+          .attr("fill", "currentColor").attr("text-anchor", "start")
+          .attr("font-weight", "bold").text(title));
+  return svg.node();
+}
 
 // --- 5. D3 CHART ---
 chart = {
@@ -197,3 +232,9 @@ chart = {
   }
 }
 ```
+
+## Data & method
+
+- **Data.** Average monthly premium of the mandatory basic health insurance per canton, 2014–2024, in CHF, from the premium statistics of the Federal Office of Public Health (`data/swiss_data/swiss_health_premiums.csv`). Cantonal boundaries from `data/geojson/switzerland.geojson`.
+- **Processing.** One value per canton and year, mapped on a single sequential colour scale over the whole period, so that the darkening of the map from year to year reflects the rise of premiums.
+- **Tools.** Observable JavaScript and D3 (Mercator projection, zoom, colour legend).

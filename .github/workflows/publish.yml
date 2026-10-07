@@ -1,0 +1,48 @@
+# Renders the Quarto site and publishes it to GitHub Pages.
+#
+# It runs on every push to `main` and on demand (Actions tab > "Publish site" >
+# "Run workflow"). To publish only on demand, delete the `push:` block below.
+# Neither R nor Python is needed: computational outputs are cached in
+# frontend/_freeze/ and committed with the pages.
+#
+# One-time setup on GitHub: Settings > Pages > Source: "GitHub Actions".
+name: Publish site
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: quarto-dev/quarto-actions/setup@v2
+        with:
+          version: 1.9.36
+      - name: Render the site
+        run: quarto render
+        working-directory: frontend
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: frontend/_site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

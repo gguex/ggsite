@@ -18,9 +18,9 @@ library(dplyr)
 library(tidyr)
 library(readr)
 
-# 1. Load the raw data from Our World in Data (this might take a few seconds)
-raw_url <- "https://raw.githubusercontent.com/owid/energy-data/master/owid-energy-data.csv"
-energy_raw <- read_csv(raw_url, show_col_types = FALSE)
+# 1. Load the Our World in Data extract (see data/owid/README.md for the source
+#    and how it was produced from the full owid-energy-data.csv)
+energy_raw <- read_csv("../../data/owid/energy_consumption_regions.csv", show_col_types = FALSE)
 
 # 2. Filter and clean the data
 # We select a few key regions and energy sources (in Terawatt-hours - TWh)
@@ -141,3 +141,9 @@ Plot.plot({
   caption: html`Source: <a href="https://ourworldindata.org/energy" target="_blank">Our World in Data</a>`
 })
 ```
+
+## Data & method
+
+- **Data.** Our World in Data, energy dataset (<https://github.com/owid/energy-data>, CC BY 4.0), based on the Energy Institute Statistical Review of World Energy and other sources. The site uses an extract of the primary energy consumption in TWh for six regions since 1965 (see `data/owid/README.md`).
+- **Processing.** Eight sources are stacked, from coal at the bottom to other renewables at the top; missing values are treated as zero. Changing the region redraws the chart with the same colour scale.
+- **Tools.** R (`dplyr`, `tidyr`) for the pre-processing, Observable Plot for the streamgraph.

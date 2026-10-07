@@ -42,12 +42,14 @@ Switzerland is a federation of 26 cantons, each with its own constitution, parli
 
 // Leaflet library and stylesheet
 L = {
-  const L = await require("leaflet@1.9.4/dist/leaflet.js");
+  // Leaflet 1.9.4 is bundled with the site (assets/vendor/leaflet/) rather than
+  // loaded from a CDN, so the page keeps working whatever happens upstream.
+  const L = await require(await FileAttachment("../../assets/vendor/leaflet/leaflet.js").url());
   if (!document.getElementById("leaflet-css")) {
     const link = document.createElement("link");
     link.id = "leaflet-css";
     link.rel = "stylesheet";
-    link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+    link.href = await FileAttachment("../../assets/vendor/leaflet/leaflet.css").url();
     document.head.appendChild(link);
   }
   return L;
@@ -164,3 +166,9 @@ viewof resetBtn = Inputs.button("Back to the whole country", {
 :::
 
 :::
+
+## Data & method
+
+- **Data.** Cantonal facts compiled in `data/swiss_data/cantons.csv`: resident population from the Federal Statistical Office (provisional figures at 31 December 2025), area, official languages and year of joining the Confederation. Coats of arms from Wikimedia Commons (public domain). Cantonal boundaries from `data/geojson/switzerland.geojson`.
+- **Processing.** Clicking a canton fits the map to its bounding box and fills the card from the table; the density is computed from population and area.
+- **Tools.** Leaflet 1.9.4 for the map, with the Swiss OpenStreetMap tiles (© OpenStreetMap contributors, ODbL), and Observable JavaScript for the interaction.

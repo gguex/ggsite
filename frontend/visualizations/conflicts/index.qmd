@@ -40,7 +40,7 @@ dataset = {
 
 ```{ojs}
 // --- Data & parameters ---
-world = d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json")
+world = FileAttachment("../../data/geojson/countries-110m.json").json()
 countries = topojson.feature(world, world.objects.countries)
 
 fade_opacity = 0.03
@@ -171,3 +171,9 @@ animation = {
   return () => t.stop();
 }
 ```
+
+## Data & method
+
+- **Data.** Uppsala Conflict Data Program, Georeferenced Event Dataset (UCDP GED) version 25.1 (Davies, Pettersson & Öberg 2025; Sundberg & Melander 2013), freely available for research with citation at <https://ucdp.uu.se/downloads/>. The site ships a slimmed extract of the events from 2000 onwards with their coordinates, date and death counts (see `data/ucdp/README.md`).
+- **Processing.** The extract is downloaded as a compressed CSV (3 MB) and decompressed in the browser. Events are played back day by day; each dot's radius grows with the number of deaths, roughly as the cube root, and its colour depends on whether civilians were among the victims. Past events fade through a translucent overlay applied at every frame.
+- **Tools.** Observable JavaScript and D3 (geographic projection, canvas rendering); country boundaries from Natural Earth via the world-atlas package (1:110m).

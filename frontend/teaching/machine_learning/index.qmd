@@ -8,6 +8,30 @@ categories: [Machine Learning, Deep Learning, Python]
 toc: true
 ---
 
+::: {.course-info}
+Faculté
+:   Faculté des lettres, Section des sciences du langage et de l'information, Université de Lausanne
+
+Niveau
+:   Master
+
+Semestre
+:   Automne 2025
+
+Langue
+:   Français
+
+Séances
+:   12
+
+Prérequis
+:   Notions de base en statistique et en algèbre linéaire
+
+Outils
+:   Python, Jupyter, PyTorch
+
+:::
+
 ## Session 1: Introduction au ML
 **Date :** 15 septembre 2025
 

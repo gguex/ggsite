@@ -8,6 +8,30 @@ categories: [Databases, SQL]
 toc: true
 ---
 
+::: {.course-info}
+Faculté
+:   Faculté des lettres, Section des sciences du langage et de l'information, Université de Lausanne
+
+Niveau
+:   Master
+
+Semestre
+:   Automne 2024
+
+Langue
+:   Français
+
+Séances
+:   12
+
+Prérequis
+:   Aucun
+
+Outils
+:   MariaDB, DBeaver
+
+:::
+
 ::: {.callout-note appearance="default"}
 **Ce cours est très pratique : chaque séance alterne slides et travaux pratiques sur une vraie base de données.** Les fichiers de cours et de TP sont fournis en zip (scripts SQL, sauvegardes de bases à restaurer, données CSV) et les corrigés sont inclus dans les zips de TP.
 :::

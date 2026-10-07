@@ -1,5 +1,6 @@
 ---
 repo-actions: false
+title-block-banner: false
 title: "Guillaume Guex"
 image: assets/profile.jpg
 about:
