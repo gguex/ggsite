@@ -213,3 +213,27 @@ body:has(#quarto-content.page-layout-custom) #title-block-header .quarto-title-m
     padding-left: 1.5rem;
     padding-right: 1.5rem;
 }
+
+
+/* --- Static maps page (visualizations/static_maps) --- */
+
+.static-map h2 {
+    margin-top: 2.5rem;
+}
+
+.static-map h2 + p em {
+    color: #6c757d;
+}
+
+.static-map a > img {
+    width: 100%;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    transition: box-shadow 0.2s ease;
+}
+
+.static-map a > img:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
