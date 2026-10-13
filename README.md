@@ -91,7 +91,7 @@ quarto render
 ## Contact
 
 Questions, corrections or ideas are welcome: open an issue here, or write to
-me at guillaume.guex@gmail.com. You can also find me on
+me at contact@guillaumeguex.ch. You can also find me on
 [ORCID](https://orcid.org/0000-0003-1001-9525) and
 [LinkedIn](https://linkedin.com/in/guillaume-guex/).
 

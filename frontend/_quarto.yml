@@ -44,7 +44,7 @@ website:
     center: "Built with [Quarto](https://quarto.org)"
     right:
       - icon: envelope
-        href: mailto:guillaume.guex@gmail.com
+        href: mailto:contact@guillaumeguex.ch
         aria-label: Email
       - icon: github
         href: https://github.com/gguex
