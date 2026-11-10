@@ -47,6 +47,7 @@ simulations, and building data visualizations.
 I created this website to share some of my work. Here you will find:
 
 - My résumé and a list of my publications (below).
+- Research notes.
 - Teaching materials.
 - Data visualizations.
 
@@ -75,11 +76,17 @@ def print_section(section_data):
         return
         
     for entry in section_data:
+        # Period read top to bottom: start date (with a dash), then end date.
+        # Entries without a start date (degrees) show only their year.
+        if entry['year_start']:
+            years = (f'<div class="cv-year-start">{entry['year_start']}&nbsp;–</div>'
+                     f'<div class="cv-year-end">{entry['year_end']}</div>')
+        else:
+            years = f'<div class="cv-year-end">{entry['year_end']}</div>'
         raw_html = f"""
         <div class="cv-entry">
             <div class="cv-year">
-              <div class="cv-year-end">{entry['year_end']}</div>
-              <div class="cv-year-start">{entry['year_start']}</div>
+              {years}
             </div>
             <div class="cv-details">
                 <div class="cv-title">{entry['title']}</div>

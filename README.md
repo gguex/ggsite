@@ -9,6 +9,8 @@ JavaScript, and is published as a static site.
 
 ## What you will find on the site
 
+- **Research Notes** — my papers, with abstract and citation, and short notes that
+  explain them to colleagues outside my field.
 - **Teaching** — slides, notebooks and exercises of the courses I give at the
   University of Lausanne (quantitative methods, machine learning, data analysis
   for the humanities, databases). The courses are in French.
@@ -41,6 +43,7 @@ frontend/                  the Quarto website
   _quarto.yml              site configuration (navbar, theme, footer, freeze)
   index.qmd                About page (résumé from data/personal_data/cv.yaml,
                            publications from references.bib)
+  research/                one folder per paper or research note
   teaching/                one folder per course, one section per session
   visualizations/          one folder per visualization
   data/                    datasets used by the pages, with their READMEs

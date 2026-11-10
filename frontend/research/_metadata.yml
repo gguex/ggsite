@@ -1,0 +1,5 @@
+# Shared settings for every page under research/ (papers and notes about my research).
+format:
+  html:
+    toc: true
+    page-layout: article

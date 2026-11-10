@@ -1,0 +1,17 @@
+---
+title: "Research Notes"
+description: "Papers and short notes about my research, written for colleagues who are not specialists."
+toc: false
+repo-actions: false
+listing:
+  contents: "*/index.qmd"
+  sort: "date desc"
+  type: default
+  categories: true
+  sort-ui: false
+  filter-ui: false
+  fields: [image, title, description, date, categories]
+  image-height: 180px
+  feed: true
+title-block-banner: true
+---

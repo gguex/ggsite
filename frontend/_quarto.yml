@@ -35,6 +35,8 @@ website:
     left:
       - text: "About Me"
         href: index.qmd
+      - text: "Research Notes"
+        href: research/index.qmd
       - text: "Teaching"
         href: teaching/index.qmd
       - text: "Visualizations"
